@@ -24,17 +24,9 @@ def log_inner_product(rate_matrix_col, log_likelihood):
     return np.log(inner_product) + max_log
 
 
-def tree_log_likelihood(tree, seq_dict, n):
-    log_likelihood_dict = {}
-    stationery_dist = np.loadtxt('WAG_stationery_dist.txt')
-    rate_matrix = np.loadtxt('WAG_matrix.txt')
-    num_states = len(stationery_dist)
-    for leaf in tree:
-        state = seq_dict[leaf.name][n]
-        log_likelihood_dict[leaf] = [-np.inf for i in range(num_states)]
-        log_likelihood_dict[leaf][state] = 0
-    fill_log_likelihood(tree, log_likelihood_dict, rate_matrix)
-    return log_inner_product(stationery_dist, log_likelihood_dict[tree])
+def tree_log_likelihood(tree, seq_dict, n, rate_matrix, stationery_dist):
+    root_log_likelihood = node_log_likelihood(tree, rate_matrix, seq_dict, n)
+    return log_inner_product(stationery_dist, root_log_likelihood)
 
 
 def log_likelihood_update(log_likelihood_1, log_likelihood_2, transition_matrix_1, transition_matrix_2):
@@ -47,19 +39,22 @@ def log_likelihood_update(log_likelihood_1, log_likelihood_2, transition_matrix_
     return new_log_likelihood
 
 
-def fill_log_likelihood(node, log_likelihood_dict, rate_matrix):
-    if node in log_likelihood_dict:
-        return log_likelihood_dict[node]
+def node_log_likelihood(node, rate_matrix, seq_dict, n):
+    if node.is_leaf():
+        num_states = rate_matrix.shape[0]
+        state = seq_dict[node.name][n]
+        new_log_likelihood = [-np.inf for i in range(num_states)]
+        new_log_likelihood[state] = 0
+        return new_log_likelihood
     else:
         child_node_1, child_node_2 = node.get_children()
         t_1 = child_node_1.dist
         t_2 = child_node_2.dist
         transition_matrix_1 = branch_matrix_exponential(rate_matrix, t_1)
         transition_matrix_2 = branch_matrix_exponential(rate_matrix, t_2)
-        log_likelihood_1 = fill_log_likelihood(child_node_1, log_likelihood_dict, rate_matrix)
-        log_likelihood_2 = fill_log_likelihood(child_node_2, log_likelihood_dict, rate_matrix)
+        log_likelihood_1 = node_log_likelihood(child_node_1, rate_matrix, seq_dict, n)
+        log_likelihood_2 = node_log_likelihood(child_node_2, rate_matrix, seq_dict, n)
         new_log_likelihood = log_likelihood_update(log_likelihood_1, log_likelihood_2, transition_matrix_1, transition_matrix_2)
-        log_likelihood_dict[node] = new_log_likelihood
         return new_log_likelihood
 
 

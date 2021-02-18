@@ -35,7 +35,7 @@ def ending_state(initial_state_index, rate_matrix, t):
 # a function to find the index of a composite state in the product matrix.
 # Input: indices i and j, number of states. Output: composite index.
 def composite_index(i, j, num_states):
-    return i * (num_states - 1) + j
+    return (i - 1) * num_states + j
 
 
 # a function to construct the 2-site transition matrix by taking the "product" of two 1-site matrix.
@@ -46,8 +46,8 @@ def matrix_product(rate_matrix):
     for i in range(num_states):
         for j in range(num_states):
             for k in range(num_states):
-                product_matrix[composite_index(i, j, num_states), composite_index(i, k, num_states)] = rate_matrix[j, k]
-                product_matrix[composite_index(i, j, num_states), composite_index(k, i, num_states)] = rate_matrix[k, j]
+                product_matrix[composite_index(i, k, num_states), composite_index(i, j, num_states)] = rate_matrix[k, j]
+                product_matrix[composite_index(k, j, num_states), composite_index(i, j, num_states)] = rate_matrix[k, i]
     for i in range(num_states):
         for j in range(num_states):
             product_matrix[composite_index(i, j, num_states), composite_index(i, j, num_states)] = rate_matrix[i, i] + rate_matrix[j, j]

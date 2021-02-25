@@ -54,6 +54,15 @@ def matrix_product(rate_matrix):
     return product_matrix
 
 
+def stationery_dist_product(stationery_dist):
+    n = len(stationery_dist)
+    product_stationery_dist = np.zeros(n**2)
+    for i in range(n):
+        for j in range(n):
+            product_stationery_dist[(i - 1)*n + j] = stationery_dist[i]*stationery_dist[j]
+    return product_stationery_dist
+
+
 # a function to sample from a stationery distribution.
 # Input: stationery distribution and the state space. Output: a state.
 def stationery_dist_sampler(stationery_dist, all_states):

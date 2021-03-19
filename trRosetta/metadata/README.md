@@ -9,7 +9,7 @@ These chain-specific sequence homologs / MSA are obtained by a two-step procedur
 1. Perform series of filtering steps on 94,962 chains in PDB (redundancy removal, keeping only chains with high-resolution true contact maps, etc.)
 2. Collect sequence homologs (aka, generate MSAs) using five different methods. 
 
-Details are in the Methods section of the Yang et al. (2020) (paper)[https://www.pnas.org/content/117/3/1496].
+Details are in the Methods section of the Yang et al. (2020) [paper](https://www.pnas.org/content/117/3/1496).
 
 ## Summary Statistics 
 

@@ -4,6 +4,7 @@ import os
 import sys
 
 import logging
+import numpy as np
 import tqdm
 
 from FastTreePhylogeny import FastTreePhylogeny
@@ -87,6 +88,8 @@ def map_func(args):
 
 
 if __name__ == "__main__":
+    np.random.seed(1)
+
     # Pull out arguments
     args = parser.parse_args()
     a3m_dir = args.a3m_dir

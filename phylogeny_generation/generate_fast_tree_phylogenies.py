@@ -20,9 +20,9 @@ def init_logger():
     consoleHandler.setFormatter(formatter)
     logger.addHandler(consoleHandler)
 
-    # fileHandler = logging.FileHandler(f"{outdir}/generate_fast_tree_phylogenies.log")
-    # fileHandler.setFormatter(formatter)
-    # logger.addHandler(fileHandler)
+    fileHandler = logging.FileHandler("generate_fast_tree_phylogenies.log")
+    fileHandler.setFormatter(formatter)
+    logger.addHandler(fileHandler)
 
 
 parser = argparse.ArgumentParser(description="Run FastTree on all MSAs")
@@ -30,15 +30,13 @@ parser.add_argument(
     "--a3m_dir",
     type=str,
     help="Directory where the MSAs are found (.a3m files)",
-    required=False,
-    default="../a3m",
+    required=True,
 )
 parser.add_argument(
     "--outdir",
     type=str,
     help="Directory where the reconstructed phylogenies will be found.",
-    required=False,
-    default="../trees",
+    required=True,
 )
 parser.add_argument(
     "--n_process",
@@ -123,5 +121,4 @@ if __name__ == "__main__":
         for protein_family_name in protein_family_names
     ]
     with multiprocessing.Pool(n_process) as pool:
-        pool.map(map_func, map_args)
         list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))

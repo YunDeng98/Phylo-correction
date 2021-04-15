@@ -5,7 +5,7 @@ import os
 import sys
 import tqdm
 
-from ContactMatrix import ContaxtMatrix
+from ContactMatrix import ContactMatrix
 
 
 parser = argparse.ArgumentParser(
@@ -71,7 +71,7 @@ def map_func(args):
     protein_family_name = args[1]
     outdir = args[2]
     armstrong_cutoff = args[3]
-    contact_matrix = ContaxtMatrix(
+    contact_matrix = ContactMatrix(
         pdb_dir=pdb_dir,
         protein_family_name=protein_family_name,
         armstrong_cutoff=armstrong_cutoff,

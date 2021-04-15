@@ -22,13 +22,21 @@ def extend(a, b, c, L, A, D):
     return c + sum([m * d for m, d in zip(m, d)])
 
 
-class ContaxtMatrix:
+class ContactMatrix:
     def __init__(
         self,
         pdb_dir: str,
         protein_family_name: str,
         armstrong_cutoff: float = 8.0,
     ):
+        r"""
+        Create a contact matrix from a PDB file.
+
+        Reads the PDB file at pdb_dir/protein_family_name.pdb and
+        computes the binary contact matrix based on the armstrong_cutoff.
+        The contact matrix can be writen out to a file with the
+        write_to_file method.
+        """
         pdb_file = os.path.join(pdb_dir, protein_family_name + ".pdb")
         pdbfile = PDBFile.read(str(pdb_file))
         structure = pdbfile.get_structure()
@@ -65,7 +73,7 @@ class ContaxtMatrix:
 
 
 if __name__ == "__main__":
-    contact_matrix = ContaxtMatrix(
+    contact_matrix = ContactMatrix(
         pdb_dir="pdb", protein_family_name="13gs_1_A", armstrong_cutoff=8.0
     )
     print(contact_matrix.nsites)

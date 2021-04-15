@@ -1,7 +1,7 @@
 set -e
 
 # Important hyperparameters
-max_seqs=1024
+max_seqs=4096
 max_sites=1024
 armstrong_cutoff=8.0
 
@@ -20,11 +20,11 @@ tree_dir=trees_"$max_seqs"_seqs_"$max_sites"_sites
 # Where the contacts will be stored
 contact_dir=contacts_"$armstrong_cutoff"
 
-# # First we need to generate the phylogenies
-# pushd phylogeny_generation
-# echo "Running phylogeny_generation.sh"
-# bash phylogeny_generation.sh ../"$a3m_dir" "$max_seqs" "$max_sites" "$n_process" ../"$tree_dir"
-# popd
+# First we need to generate the phylogenies
+pushd phylogeny_generation
+echo "Running phylogeny_generation.sh"
+bash phylogeny_generation.sh ../"$a3m_dir" "$max_seqs" "$max_sites" "$n_process" ../"$tree_dir"
+popd
 
 # Generate the contacts
 pushd contact_generation

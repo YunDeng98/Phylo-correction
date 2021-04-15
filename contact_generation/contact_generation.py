@@ -46,7 +46,7 @@ parser.add_argument(
     type=int,
     help="Maximum number of families to run on.",
     required=False,
-    default=100000000
+    default=100000000,
 )
 
 
@@ -74,7 +74,7 @@ def map_func(args):
     contact_matrix = ContaxtMatrix(
         pdb_dir=pdb_dir,
         protein_family_name=protein_family_name,
-        armstrong_cutoff=armstrong_cutoff
+        armstrong_cutoff=armstrong_cutoff,
     )
     outfile = os.path.join(outdir, protein_family_name + ".cm")
     contact_matrix.write_to_file(outfile)

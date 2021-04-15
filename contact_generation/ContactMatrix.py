@@ -45,7 +45,7 @@ class ContaxtMatrix:
         r"""
         Number of sites in the sequence
         """
-        assert(self._pdb_contact.shape[0] == self._pdb_contact.shape[1])
+        assert self._pdb_contact.shape[0] == self._pdb_contact.shape[1]
         return self._pdb_contact.shape[0]
 
     def write_to_file(self, outfile: str) -> None:
@@ -65,5 +65,7 @@ class ContaxtMatrix:
 
 
 if __name__ == "__main__":
-    contact_matrix = ContaxtMatrix(pdb_dir="pdb", protein_family_name="13gs_1_A", armstrong_cutoff=9.0)
+    contact_matrix = ContaxtMatrix(
+        pdb_dir="pdb", protein_family_name="13gs_1_A", armstrong_cutoff=8.0
+    )
     print(contact_matrix.nsites)

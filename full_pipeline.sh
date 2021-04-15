@@ -1,7 +1,7 @@
 set -e
 
 # Important hyperparameters
-max_seqs=4096
+max_seqs=1024
 max_sites=1024
 armstrong_cutoff=8.0
 

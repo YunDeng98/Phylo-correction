@@ -1,0 +1,3 @@
+[console_scripts]
+ngesh = ngesh.__main__:main
+

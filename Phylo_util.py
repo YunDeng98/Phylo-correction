@@ -1,5 +1,6 @@
 import numpy as np
 import random
+from functools import lru_cache
 
 
 class substitution_model:
@@ -27,6 +28,7 @@ class substitution_model:
         P2 = np.diag(np.sqrt(1 / stationery_dist))
         return P1, P2
 
+    @lru_cache(maxsize=None)
     def expm(self, t):
         n = self.D.shape[0]
         exp_D = np.diag(np.exp(t * self.D))

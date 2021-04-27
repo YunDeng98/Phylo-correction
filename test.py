@@ -44,13 +44,9 @@ def LR_test():
     null_model = Phylo_util.substitution_model(product_rate_matrix, product_stationery_dist)
     new_model = Phylo_util.substitution_model(new_product_rate_matrix, new_product_stationery_dist)
     tree = Tree('tall_tree.nw', format=1)
-    for i in range(50):
-        print(i)
-        seq_dict = Phylo_util.build_sequence_alignment(tree, product_rate_matrix, product_stationery_dist)
-        start = timer()
+    for i in range(1000):
+        seq_dict = Phylo_util.build_sequence_alignment(tree, null_model)
         l1 = Fast_Felsenstein_algorithm.tree_log_likelihood(tree, seq_dict, null_model)
-        end = timer()
-        print(end - start)
         l2 = Fast_Felsenstein_algorithm.tree_log_likelihood(tree, seq_dict, new_model)
         print(l1, l2, l1 - l2)
 
@@ -124,4 +120,13 @@ def random_check():
         print(l1, l2, l1 - l2)
 
 
-random_check()
+def cache_test():
+    rate_matrix = np.loadtxt('WAG_matrix.txt')
+    stationery_dist = np.loadtxt('WAG_stationery_dist.txt')
+    new_rate_matrix = np.loadtxt('WAG_new_matrix.txt')
+    new_stationery_dist = np.repeat(0.05, 20)
+    null_model = Phylo_util.substitution_model(rate_matrix, stationery_dist)
+    new_model = Phylo_util.substitution_model(new_rate_matrix, new_stationery_dist)
+    print(null_model.expm(1) - new_model.expm(1))
+
+LR_test()

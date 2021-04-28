@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -60,6 +60,16 @@ class MSA:
             self.protein_family_name = protein_family_name
             self._nseqs = len(msa)
             self._nsites = len(msa[0][1])
+            self._msa_dict = dict(msa)
+
+    def get_sequence(self, sequence_name: str) -> str:
+        r"""
+        Returns the sequence corresponding to 'sequence_name'
+        """
+        return self._msa_dict[sequence_name]
+
+    def get_msa(self) -> Dict[str, str]:
+        return self._msa_dict.copy()
 
     @property
     def nseqs(self) -> int:

@@ -1,5 +1,6 @@
 import os
 import time
+import tempfile
 
 from MSA import MSA
 
@@ -30,20 +31,21 @@ class FastTreePhylogeny:
             a3m_dir, protein_family_name, max_seqs=max_seqs, max_sites=max_sites
         )
         # Write (standardized) MSA
-        processed_msa_filename = "standardized_alignment.a3m"
-        msa.write_to_file(processed_msa_filename)
-        # Run FastTree on (standardized) MSA
-        outfile = os.path.join(outdir, protein_family_name) + ".newick"
-        logger = logging.getLogger("phylogeny_generation" + __name__)
-        logger.debug(f"Running FastTree on MSA:\n{msa}")
-        time_start = time.time()
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        os.system(f"{dir_path}/FastTree -quiet < {processed_msa_filename} > {outfile}")
-        time_end = time.time()
-        self._total_time = time_end - time_start
-        logger.debug(f"Time taken: {self.total_time}")
-        self._msa = msa
-        self._protein_family_name = protein_family_name
+        with tempfile.NamedTemporaryFile("w") as processed_msa_file:
+            processed_msa_filename = processed_msa_file.name
+            msa.write_to_file(processed_msa_filename)
+            # Run FastTree on (standardized) MSA
+            outfile = os.path.join(outdir, protein_family_name) + ".newick"
+            logger = logging.getLogger("phylogeny_generation" + __name__)
+            logger.debug(f"Running FastTree on MSA:\n{msa}")
+            time_start = time.time()
+            dir_path = os.path.dirname(os.path.realpath(__file__))
+            os.system(f"{dir_path}/FastTree -quiet < {processed_msa_filename} > {outfile}")
+            time_end = time.time()
+            self._total_time = time_end - time_start
+            logger.debug(f"Time taken: {self.total_time}")
+            self._msa = msa
+            self._protein_family_name = protein_family_name
 
     @property
     def total_time(self) -> float:

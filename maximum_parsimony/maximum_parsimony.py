@@ -138,6 +138,7 @@ def create_node_name_vs_int_mappings(tree) -> Tuple[Dict, Dict]:
 
     return node_name_to_int, int_to_node_name
 
+
 def write_out_tree(tree, node_name_to_int, tree_filepath) -> str:
     res = []
 
@@ -153,6 +154,7 @@ def write_out_tree(tree, node_name_to_int, tree_filepath) -> str:
         file.write(f"{len(res)}\n")
         file.write(''.join(res))
 
+
 def write_out_msa(msa: MSA, node_name_to_int, msa_filepath) -> str:
     res = ""
     nleaves = 0
@@ -164,6 +166,7 @@ def write_out_msa(msa: MSA, node_name_to_int, msa_filepath) -> str:
     with open(msa_filepath, "w") as outfile:
         outfile.write(f"{nleaves}\n")
         outfile.write(res)
+
 
 def map_parsimony_indexing_back_to_str(int_to_node_name, cpp_parsimony_filepath, parsimony_filepath) -> None:
     # Read parsimony_filepath and replace each header by the node name, then write back to the same file.
@@ -178,8 +181,8 @@ def map_parsimony_indexing_back_to_str(int_to_node_name, cpp_parsimony_filepath,
                     res += f"{int_to_node_name[int(line_contents[0])]} {line_contents[1]}"
             outfile.write(res)
 
+
 def map_func(args):
-    init_logger()
     logger = logging.getLogger("maximum_parsimony")
     a3m_dir = args[0]
     tree_dir = args[1]
@@ -224,10 +227,16 @@ def map_func(args):
 
                 # Run C++ maximum parsimony
                 dir_path = os.path.dirname(os.path.realpath(__file__))
-                os.system(f"{dir_path}/maximum_parsimony {tree_filepath} {msa_filepath} {cpp_parsimony_filepath}")
+                call_result = os.system(f"{dir_path}/maximum_parsimony {tree_filepath} {msa_filepath} {cpp_parsimony_filepath}")
+                # logger.info(f"Call result for family {protein_family_name} = {call_result}")
+                if call_result != 0:
+                    logger.info(f"Failed to run C++ maximum parsimony on family {protein_family_name}")
                 # Convert .parsimony's indexing into string based.
-                parsimony_filepath = os.path.join(outdir, protein_family_name + ".parsimony")
-                map_parsimony_indexing_back_to_str(int_to_node_name, cpp_parsimony_filepath, parsimony_filepath)
+                try:
+                    parsimony_filepath = os.path.join(outdir, protein_family_name + ".parsimony")
+                    map_parsimony_indexing_back_to_str(int_to_node_name, cpp_parsimony_filepath, parsimony_filepath)
+                except:
+                    logger.info(f"Failed to process C++ output for {protein_family_name}")
 
 
 if __name__ == "__main__":

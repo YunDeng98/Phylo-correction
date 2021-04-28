@@ -16,4 +16,4 @@ bash install_fast_tree.sh
 # python3 fast_tree_benchmark_extrapolation.py --a3m_dir "$a3m_dir" --max_seqs "$max_seqs" --max_sites "$max_sites" --outdir fast_tree_benchmark_extrapolation_output --grid_path ./fast_tree_benchmark_output/benchmark_results.csv
 
 echo "Generating FastTree Phylogenies"
-python3 generate_fast_tree_phylogenies.py --a3m_dir "$a3m_dir" --outdir "$tree_dir" --n_process "$n_process" --expected_number_of_MSAs 15051 --max_seqs "$max_seqs" --max_sites "$max_sites" --max_families 100000000
+python3 generate_fast_tree_phylogenies.py --a3m_dir "$a3m_dir" --outdir "$tree_dir" --n_process "$n_process" --expected_number_of_MSAs 15051 --max_seqs "$max_seqs" --max_sites "$max_sites" --max_families 10000000

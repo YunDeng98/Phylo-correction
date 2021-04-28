@@ -20,7 +20,7 @@ vector<int> G[maxN];
 int dp[maxN][maxS];
 
 void read_tree(string tree_filepath){
-    cerr << "Reading graph ... " << endl;
+    // cerr << "Reading graph ... " << endl;
     ifstream fin(tree_filepath);
     fin >> N;
     forn(i, N - 1){
@@ -31,7 +31,7 @@ void read_tree(string tree_filepath){
 }
 
 void read_msa(string msa_filepath){
-    cerr << "Reading sequences ... " << endl;
+    // cerr << "Reading sequences ... " << endl;
     ifstream fin(msa_filepath);
     int nleaves;
     fin >> nleaves;
@@ -126,11 +126,11 @@ void show(vector<int> & v){
 }
 
 void solve_maximum_parsimony_for_site(int site_id){
-    cerr << "Solving maximum parsimony problem for site " << site_id << " ... " << endl;
+    // cerr << "Solving maximum parsimony problem for site " << site_id << " ... " << endl;
     dfs(-1, 0, site_id);
     int maximum_parsimony = INF;
     forn(i, maxS) maximum_parsimony = min(maximum_parsimony, dp[ROOT][i]);
-    cerr << "Maximum Parsimony = " << maximum_parsimony << endl;
+    // cerr << "Maximum Parsimony = " << maximum_parsimony << endl;
     vector<int> optimal_root_states;
     forn(i, maxS) if(dp[ROOT][i] == maximum_parsimony) optimal_root_states.pb(i);
     // show(optimal_root_states);
@@ -140,7 +140,7 @@ void solve_maximum_parsimony_for_site(int site_id){
 }
 
 void solve_maximum_parsimony(){
-    cerr << "Solving maximum parsimony problem ... " << endl;
+    // cerr << "Solving maximum parsimony problem ... " << endl;
     forn(i, L){
         solve_maximum_parsimony_for_site(i);
     }
@@ -162,7 +162,7 @@ void test(){
 
 int main(int argc, char* argv[]){
     srand(2);
-    cerr << "Running maximum parsimony C++ script ... " << endl;
+    // cerr << "Running maximum parsimony C++ script ... " << endl;
     if(argc != 4){
         cerr << "ERROR: The tree_filepath, msa_filepath, and solution_filepath should be provided!" << endl;
         return 1;

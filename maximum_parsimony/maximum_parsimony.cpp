@@ -157,6 +157,7 @@ void write_out_solution(string solution_filepath){
 void test(){
     assert(aa_to_int('A') == 0);
     assert(aa_to_int('-') == maxS - 1);
+    assert(int_to_aa(maxS - 1) == '-');
 }
 
 int main(int argc, char* argv[]){

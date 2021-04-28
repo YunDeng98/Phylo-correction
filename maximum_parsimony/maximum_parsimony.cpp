@@ -19,9 +19,9 @@ string sequences[maxN];
 vector<int> G[maxN];
 int dp[maxN][maxS];
 
-void read_graph(string graph_filepath){
+void read_tree(string tree_filepath){
     cerr << "Reading graph ... " << endl;
-    ifstream fin(graph_filepath);
+    ifstream fin(tree_filepath);
     fin >> N;
     forn(i, N - 1){
         int u, v;
@@ -30,9 +30,9 @@ void read_graph(string graph_filepath){
     }
 }
 
-void read_sequences(string sequences_filepath){
+void read_msa(string msa_filepath){
     cerr << "Reading sequences ... " << endl;
-    ifstream fin(sequences_filepath);
+    ifstream fin(msa_filepath);
     int nleaves;
     fin >> nleaves;
     forn(i, nleaves){
@@ -164,15 +164,15 @@ int main(int argc, char* argv[]){
     srand(2);
     cerr << "Running maximum parsimony C++ script ... " << endl;
     if(argc != 4){
-        cerr << "ERROR: The graph_filepath, sequences_filepath, and solution_filepath should be provided!" << endl;
+        cerr << "ERROR: The tree_filepath, msa_filepath, and solution_filepath should be provided!" << endl;
         return 1;
     }
     test();
-    string graph_filepath = argv[1];
-    string sequences_filepath = argv[2];
+    string tree_filepath = argv[1];
+    string msa_filepath = argv[2];
     string solution_filepath = argv[3];
-    read_graph(graph_filepath);
-    read_sequences(sequences_filepath);
+    read_tree(tree_filepath);
+    read_msa(msa_filepath);
     solve_maximum_parsimony();
     write_out_solution(solution_filepath);
     return 0;

@@ -68,8 +68,11 @@ class MSA:
         """
         return self._msa_dict[sequence_name]
 
-    def get_msa(self) -> Dict[str, str]:
-        return self._msa_dict.copy()
+    def get_msa(self, copy: bool = False) -> Dict[str, str]:
+        if copy:
+            return self._msa_dict.copy()
+        else:
+            return self._msa_dict
 
     @property
     def nseqs(self) -> int:

@@ -73,6 +73,7 @@ parser.add_argument(
 
 
 def map_func(args):
+    np.random.seed(1)
     a3m_dir = args[0]
     protein_family_name = args[1]
     outdir = args[2]

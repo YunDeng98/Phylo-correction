@@ -151,7 +151,7 @@ def write_out_tree(tree, node_name_to_int, tree_filepath) -> str:
     dfs_write_out_tree(None, tree)
 
     with open(tree_filepath, "w") as file:
-        file.write(f"{len(res)}\n")
+        file.write(f"{len(res) + 1}\n")
         file.write(''.join(res))
 
 

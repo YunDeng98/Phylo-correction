@@ -26,7 +26,7 @@ maximum_parsimony_dir=maximum_parsimony_"$max_seqs"_seqs_"$max_sites"_sites
 # Where the transitions obtained from the maximum parsimony phylogenies will be stored
 transitions_dir=transitions_"$max_seqs"_seqs_"$max_sites"_sites
 # Where the transition matrices obtained by quantizing transition edges will be stored
-matrices_dir=matrices_"$max_seqs"_seqs_"$max_sites"_sites_REPRO
+matrices_dir=matrices_"$max_seqs"_seqs_"$max_sites"_sites
 # Where the co-transitions obtained from the maximum parsimony phylogenies will be stored
 co_transitions_dir=co_transitions_"$max_seqs"_seqs_"$max_sites"_sites_"$armstrong_cutoff"
 # Where the co-transition matrices obtained by quantizing transition edges will be stored

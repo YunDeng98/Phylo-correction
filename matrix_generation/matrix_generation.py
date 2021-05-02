@@ -11,7 +11,7 @@ import logging
 import numpy as np
 import tempfile
 import tqdm
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 from ete3 import Tree
 import numpy as np
@@ -87,41 +87,61 @@ parser.add_argument(
     required=False,
     default=100000000
 )
+parser.add_argument(
+    "--num_sites",
+    type=int,
+    help="Whether the transitions are single-site (1) or for two sites (2)",
+    required=True
+)
 
-amino_acids = ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'] + ['-']
-for letter in string.ascii_uppercase:
-    if letter not in amino_acids:
-        amino_acids += [letter]
-# amino_acids = list(string.ascii_uppercase) + ['-']
-res = pd.DataFrame(np.zeros(shape=(len(amino_acids), len(amino_acids)), dtype=int), index=amino_acids, columns=amino_acids)
 
 def map_func(args):
     logger = logging.getLogger("matrix_generation")
     a3m_dir = args[0]
     transitions_dir = args[1]
-    protein_family_name = args[2]
+    protein_family_names_for_shard = args[2]
     outdir = args[3]
-    logger.info(f"Starting on family {protein_family_name}")
-    print(f"COMPUTING MATRIX FOR {protein_family_name}")
-    transitions_df = pd.read_csv(os.path.join(transitions_dir, protein_family_name + ".transitions"), sep=",")
+    alphabet = args[4]
+    logger.info(f"Starting on {len(protein_family_names_for_shard)} families")
 
-    # Filter transitions based on citeria
-    print(f"TODO: Filter transitions based on criteria! (low, short branches)")
+    # Create results data frame.
+    res = pd.DataFrame(np.zeros(shape=(len(alphabet), len(alphabet)), dtype=int), index=alphabet, columns=alphabet)
 
-    # Summarize remaining transitions into the matrices
-    summarized_transitions = transitions_df.groupby(["starting_state", "ending_state"]).size()
-    for starting_state in amino_acids:
-        for ending_state in amino_acids:
-            if (starting_state, ending_state) in summarized_transitions:
-                res.loc[starting_state, ending_state] += summarized_transitions[(starting_state, ending_state)]
+    for protein_family_name in protein_family_names_for_shard:
+        print(f"Starting on {protein_family_name}")
+        transitions_df = pd.read_csv(os.path.join(transitions_dir, protein_family_name + ".transitions"), sep=",")
+
+        # Filter transitions based on citeria
+        print(f"TODO: Filter transitions based on criteria! (low, short branches)")
+
+        # Now add quantization column and group by it too.
+        print(f"TODO: Add quantization column and group by it too!")
+
+        # Summarize remaining transitions into the matrices
+        summarized_transitions = transitions_df.groupby(["starting_state", "ending_state"]).size()
+        for starting_state in alphabet:
+            for ending_state in alphabet:
+                if (starting_state, ending_state) in summarized_transitions:
+                    res.loc[starting_state, ending_state] += summarized_transitions[(starting_state, ending_state)]
+
+    return res
 
 
-def write_out_matrices(outdir):
+def write_out_matrices(res, outdir):
     out_filepath = os.path.join(outdir, "matrices.txt")
     res.to_csv(out_filepath, sep="\t")
 
 
-if __name__ == "__main__":
+def get_protein_family_names_for_shard(
+    shard_id: int,
+    n_process: int,
+    protein_family_names: List[str]
+) -> List[str]:
+    res = [protein_family_names[i] for i in range(len(protein_family_names)) if i % n_process == shard_id]
+    return res
+
+
+def doit():
     np.random.seed(1)
 
     # Pull out arguments
@@ -132,13 +152,30 @@ if __name__ == "__main__":
     expected_number_of_MSAs = args.expected_number_of_MSAs
     outdir = args.outdir
     max_families = args.max_families
+    num_sites = args.num_sites
+    assert(num_sites in [1, 2])
+
+    # Create list of amino acids
+    amino_acids = ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'] + ['-']
+    for letter in string.ascii_uppercase:
+        if letter not in amino_acids:
+            amino_acids += [letter]
+
+    # Create alphabet of states.
+    if num_sites == 2:
+        alphabet = []
+        for aa1 in amino_acids:
+            for aa2 in amino_acids:
+                alphabet += (aa1 + aa2)
+    else:
+        assert(num_sites == 1)
+        alphabet = amino_acids[:]
 
     init_logger()
     logger = logging.getLogger("matrix_generation")
     logger.info("Starting ... ")
 
     print(f"TODO: Accept branch length quantization as input!")
-    print(f"TODO: Accept alphabet of states as input? Or: just infer from data whether we are single or double site.")
 
     if os.path.exists(outdir):
         raise ValueError(
@@ -157,16 +194,20 @@ if __name__ == "__main__":
         )
     protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
 
-    # print(f"protein_family_names = {protein_family_names}")
-
     map_args = [
-        (a3m_dir, transitions_dir, protein_family_name, outdir)
-        for protein_family_name in protein_family_names
+        (a3m_dir, transitions_dir, get_protein_family_names_for_shard(shard_id, n_process, protein_family_names), outdir, alphabet)
+        for shard_id in range(n_process)
     ]
-    # with multiprocessing.Pool(n_process) as pool:
-    #     list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
 
-    for args in map_args:
-        map_func(args)
+    with multiprocessing.Pool(n_process) as pool:
+        shard_results = list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
 
-    write_out_matrices(outdir)
+    res = shard_results[0]
+    for i in range(1, len(shard_results)):
+        res += shard_results[i]
+
+    write_out_matrices(res, outdir)
+
+
+if __name__ == "__main__":
+    doit()

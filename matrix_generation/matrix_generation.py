@@ -166,7 +166,7 @@ def doit():
         alphabet = []
         for aa1 in amino_acids:
             for aa2 in amino_acids:
-                alphabet += (aa1 + aa2)
+                alphabet.append(f"{aa1}{aa2}")
     else:
         assert(num_sites == 1)
         alphabet = amino_acids[:]

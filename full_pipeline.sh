@@ -8,7 +8,7 @@ armstrong_cutoff=8.0
 # Irrelevant hyperparameters
 n_process=32
 expected_number_of_MSAs=15051
-max_families=100000000
+max_families=16
 
 # Input data directories
 # Directory where the MSAs are found.
@@ -56,11 +56,11 @@ co_matrices_dir=co_matrices_"$max_seqs"_seqs_"$max_sites"_sites_"$armstrong_cuto
 # bash transition_extraction.sh ../"$a3m_dir" ../"$maximum_parsimony_dir" ../"$transitions_dir" "$n_process" "$expected_number_of_MSAs" "$max_families"
 # popd
 
-# Generate single-site transition matrices
-pushd matrix_generation
-echo "Running matrix_generation.sh"
-bash matrix_generation.sh ../"$a3m_dir" ../"$transitions_dir" ../"$matrices_dir" "$n_process" "$expected_number_of_MSAs" "$max_families" 1
-popd
+# # Generate single-site transition matrices
+# pushd matrix_generation
+# echo "Running matrix_generation.sh"
+# bash matrix_generation.sh ../"$a3m_dir" ../"$transitions_dir" ../"$matrices_dir" "$n_process" "$expected_number_of_MSAs" "$max_families" 1
+# popd
 
 # # Generate co-transitions
 # pushd co_transition_extraction
@@ -68,8 +68,8 @@ popd
 # bash co_transition_extraction.sh ../"$a3m_dir" ../"$maximum_parsimony_dir" ../"$co_transitions_dir" "$n_process" "$expected_number_of_MSAs" "$max_families" ../"$contact_dir"
 # popd
 
-# # Generate co-transition matrices
-# pushd matrix_generation
-# echo "Running matrix_generation.sh"
-# bash matrix_generation.sh ../"$a3m_dir" ../"$co_transitions_dir" ../"$co_matrices_dir" "$n_process" "$expected_number_of_MSAs" "$max_families" 2
-# popd
+# Generate co-transition matrices
+pushd matrix_generation
+echo "Running matrix_generation.sh"
+bash matrix_generation.sh ../"$a3m_dir" ../"$co_transitions_dir" ../"$co_matrices_dir" "$n_process" "$expected_number_of_MSAs" "$max_families" 2
+popd

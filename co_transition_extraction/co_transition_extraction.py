@@ -123,7 +123,7 @@ def get_transitions(tree, sequences, contact_matrix):
     
     L = len(sequences['internal-1'])
     assert(contact_matrix.shape == (L, L))
-    sites_in_contact = np.array([(i, j) for i in range(L) for j in range(i + 1, L) if contact_matrix[i, j] == 1 and abs(i - j) >= 10])
+    sites_in_contact = np.array([(i, j) for i in range(L) for j in range(i + 1, L) if contact_matrix[i, j] == 1 and abs(i - j) >= 7])
     # chosen_sites_in_contact = sites_in_contact[
     #     np.random.choice(
     #         range(len(sites_in_contact)),

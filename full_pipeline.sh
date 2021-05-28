@@ -95,3 +95,7 @@ pushd simulation
 echo "Running simulation.sh"
 bash simulation.sh ../"$a3m_gt_for_simulation_dir" ../"$tree_gt_for_simulation_dir" ../"$a3m_simulated_dir" ../"$contact_simulated_dir" ../"$ancestral_states_simulated_dir" "$n_process" "$expected_number_of_MSAs" "$max_families" "$simulation_pct_interacting_positions" ../"$Q1_ground_truth" ../"$Q2_ground_truth"
 popd
+
+# Run full pipeline on simulated data
+echo "Running full_pipeline_simulated.sh"
+bash full_pipeline_simulated.sh

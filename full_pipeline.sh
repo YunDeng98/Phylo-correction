@@ -6,9 +6,9 @@ max_sites=1024
 armstrong_cutoff=8.0
 
 # Irrelevant hyperparameters
-n_process=1
+n_process=32
 expected_number_of_MSAs=3
-max_families=1
+max_families=3
 
 # Input data directories
 # Directory where the MSAs are found.

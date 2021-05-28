@@ -229,8 +229,8 @@ def map_func(args):
     # Read co-evolution rate matrix
     Q2 = pd.read_csv(Q2_ground_truth, sep="\t", index_col=0)
     states = list(Q1.index)
-    logger.info(f"Q1 states = {list(Q1.index)}")
-    logger.info(f"Q2 states = {list(Q2.index)}")
+    # logger.info(f"Q1 states = {list(Q1.index)}")
+    # logger.info(f"Q2 states = {list(Q2.index)}")
     # Pedantically check that states in Q1 and Q2 are compatible.
     if not (len(Q1.index) ** 2 == len(Q2.index)):
         logger.error("Q1 and Q2 indices not compatible")

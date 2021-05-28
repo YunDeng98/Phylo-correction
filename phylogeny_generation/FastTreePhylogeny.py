@@ -24,7 +24,7 @@ class FastTreePhylogeny:
         """
         if not os.path.exists(outdir):
             print(f"Creating outdir {outdir}")
-            os.mkdir(outdir)
+            os.makedirs(outdir)
 
         # Read MSA into standardized format (lowercase amino acids are removed.)
         msa = MSA(

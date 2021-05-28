@@ -77,7 +77,7 @@ if __name__ == "__main__":
             f"overwritten. Aborting!"
         )
 
-    os.mkdir(outdir)
+    os.makedirs(outdir)
     init_logger(outdir)
 
     logger = logging.getLogger("phylogeny_generation")

@@ -74,7 +74,7 @@ if __name__ == "__main__":
     outdir = args.outdir
     grid_path = args.grid_path
     if not os.path.exists(outdir):
-        os.mkdir(outdir)
+        os.makedirs(outdir)
 
     init_logger(outdir=outdir)
     logger = logging.getLogger("phylogeny_generation")

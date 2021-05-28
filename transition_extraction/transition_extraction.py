@@ -176,7 +176,7 @@ if __name__ == "__main__":
         raise ValueError(
             f"outdir {outdir} already exists. Aborting not to " f"overwrite!"
         )
-    os.mkdir(outdir)
+    os.makedirs(outdir)
 
     if not os.path.exists(a3m_dir):
         raise ValueError(f"Could not find a3m_dir {a3m_dir}")

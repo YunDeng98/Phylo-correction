@@ -6,9 +6,9 @@ max_sites=1024
 armstrong_cutoff=8.0
 
 # Irrelevant hyperparameters
-n_process=32
-expected_number_of_MSAs=15051
-max_families=100000000
+n_process=1
+expected_number_of_MSAs=3
+max_families=1
 
 # Input data directories
 # Directory where the MSAs are found.
@@ -31,6 +31,19 @@ matrices_dir=matrices_"$max_seqs"_seqs_"$max_sites"_sites
 co_transitions_dir=co_transitions_"$max_seqs"_seqs_"$max_sites"_sites_"$armstrong_cutoff"
 # Where the co-transition matrices obtained by quantizing transition edges will be stored
 co_matrices_dir=co_matrices_"$max_seqs"_seqs_"$max_sites"_sites_"$armstrong_cutoff"
+
+# Simulated data parameters
+simulation_pct_interacting_positions=0.66
+Q1_ground_truth=Q1_ground_truth.txt
+Q2_ground_truth=Q2_ground_truth.txt
+# Simulated data directories
+# a3m_gt_for_simulation_dir="$a3m_dir"
+# tree_gt_for_simulation_dir="$tree_dir"
+a3m_gt_for_simulation_dir=a3m_test
+tree_gt_for_simulation_dir=trees_test
+a3m_simulated_dir=simulated_data/a3m_simulated
+contact_simulated_dir=simulated_data/contacts_simulated
+ancestral_states_simulated_dir=simulated_data/ancestral_states_simulated
 
 # # First we need to generate the phylogenies
 # pushd phylogeny_generation
@@ -62,14 +75,20 @@ co_matrices_dir=co_matrices_"$max_seqs"_seqs_"$max_sites"_sites_"$armstrong_cuto
 # bash matrix_generation.sh ../"$a3m_dir" ../"$transitions_dir" ../"$matrices_dir" "$n_process" "$expected_number_of_MSAs" "$max_families" 1
 # popd
 
-# Generate co-transitions
-pushd co_transition_extraction
-echo "Running co_transition_extraction.sh"
-bash co_transition_extraction.sh ../"$a3m_dir" ../"$maximum_parsimony_dir" ../"$co_transitions_dir" "$n_process" "$expected_number_of_MSAs" "$max_families" ../"$contact_dir"
-popd
+# # Generate co-transitions
+# pushd co_transition_extraction
+# echo "Running co_transition_extraction.sh"
+# bash co_transition_extraction.sh ../"$a3m_dir" ../"$maximum_parsimony_dir" ../"$co_transitions_dir" "$n_process" "$expected_number_of_MSAs" "$max_families" ../"$contact_dir"
+# popd
 
-# Generate co-transition matrices
-pushd matrix_generation
-echo "Running matrix_generation.sh"
-bash matrix_generation.sh ../"$a3m_dir" ../"$co_transitions_dir" ../"$co_matrices_dir" "$n_process" "$expected_number_of_MSAs" "$max_families" 2
+# # Generate co-transition matrices
+# pushd matrix_generation
+# echo "Running matrix_generation.sh"
+# bash matrix_generation.sh ../"$a3m_dir" ../"$co_transitions_dir" ../"$co_matrices_dir" "$n_process" "$expected_number_of_MSAs" "$max_families" 2
+# popd
+
+# Simulate data (MSAs + contact maps + trees with true maximum parsimony states)
+pushd simulation
+echo "Running simulation.sh"
+bash simulation.sh ../"$a3m_gt_for_simulation_dir" ../"$tree_gt_for_simulation_dir" ../"$a3m_simulated_dir" ../"$contact_simulated_dir" ../"$ancestral_states_simulated_dir" "$n_process" "$expected_number_of_MSAs" "$max_families" "$simulation_pct_interacting_positions" ../"$Q1_ground_truth" ../"$Q2_ground_truth"
 popd

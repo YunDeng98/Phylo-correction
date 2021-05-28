@@ -32,19 +32,6 @@ co_transitions_dir=co_transitions_"$max_seqs"_seqs_"$max_sites"_sites_"$armstron
 # Where the co-transition matrices obtained by quantizing transition edges will be stored
 co_matrices_dir=co_matrices_"$max_seqs"_seqs_"$max_sites"_sites_"$armstrong_cutoff"
 
-# Simulated data parameters
-simulation_pct_interacting_positions=0.66
-Q1_ground_truth=Q1_ground_truth.txt
-Q2_ground_truth=Q2_ground_truth.txt
-# Simulated data directories
-# a3m_gt_for_simulation_dir="$a3m_dir"
-# tree_gt_for_simulation_dir="$tree_dir"
-a3m_gt_for_simulation_dir=a3m_test
-tree_gt_for_simulation_dir=trees_test
-a3m_simulated_dir=simulated_data/a3m_simulated
-contact_simulated_dir=simulated_data/contacts_simulated
-ancestral_states_simulated_dir=simulated_data/ancestral_states_simulated
-
 # # First we need to generate the phylogenies
 # pushd phylogeny_generation
 # echo "Running phylogeny_generation.sh"
@@ -86,6 +73,22 @@ ancestral_states_simulated_dir=simulated_data/ancestral_states_simulated
 # echo "Running matrix_generation.sh"
 # bash matrix_generation.sh ../"$a3m_dir" ../"$co_transitions_dir" ../"$co_matrices_dir" "$n_process" "$expected_number_of_MSAs" "$max_families" 2
 # popd
+
+
+##### Data simulation for end-to-end test #####
+
+# Simulated data parameters
+simulation_pct_interacting_positions=0.66
+Q1_ground_truth=Q1_ground_truth.txt
+Q2_ground_truth=Q2_ground_truth.txt
+# Simulated data directories
+# a3m_gt_for_simulation_dir="$a3m_dir"
+# tree_gt_for_simulation_dir="$tree_dir"
+a3m_gt_for_simulation_dir=a3m_test
+tree_gt_for_simulation_dir=trees_test
+a3m_simulated_dir=simulated_data/a3m_simulated
+contact_simulated_dir=simulated_data/contacts_simulated
+ancestral_states_simulated_dir=simulated_data/ancestral_states_simulated
 
 # Simulate data (MSAs + contact maps + trees with true maximum parsimony states)
 pushd simulation

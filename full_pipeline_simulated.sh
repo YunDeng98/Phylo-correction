@@ -18,19 +18,19 @@ a3m_dir=simulated_data/a3m_simulated
 
 # Output data directories
 # Where the phylogenies will be stored
-tree_dir=simulated_data_outputs/trees_"$max_seqs"_seqs_"$max_sites"_sites
+tree_dir=simulated_data_results/trees_"$max_seqs"_seqs_"$max_sites"_sites
 # Where the contacts will be stored
 contact_dir=simulated_data/contacts_simulated
 # Where the maximum parsimony reconstructions will be stored
-maximum_parsimony_dir=simulated_data_outputs/maximum_parsimony_"$max_seqs"_seqs_"$max_sites"_sites
+maximum_parsimony_dir=simulated_data_results/maximum_parsimony_"$max_seqs"_seqs_"$max_sites"_sites
 # Where the transitions obtained from the maximum parsimony phylogenies will be stored
-transitions_dir=simulated_data_outputs/transitions_"$max_seqs"_seqs_"$max_sites"_sites
+transitions_dir=simulated_data_results/transitions_"$max_seqs"_seqs_"$max_sites"_sites
 # Where the transition matrices obtained by quantizing transition edges will be stored
-matrices_dir=simulated_data_outputs/matrices_"$max_seqs"_seqs_"$max_sites"_sites
+matrices_dir=simulated_data_results/matrices_"$max_seqs"_seqs_"$max_sites"_sites
 # Where the co-transitions obtained from the maximum parsimony phylogenies will be stored
-co_transitions_dir=simulated_data_outputs/co_transitions_"$max_seqs"_seqs_"$max_sites"_sites_"$armstrong_cutoff"
+co_transitions_dir=simulated_data_results/co_transitions_"$max_seqs"_seqs_"$max_sites"_sites_"$armstrong_cutoff"
 # Where the co-transition matrices obtained by quantizing transition edges will be stored
-co_matrices_dir=simulated_data_outputs/co_matrices_"$max_seqs"_seqs_"$max_sites"_sites_"$armstrong_cutoff"
+co_matrices_dir=simulated_data_results/co_matrices_"$max_seqs"_seqs_"$max_sites"_sites_"$armstrong_cutoff"
 
 # First we need to generate the phylogenies
 pushd phylogeny_generation

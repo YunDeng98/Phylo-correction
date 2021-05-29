@@ -4,7 +4,7 @@ set -e
 max_seqs=1024
 max_sites=1024
 # armstrong_cutoff=8.0  # Not needed because contact matrices are already simulated
-rate_matrix=Q1_uniform_FastTree.txt
+rate_matrix=synthetic_rate_matrices/Q1_uniform_FastTree.txt
 
 # Irrelevant hyperparameters
 n_process=3

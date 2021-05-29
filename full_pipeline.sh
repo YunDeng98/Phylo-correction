@@ -80,10 +80,10 @@ co_matrices_dir=co_matrices_"$max_seqs"_seqs_"$max_sites"_sites_"$armstrong_cuto
 
 # Simulated data parameters
 simulation_pct_interacting_positions=0.66
-# Q1_ground_truth=Q1_ground_truth.txt
-# Q2_ground_truth=Q2_ground_truth.txt
-Q1_ground_truth=Q1_uniform.txt
-Q2_ground_truth=Q2_uniform.txt
+# Q1_ground_truth=synthetic_rate_matrices/Q1_ground_truth.txt
+# Q2_ground_truth=synthetic_rate_matrices/Q2_ground_truth.txt
+Q1_ground_truth=synthetic_rate_matrices/Q1_uniform.txt
+Q2_ground_truth=synthetic_rate_matrices/Q2_uniform.txt
 # Simulated data directories
 # a3m_gt_for_simulation_dir="$a3m_dir"
 # tree_gt_for_simulation_dir="$tree_dir"

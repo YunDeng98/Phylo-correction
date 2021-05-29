@@ -78,6 +78,8 @@ co_matrices_dir=co_matrices_"$max_seqs"_seqs_"$max_sites"_sites_"$armstrong_cuto
 
 ##### Data simulation for end-to-end test #####
 
+### Simulation with Q2_uniform ###
+
 # Simulated data parameters
 simulation_pct_interacting_positions=0.66
 # Q1_ground_truth=synthetic_rate_matrices/Q1_ground_truth.txt
@@ -89,9 +91,9 @@ Q2_ground_truth=synthetic_rate_matrices/Q2_uniform.txt
 # tree_gt_for_simulation_dir="$tree_dir"
 a3m_gt_for_simulation_dir=a3m_test
 tree_gt_for_simulation_dir=trees_test
-a3m_simulated_dir=simulated_data/a3m_simulated
-contact_simulated_dir=simulated_data/contacts_simulated
-ancestral_states_simulated_dir=simulated_data/ancestral_states_simulated
+a3m_simulated_dir=simulated_data_Q2_uniform/a3m_simulated
+contact_simulated_dir=simulated_data_Q2_uniform/contacts_simulated
+ancestral_states_simulated_dir=simulated_data_Q2_uniform/ancestral_states_simulated
 
 # Simulate data (MSAs + contact maps + trees with true maximum parsimony states)
 pushd simulation
@@ -99,6 +101,32 @@ echo "Running simulation.sh"
 bash simulation.sh ../"$a3m_gt_for_simulation_dir" ../"$tree_gt_for_simulation_dir" ../"$a3m_simulated_dir" ../"$contact_simulated_dir" ../"$ancestral_states_simulated_dir" "$n_process" "$expected_number_of_MSAs" "$max_families" "$simulation_pct_interacting_positions" ../"$Q1_ground_truth" ../"$Q2_ground_truth"
 popd
 
-# # Run full pipeline on simulated data
-# echo "Running full_pipeline_simulated.sh"
-# bash full_pipeline_simulated.sh
+# Run full pipeline on simulated data
+echo "Running full_pipeline_simulated.sh"
+bash full_pipeline_simulated.sh simulated_data_Q2_uniform synthetic_rate_matrices/Q1_uniform_FastTree.txt
+
+
+### Simulation with Q2_uniform_constrained ###
+
+# Simulated data parameters
+simulation_pct_interacting_positions=0.66
+Q1_ground_truth=synthetic_rate_matrices/Q1_uniform.txt
+Q2_ground_truth=synthetic_rate_matrices/Q2_uniform_constrained.txt
+# Simulated data directories
+# a3m_gt_for_simulation_dir="$a3m_dir"
+# tree_gt_for_simulation_dir="$tree_dir"
+a3m_gt_for_simulation_dir=a3m_test
+tree_gt_for_simulation_dir=trees_test
+a3m_simulated_dir=simulated_data_Q2_uniform_constrained/a3m_simulated
+contact_simulated_dir=simulated_data_Q2_uniform_constrained/contacts_simulated
+ancestral_states_simulated_dir=simulated_data_Q2_uniform_constrained/ancestral_states_simulated
+
+# Simulate data (MSAs + contact maps + trees with true maximum parsimony states)
+pushd simulation
+echo "Running simulation.sh"
+bash simulation.sh ../"$a3m_gt_for_simulation_dir" ../"$tree_gt_for_simulation_dir" ../"$a3m_simulated_dir" ../"$contact_simulated_dir" ../"$ancestral_states_simulated_dir" "$n_process" "$expected_number_of_MSAs" "$max_families" "$simulation_pct_interacting_positions" ../"$Q1_ground_truth" ../"$Q2_ground_truth"
+popd
+
+# Run full pipeline on simulated data
+echo "Running full_pipeline_simulated.sh"
+bash full_pipeline_simulated.sh simulated_data_Q2_uniform_constrained synthetic_rate_matrices/Q1_uniform_FastTree.txt

@@ -6,7 +6,7 @@ max_sites=1024
 armstrong_cutoff=8.0
 
 # Irrelevant hyperparameters
-n_process=32
+n_process=3
 expected_number_of_MSAs=3
 max_families=3
 
@@ -79,8 +79,10 @@ co_matrices_dir=co_matrices_"$max_seqs"_seqs_"$max_sites"_sites_"$armstrong_cuto
 
 # Simulated data parameters
 simulation_pct_interacting_positions=0.66
-Q1_ground_truth=Q1_ground_truth.txt
-Q2_ground_truth=Q2_ground_truth.txt
+# Q1_ground_truth=Q1_ground_truth.txt
+# Q2_ground_truth=Q2_ground_truth.txt
+Q1_ground_truth=Q1_uniform.txt
+Q2_ground_truth=Q2_uniform.txt
 # Simulated data directories
 # a3m_gt_for_simulation_dir="$a3m_dir"
 # tree_gt_for_simulation_dir="$tree_dir"
@@ -96,6 +98,6 @@ echo "Running simulation.sh"
 bash simulation.sh ../"$a3m_gt_for_simulation_dir" ../"$tree_gt_for_simulation_dir" ../"$a3m_simulated_dir" ../"$contact_simulated_dir" ../"$ancestral_states_simulated_dir" "$n_process" "$expected_number_of_MSAs" "$max_families" "$simulation_pct_interacting_positions" ../"$Q1_ground_truth" ../"$Q2_ground_truth"
 popd
 
-# Run full pipeline on simulated data
-echo "Running full_pipeline_simulated.sh"
-bash full_pipeline_simulated.sh
+# # Run full pipeline on simulated data
+# echo "Running full_pipeline_simulated.sh"
+# bash full_pipeline_simulated.sh

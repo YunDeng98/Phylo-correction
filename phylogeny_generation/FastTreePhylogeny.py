@@ -15,12 +15,16 @@ class FastTreePhylogeny:
         outdir: str,
         max_seqs: int = 0,
         max_sites: int = 0,
+        rate_matrix: str = ''
     ) -> None:
         r"""
         Run FastTree on a given MSA.
 
         Runs FastTree on the MSA at a3m_dir/protein_family_name.a3m and writes
         the output (a newick tree) to outdir/protein_family_name.newick.
+
+        Uses the rate matrix at 'rate_matrix'. If 'rate_matrix' ends in 'None',
+        the default FastTree rate matrix is used.
         """
         if not os.path.exists(outdir):
             print(f"Creating outdir {outdir}")
@@ -36,11 +40,19 @@ class FastTreePhylogeny:
             msa.write_to_file(processed_msa_filename)
             # Run FastTree on (standardized) MSA
             outfile = os.path.join(outdir, protein_family_name) + ".newick"
-            logger = logging.getLogger("phylogeny_generation" + __name__)
-            logger.debug(f"Running FastTree on MSA:\n{msa}")
+            logger = logging.getLogger("phylogeny_generation." + __name__)
             time_start = time.time()
             dir_path = os.path.dirname(os.path.realpath(__file__))
-            os.system(f"{dir_path}/FastTree -quiet < {processed_msa_filename} > {outfile}")
+            if rate_matrix[-4:] == 'None':
+                assert(not os.path.exists(rate_matrix))
+                logger.debug(f"Running FastTree with default rate matrix on MSA:\n{msa}")
+                os.system(f"{dir_path}/FastTree -quiet < {processed_msa_filename} > {outfile}")
+            else:
+                if not os.path.exists(rate_matrix):
+                    logger.error(f"Could not find rate matrix {rate_matrix}")
+                    exit(1)
+                logger.debug(f"Running FastTree with rate matrix {rate_matrix} on MSA:\n{msa}")
+                os.system(f"{dir_path}/FastTree -quiet -trans {rate_matrix} < {processed_msa_filename} > {outfile}")
             time_end = time.time()
             self._total_time = time_end - time_start
             logger.debug(f"Time taken: {self.total_time}")

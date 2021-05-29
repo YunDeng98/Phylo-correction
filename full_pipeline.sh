@@ -4,6 +4,7 @@ set -e
 max_seqs=1024
 max_sites=1024
 armstrong_cutoff=8.0
+rate_matrix=None
 
 # Irrelevant hyperparameters
 n_process=3
@@ -35,7 +36,7 @@ co_matrices_dir=co_matrices_"$max_seqs"_seqs_"$max_sites"_sites_"$armstrong_cuto
 # # First we need to generate the phylogenies
 # pushd phylogeny_generation
 # echo "Running phylogeny_generation.sh"
-# bash phylogeny_generation.sh ../"$a3m_dir" "$max_seqs" "$max_sites" "$n_process" ../"$tree_dir" "$expected_number_of_MSAs" "$max_families"
+# bash phylogeny_generation.sh ../"$a3m_dir" "$max_seqs" "$max_sites" "$n_process" ../"$tree_dir" "$expected_number_of_MSAs" "$max_families" ../"$rate_matrix"
 # popd
 
 # # Generate the contacts

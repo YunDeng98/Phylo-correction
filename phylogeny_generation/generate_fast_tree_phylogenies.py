@@ -70,6 +70,12 @@ parser.add_argument(
     required=False,
     default=100000000
 )
+parser.add_argument(
+    "--rate_matrix",
+    type=str,
+    help="Rate matrix to be used in FastTree.",
+    required=True,
+)
 
 
 def map_func(args):
@@ -79,12 +85,14 @@ def map_func(args):
     outdir = args[2]
     max_seqs = args[3]
     max_sites = args[4]
+    rate_matrix = args[5]
     FastTreePhylogeny(
         a3m_dir=a3m_dir,
         protein_family_name=protein_family_name,
         outdir=outdir,
         max_seqs=max_seqs,
         max_sites=max_sites,
+        rate_matrix=rate_matrix,
     )
 
 
@@ -100,6 +108,7 @@ if __name__ == "__main__":
     max_seqs = args.max_seqs
     max_sites = args.max_sites
     max_families = args.max_families
+    rate_matrix = args.rate_matrix
 
     init_logger()
 
@@ -121,7 +130,7 @@ if __name__ == "__main__":
     protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
 
     map_args = [
-        (a3m_dir, protein_family_name, outdir, max_seqs, max_sites)
+        (a3m_dir, protein_family_name, outdir, max_seqs, max_sites, rate_matrix)
         for protein_family_name in protein_family_names
     ]
     with multiprocessing.Pool(n_process) as pool:

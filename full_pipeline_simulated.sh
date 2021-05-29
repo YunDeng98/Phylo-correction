@@ -4,9 +4,10 @@ set -e
 max_seqs=1024
 max_sites=1024
 # armstrong_cutoff=8.0  # Not needed because contact matrices are already simulated
+rate_matrix=Q1_uniform_FastTree.txt
 
 # Irrelevant hyperparameters
-n_process=32
+n_process=3
 expected_number_of_MSAs=3
 max_families=100000000
 
@@ -35,7 +36,7 @@ co_matrices_dir=simulated_data_results/co_matrices_"$max_seqs"_seqs_"$max_sites"
 # First we need to generate the phylogenies
 pushd phylogeny_generation
 echo "Running phylogeny_generation.sh"
-bash phylogeny_generation.sh ../"$a3m_dir" "$max_seqs" "$max_sites" "$n_process" ../"$tree_dir" "$expected_number_of_MSAs" "$max_families"
+bash phylogeny_generation.sh ../"$a3m_dir" "$max_seqs" "$max_sites" "$n_process" ../"$tree_dir" "$expected_number_of_MSAs" "$max_families"  ../"$rate_matrix"
 popd
 
 # # Generate the contacts  # Not needed because contact matrices are already simulated

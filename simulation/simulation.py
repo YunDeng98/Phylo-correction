@@ -225,9 +225,9 @@ def map_func(args):
     tree.write(format=3, outfile=os.path.join(parsimony_tree_path))
 
     # Read single-site transition rate matrix
-    Q1 = pd.read_csv(Q1_ground_truth, sep="\t", index_col=0)
+    Q1 = pd.read_csv(Q1_ground_truth, sep="\t", index_col=0, keep_default_na=False, na_values=[''])
     # Read co-evolution rate matrix
-    Q2 = pd.read_csv(Q2_ground_truth, sep="\t", index_col=0)
+    Q2 = pd.read_csv(Q2_ground_truth, sep="\t", index_col=0, keep_default_na=False, na_values=[''])
     states = list(Q1.index)
     # logger.info(f"Q1 states = {list(Q1.index)}")
     # logger.info(f"Q2 states = {list(Q2.index)}")
@@ -238,7 +238,7 @@ def map_func(args):
     for s1 in states:
         for s2 in states:
             if not (s1 + s2 in Q2.index):
-                logger.error("Q1 and Q2 indices not compatible")
+                logger.error(f"Q1 and Q2 indices not compatible: {s1 + s2} not in Q2 index")
                 return
 
     # Determine contacting pairs

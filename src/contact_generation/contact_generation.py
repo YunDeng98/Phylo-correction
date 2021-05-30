@@ -8,7 +8,7 @@ import random
 
 from typing import List
 
-from .ContactMatrix import ContactMatrix
+from src.contact_generation.ContactMatrix import ContactMatrix
 
 
 def map_func(args: List) -> None:

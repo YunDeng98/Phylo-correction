@@ -26,8 +26,23 @@ class FastTreePhylogeny:
         Uses the rate matrix at 'rate_matrix'. If 'rate_matrix' ends in 'None',
         the default FastTree rate matrix is used.
         """
+        logger = logging.getLogger("phylogeny_generation." + __name__)
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        fast_tree_bin_path = os.path.join(dir_path, 'FastTree')
+        fast_tree_path = os.path.join(dir_path, 'FastTree.c')
+        if not os.path.exists(fast_tree_bin_path):
+            logger.info("Getting FastTree.c file ...")
+            os.system(
+                f"wget http://www.microbesonline.org/fasttree/FastTree.c -P {dir_path}"
+            )
+            logger.info("Compiling FastTree ...")
+            # See http://www.microbesonline.org/fasttree/#Install
+            os.system(
+                f"gcc -DNO_SSE -O3 -finline-functions -funroll-loops -Wall -o {fast_tree_bin_path} {fast_tree_path} -lm"
+            )
+
         if not os.path.exists(outdir):
-            print(f"Creating outdir {outdir}")
+            logger.info(f"Creating outdir {outdir}")
             os.makedirs(outdir)
 
         # Read MSA into standardized format (lowercase amino acids are removed.)
@@ -40,7 +55,6 @@ class FastTreePhylogeny:
             msa.write_to_file(processed_msa_filename)
             # Run FastTree on (standardized) MSA
             outfile = os.path.join(outdir, protein_family_name) + ".newick"
-            logger = logging.getLogger("phylogeny_generation." + __name__)
             time_start = time.time()
             dir_path = os.path.dirname(os.path.realpath(__file__))
             if rate_matrix[-4:] == 'None':

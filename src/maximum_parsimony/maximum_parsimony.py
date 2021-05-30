@@ -204,12 +204,25 @@ class MaximumParsimonyReconstructor():
         outdir,
         max_families,
     ):
+        logger = logging.getLogger("maximum_parsimony")
         self.a3m_dir = a3m_dir
         self.tree_dir = tree_dir
         self.n_process = n_process
         self.expected_number_of_MSAs = expected_number_of_MSAs
         self.outdir = outdir
         self.max_families = max_families
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        maximum_parsimony_bin_path = os.path.join(dir_path, 'maximum_parsimony')
+        maximum_parsimony_path = os.path.join(dir_path, 'maximum_parsimony.cpp')
+        if not os.path.exists(maximum_parsimony_bin_path):
+            logger.info("Compiling maximum_parsimony.cpp")
+            os.system(
+                'g++ -std=c++17 -O3 -Wshadow -Wall  -Wextra -D_GLIBCXX_DEBUG'
+                f' -o {maximum_parsimony_bin_path} {maximum_parsimony_path}'
+            )
+            # Test maximum_parsimony.cpp with:
+            # $ ./maximum_parsimony test_data/tree.txt test_data/sequences.txt
+            #   test_data/solution.txt
 
     def run(self):
         a3m_dir = self.a3m_dir

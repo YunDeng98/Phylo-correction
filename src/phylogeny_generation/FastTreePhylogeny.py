@@ -26,7 +26,7 @@ class FastTreePhylogeny:
         Uses the rate matrix at 'rate_matrix'. If 'rate_matrix' ends in 'None',
         the default FastTree rate matrix is used.
         """
-        logger = logging.getLogger("phylogeny_generation." + __name__)
+        logger = logging.getLogger("FastTreePhylogeny")
         dir_path = os.path.dirname(os.path.realpath(__file__))
         fast_tree_bin_path = os.path.join(dir_path, 'FastTree')
         fast_tree_path = os.path.join(dir_path, 'FastTree.c')

@@ -22,22 +22,6 @@ import hashlib
 sys.path.append('../')
 
 
-def init_logger():
-    logger = logging.getLogger("matrix_generation")
-    logger.setLevel(logging.DEBUG)
-    # fmt_str = "[%(asctime)s] %(levelname)s @ line %(lineno)d: %(message)s"
-    fmt_str = "[%(asctime)s] - %(name)s - %(levelname)s - %(message)s"
-    formatter = logging.Formatter(fmt_str)
-
-    consoleHandler = logging.StreamHandler(sys.stdout)
-    consoleHandler.setFormatter(formatter)
-    logger.addHandler(consoleHandler)
-
-    fileHandler = logging.FileHandler("matrix_generation.log")
-    fileHandler.setFormatter(formatter)
-    logger.addHandler(fileHandler)
-
-
 def map_func(args):
     a3m_dir = args[0]
     transitions_dir = args[1]
@@ -135,7 +119,6 @@ class MatrixGenerator:
             assert(num_sites == 1)
             alphabet = amino_acids[:]
 
-        init_logger()
         logger = logging.getLogger("matrix_generation")
         logger.info("Starting ... ")
 

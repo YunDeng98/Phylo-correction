@@ -21,22 +21,6 @@ sys.path.append('../')
 from src.phylogeny_generation import MSA
 
 
-def init_logger():
-    logger = logging.getLogger("maximum_parsimony")
-    logger.setLevel(logging.DEBUG)
-    # fmt_str = "[%(asctime)s] %(levelname)s @ line %(lineno)d: %(message)s"
-    fmt_str = "[%(asctime)s] - %(name)s - %(levelname)s - %(message)s"
-    formatter = logging.Formatter(fmt_str)
-
-    consoleHandler = logging.StreamHandler(sys.stdout)
-    consoleHandler.setFormatter(formatter)
-    logger.addHandler(consoleHandler)
-
-    fileHandler = logging.FileHandler("maximum_parsimony.log")
-    fileHandler.setFormatter(formatter)
-    logger.addHandler(fileHandler)
-
-
 def name_internal_nodes(t: Tree):
     r"""
     Assigns names to the internal nodes of tree t if they don't already have a name.
@@ -235,7 +219,6 @@ class MaximumParsimonyReconstructor():
         max_seqs = 0
         max_sites = 0
 
-        init_logger()
         logger = logging.getLogger("maximum_parsimony")
         logger.info("Starting ... ")
 

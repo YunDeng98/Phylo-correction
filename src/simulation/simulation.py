@@ -22,22 +22,6 @@ from src.maximum_parsimony import name_internal_nodes
 import Phylo_util
 
 
-def init_logger():
-    logger = logging.getLogger("simulation")
-    logger.setLevel(logging.DEBUG)
-    # fmt_str = "[%(asctime)s] %(levelname)s @ line %(lineno)d: %(message)s"
-    fmt_str = "[%(asctime)s] - %(name)s - %(levelname)s - %(message)s"
-    formatter = logging.Formatter(fmt_str)
-
-    consoleHandler = logging.StreamHandler(sys.stdout)
-    consoleHandler.setFormatter(formatter)
-    logger.addHandler(consoleHandler)
-
-    fileHandler = logging.FileHandler("simulation.log")
-    fileHandler.setFormatter(formatter)
-    logger.addHandler(fileHandler)
-
-
 def get_L(msa_path: str) -> int:
     with open(msa_path) as file:
         for i, line in enumerate(file):
@@ -256,7 +240,6 @@ class Simulator:
         Q1_ground_truth = self.Q1_ground_truth
         Q2_ground_truth = self.Q2_ground_truth
 
-        init_logger()
         logger = logging.getLogger("simulation")
         logger.info("Starting ... ")
 

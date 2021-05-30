@@ -19,22 +19,6 @@ from ete3 import Tree
 sys.path.append('../')
 
 
-def init_logger():
-    logger = logging.getLogger("transition_extraction")
-    logger.setLevel(logging.DEBUG)
-    # fmt_str = "[%(asctime)s] %(levelname)s @ line %(lineno)d: %(message)s"
-    fmt_str = "[%(asctime)s] - %(name)s - %(levelname)s - %(message)s"
-    formatter = logging.Formatter(fmt_str)
-
-    consoleHandler = logging.StreamHandler(sys.stdout)
-    consoleHandler.setFormatter(formatter)
-    logger.addHandler(consoleHandler)
-
-    fileHandler = logging.FileHandler("transition_extraction.log")
-    fileHandler.setFormatter(formatter)
-    logger.addHandler(fileHandler)
-
-
 def get_transitions(tree, sequences):
     # The root's name was not written out by ete3 in the maximum_parsimony script,
     # so we name it ourselves.
@@ -134,7 +118,6 @@ class TransitionExtractor:
         outdir = self.outdir
         max_families = self.max_families
 
-        init_logger()
         logger = logging.getLogger("transition_extraction")
         logger.info("Starting ... ")
 

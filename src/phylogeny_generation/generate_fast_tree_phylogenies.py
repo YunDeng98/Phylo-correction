@@ -11,22 +11,6 @@ import tqdm
 from .FastTreePhylogeny import FastTreePhylogeny
 
 
-def init_logger():
-    logger = logging.getLogger("phylogeny_generation")
-    logger.setLevel(logging.DEBUG)
-    # fmt_str = "[%(asctime)s] %(levelname)s @ line %(lineno)d: %(message)s"
-    fmt_str = "[%(asctime)s] - %(name)s - %(levelname)s - %(message)s"
-    formatter = logging.Formatter(fmt_str)
-
-    consoleHandler = logging.StreamHandler(sys.stdout)
-    consoleHandler.setFormatter(formatter)
-    logger.addHandler(consoleHandler)
-
-    fileHandler = logging.FileHandler("generate_fast_tree_phylogenies.log")
-    fileHandler.setFormatter(formatter)
-    logger.addHandler(fileHandler)
-
-
 def _map_func(args):
     a3m_dir = args[0]
     protein_family_name = args[1]
@@ -84,8 +68,6 @@ class PhylogenyGenerator():
         max_sites = self.max_sites
         max_families = self.max_families
         rate_matrix = self.rate_matrix
-
-        init_logger()
 
         if os.path.exists(outdir):
             raise ValueError(

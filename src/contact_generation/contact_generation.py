@@ -10,22 +10,6 @@ import random
 from .ContactMatrix import ContactMatrix
 
 
-def init_logger():
-    logger = logging.getLogger("contact_generation")
-    logger.setLevel(logging.DEBUG)
-    # fmt_str = "[%(asctime)s] %(levelname)s @ line %(lineno)d: %(message)s"
-    fmt_str = "[%(asctime)s] - %(name)s - %(levelname)s - %(message)s"
-    formatter = logging.Formatter(fmt_str)
-
-    consoleHandler = logging.StreamHandler(sys.stdout)
-    consoleHandler.setFormatter(formatter)
-    logger.addHandler(consoleHandler)
-
-    fileHandler = logging.FileHandler("contact_generation.log")
-    fileHandler.setFormatter(formatter)
-    logger.addHandler(fileHandler)
-
-
 def map_func(args):
     pdb_dir = args[0]
     protein_family_name = args[1]
@@ -74,8 +58,6 @@ class ContactGenerator:
         expected_number_of_families = self.expected_number_of_families
         outdir = self.outdir
         max_families = self.max_families
-
-        init_logger()
 
         if os.path.exists(outdir):
             raise ValueError(

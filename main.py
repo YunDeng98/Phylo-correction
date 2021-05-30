@@ -17,7 +17,7 @@ def init_logger():
     consoleHandler.setFormatter(formatter)
     logger.addHandler(consoleHandler)
 
-    fileHandler = logging.FileHandler("full_pipeline.log")
+    fileHandler = logging.FileHandler("Phylo-correction.log")
     fileHandler.setFormatter(formatter)
     logger.addHandler(fileHandler)
 

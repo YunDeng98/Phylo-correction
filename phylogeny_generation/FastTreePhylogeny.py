@@ -2,7 +2,7 @@ import os
 import time
 import tempfile
 
-from MSA import MSA
+from .MSA import MSA
 
 import logging
 

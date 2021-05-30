@@ -12,12 +12,14 @@ import numpy as np
 import tempfile
 import tqdm
 from typing import Dict, Tuple
+import hashlib
+import random
 
 from ete3 import Tree
 
 sys.path.append('../')
 
-from phylogeny_generation.MSA import MSA
+from phylogeny_generation import MSA
 
 
 def init_logger():
@@ -183,13 +185,19 @@ def map_parsimony_indexing_back_to_str(int_to_node_name, cpp_parsimony_filepath,
 
 
 def map_func(args):
-    logger = logging.getLogger("maximum_parsimony")
     a3m_dir = args[0]
     tree_dir = args[1]
     protein_family_name = args[2]
     outdir = args[3]
     max_seqs = args[4]
     max_sites = args[5]
+
+    logger = logging.getLogger("maximum_parsimony")
+    seed = int(hashlib.md5((protein_family_name + 'maximum_parsimony').encode()).hexdigest()[:8], 16)
+    logger.info(f"Setting random seed to: {seed}")
+    np.random.seed(seed)
+    random.seed(seed)
+
     msa = MSA(
         a3m_dir=a3m_dir,
         protein_family_name=protein_family_name,
@@ -239,44 +247,78 @@ def map_func(args):
                     logger.info(f"Failed to process C++ output for {protein_family_name}")
 
 
-if __name__ == "__main__":
-    np.random.seed(1)
+class MaximumParsimonyReconstructor():
+    def __init__(
+        self,
+        a3m_dir,
+        tree_dir,
+        n_process,
+        expected_number_of_MSAs,
+        outdir,
+        max_families,
+    ):
+        self.a3m_dir = a3m_dir
+        self.tree_dir = tree_dir
+        self.n_process = n_process
+        self.expected_number_of_MSAs = expected_number_of_MSAs
+        self.outdir = outdir
+        self.max_families = max_families
 
+    def run(self):
+        a3m_dir = self.a3m_dir
+        tree_dir = self.tree_dir
+        n_process = self.n_process
+        expected_number_of_MSAs = self.expected_number_of_MSAs
+        outdir = self.outdir
+        max_families = self.max_families
+
+        max_seqs = 0
+        max_sites = 0
+
+        init_logger()
+        logger = logging.getLogger("maximum_parsimony")
+        logger.info("Starting ... ")
+
+        if os.path.exists(outdir):
+            raise ValueError(
+                f"outdir {outdir} already exists. Aborting not to " f"overwrite!"
+            )
+        os.makedirs(outdir)
+
+        if not os.path.exists(a3m_dir):
+            raise ValueError(f"Could not find a3m_dir {a3m_dir}")
+
+        filenames = list(os.listdir(a3m_dir))
+        if not len(filenames) == expected_number_of_MSAs:
+            raise ValueError(
+                f"Number of MSAs is {len(filenames)}, does not match "
+                f"expected {expected_number_of_MSAs}"
+            )
+        protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
+
+        map_args = [
+            (a3m_dir, tree_dir, protein_family_name, outdir, max_seqs, max_sites)
+            for protein_family_name in protein_family_names
+        ]
+        with multiprocessing.Pool(n_process) as pool:
+            list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
+
+
+def _main():
     # Pull out arguments
     args = parser.parse_args()
-    a3m_dir = args.a3m_dir
-    tree_dir = args.tree_dir
-    n_process = args.n_process
-    expected_number_of_MSAs = args.expected_number_of_MSAs
-    outdir = args.outdir
-    max_seqs = 0
-    max_sites = 0
-    max_families = args.max_families
 
-    init_logger()
-    logger = logging.getLogger("maximum_parsimony")
-    logger.info("Starting ... ")
-
-    if os.path.exists(outdir):
-        raise ValueError(
-            f"outdir {outdir} already exists. Aborting not to " f"overwrite!"
+    maximum_parsimony_reconstructor =\
+        MaximumParsimonyReconstructor(
+            a3m_dir=args.a3m_dir,
+            tree_dir=args.tree_dir,
+            n_process=args.n_process,
+            expected_number_of_MSAs=args.expected_number_of_MSAs,
+            outdir=args.outdir,
+            max_families=args.max_families,
         )
-    os.makedirs(outdir)
+    maximum_parsimony_reconstructor.run()
 
-    if not os.path.exists(a3m_dir):
-        raise ValueError(f"Could not find a3m_dir {a3m_dir}")
 
-    filenames = list(os.listdir(a3m_dir))
-    if not len(filenames) == expected_number_of_MSAs:
-        raise ValueError(
-            f"Number of MSAs is {len(filenames)}, does not match "
-            f"expected {expected_number_of_MSAs}"
-        )
-    protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
-
-    map_args = [
-        (a3m_dir, tree_dir, protein_family_name, outdir, max_seqs, max_sites)
-        for protein_family_name in protein_family_names
-    ]
-    with multiprocessing.Pool(n_process) as pool:
-        list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
+if __name__ == "__main__":
+    _main()

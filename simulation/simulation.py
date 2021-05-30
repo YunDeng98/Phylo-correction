@@ -19,7 +19,7 @@ from typing import Dict, List, Tuple
 from ete3 import Tree
 
 sys.path.append('../')
-from maximum_parsimony.maximum_parsimony import name_internal_nodes
+from maximum_parsimony import name_internal_nodes
 import Phylo_util
 
 
@@ -287,64 +287,106 @@ def map_func(args):
         file.write(f"{num_nodes}\n" + maximum_parsimony)
 
 
-def doit():
-    np.random.seed(1)
+class Simulator:
+    def __init__(
+        self,
+        a3m_dir,
+        tree_dir,
+        a3m_simulated_dir,
+        contact_simulated_dir,
+        ancestral_states_simulated_dir,
+        n_process,
+        expected_number_of_MSAs,
+        max_families,
+        simulation_pct_interacting_positions,
+        Q1_ground_truth,
+        Q2_ground_truth,
+    ):
+        self.a3m_dir = a3m_dir
+        self.tree_dir = tree_dir
+        self.a3m_simulated_dir = a3m_simulated_dir
+        self.contact_simulated_dir = contact_simulated_dir
+        self.ancestral_states_simulated_dir = ancestral_states_simulated_dir
+        self.n_process = n_process
+        self.expected_number_of_MSAs = expected_number_of_MSAs
+        self.max_families = max_families
+        self.simulation_pct_interacting_positions = simulation_pct_interacting_positions
+        self.Q1_ground_truth = Q1_ground_truth
+        self.Q2_ground_truth = Q2_ground_truth
 
+    def run(self):
+        a3m_dir = self.a3m_dir
+        tree_dir = self.tree_dir
+        a3m_simulated_dir = self.a3m_simulated_dir
+        contact_simulated_dir = self.contact_simulated_dir
+        ancestral_states_simulated_dir = self.ancestral_states_simulated_dir
+        n_process = self.n_process
+        expected_number_of_MSAs = self.expected_number_of_MSAs
+        max_families = self.max_families
+        simulation_pct_interacting_positions = self.simulation_pct_interacting_positions
+        Q1_ground_truth = self.Q1_ground_truth
+        Q2_ground_truth = self.Q2_ground_truth
+
+        init_logger()
+        logger = logging.getLogger("simulation")
+        logger.info("Starting ... ")
+
+        for dire in [a3m_dir, tree_dir]:
+            if not os.path.exists(dire):
+                raise ValueError(f"Could not find directory {dire}")
+
+        for dire in [a3m_simulated_dir, contact_simulated_dir, ancestral_states_simulated_dir]:
+            if os.path.exists(dire):
+                raise ValueError(
+                    f"outdir {dire} already exists. Aborting not to " f"overwrite!"
+                )
+            os.makedirs(dire)
+
+        filenames = list(os.listdir(a3m_dir))
+        if not len(filenames) == expected_number_of_MSAs:
+            raise ValueError(
+                f"Number of MSAs is {len(filenames)}, does not match "
+                f"expected {expected_number_of_MSAs}"
+            )
+        protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
+
+        map_args = [
+            (protein_family_name,
+             a3m_dir,
+             tree_dir,
+             simulation_pct_interacting_positions,
+             Q1_ground_truth,
+             Q2_ground_truth,
+             contact_simulated_dir,
+             a3m_simulated_dir,
+             ancestral_states_simulated_dir)
+            for protein_family_name in protein_family_names
+        ]
+        if n_process > 1:
+            with multiprocessing.Pool(n_process) as pool:
+                list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
+        else:
+            list(tqdm.tqdm(map(map_func, map_args), total=len(map_args)))
+
+
+def _main():
     # Pull out arguments
     args = parser.parse_args()
-    a3m_dir = args.a3m_dir
-    tree_dir = args.tree_dir
-    a3m_simulated_dir = args.a3m_simulated_dir
-    contact_simulated_dir = args.contact_simulated_dir
-    ancestral_states_simulated_dir = args.ancestral_states_simulated_dir
-    n_process = args.n_process
-    expected_number_of_MSAs = args.expected_number_of_MSAs
-    max_families = args.max_families
-    simulation_pct_interacting_positions = args.simulation_pct_interacting_positions
-    Q1_ground_truth = args.Q1_ground_truth
-    Q2_ground_truth = args.Q2_ground_truth
-
-    init_logger()
-    logger = logging.getLogger("simulation")
-    logger.info("Starting ... ")
-
-    for dire in [a3m_dir, tree_dir]:
-        if not os.path.exists(dire):
-            raise ValueError(f"Could not find directory {dire}")
-
-    for dire in [a3m_simulated_dir, contact_simulated_dir, ancestral_states_simulated_dir]:
-        if os.path.exists(dire):
-            raise ValueError(
-                f"outdir {dire} already exists. Aborting not to " f"overwrite!"
-            )
-        os.makedirs(dire)
-
-    filenames = list(os.listdir(a3m_dir))
-    if not len(filenames) == expected_number_of_MSAs:
-        raise ValueError(
-            f"Number of MSAs is {len(filenames)}, does not match "
-            f"expected {expected_number_of_MSAs}"
-        )
-    protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
-
-    map_args = [
-        (protein_family_name,
-         a3m_dir,
-         tree_dir,
-         simulation_pct_interacting_positions,
-         Q1_ground_truth,
-         Q2_ground_truth,
-         contact_simulated_dir,
-         a3m_simulated_dir,
-         ancestral_states_simulated_dir)
-        for protein_family_name in protein_family_names
-    ]
-    if n_process > 1:
-        with multiprocessing.Pool(n_process) as pool:
-            list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
-    else:
-        list(tqdm.tqdm(map(map_func, map_args), total=len(map_args)))
+    simulator = Simulator(
+        a3m_dir=args.a3m_dir,
+        tree_dir=args.tree_dir,
+        a3m_simulated_dir=args.a3m_simulated_dir,
+        contact_simulated_dir=args.contact_simulated_dir,
+        ancestral_states_simulated_dir=args.ancestral_states_simulated_dir,
+        n_process=args.n_process,
+        expected_number_of_MSAs=args.expected_number_of_MSAs,
+        max_families=args.max_families,
+        simulation_pct_interacting_positions=args.simulation_pct_interacting_positions,
+        Q1_ground_truth=args.Q1_ground_truth,
+        Q2_ground_truth=args.Q2_ground_truth,
+    )
+    simulator.run()
 
 
 if __name__ == "__main__":
-    doit()
+    _main()

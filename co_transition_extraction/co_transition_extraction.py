@@ -12,6 +12,8 @@ import numpy as np
 import tempfile
 import tqdm
 from typing import Dict, Tuple
+import random
+import hashlib
 
 from ete3 import Tree
 
@@ -19,7 +21,7 @@ sys.path.append('../')
 
 
 def init_logger():
-    logger = logging.getLogger("transition_extraction")
+    logger = logging.getLogger("co_transition_extraction")
     logger.setLevel(logging.DEBUG)
     # fmt_str = "[%(asctime)s] %(levelname)s @ line %(lineno)d: %(message)s"
     fmt_str = "[%(asctime)s] - %(name)s - %(levelname)s - %(message)s"
@@ -29,7 +31,7 @@ def init_logger():
     consoleHandler.setFormatter(formatter)
     logger.addHandler(consoleHandler)
 
-    fileHandler = logging.FileHandler("transition_extraction.log")
+    fileHandler = logging.FileHandler("co_transition_extraction.log")
     fileHandler.setFormatter(formatter)
     logger.addHandler(fileHandler)
 
@@ -138,12 +140,17 @@ def get_transitions(tree, sequences, contact_matrix):
 
 
 def map_func(args):
-    logger = logging.getLogger("transition_extraction")
     a3m_dir = args[0]
     parsimony_dir = args[1]
     protein_family_name = args[2]
     outdir = args[3]
     contact_dir = args[4]
+
+    logger = logging.getLogger("co_transition_extraction")
+    seed = int(hashlib.md5((protein_family_name + 'co_transition_extraction').encode()).hexdigest()[:8], 16)
+    logger.info(f"Setting random seed to: {seed}")
+    np.random.seed(seed)
+    random.seed(seed)
     logger.info(f"Starting on family {protein_family_name}")
 
     # Read tree. Careful: Some trees might be corrupted / not exist due to MSA issues.
@@ -176,46 +183,79 @@ def map_func(args):
         transition_file.write(res)
 
 
+class CoTransitionExtractor:
+    def __init__(
+        self,
+        a3m_dir,
+        parsimony_dir,
+        n_process,
+        expected_number_of_MSAs,
+        outdir,
+        max_families,
+        contact_dir,
+    ):
+        self.a3m_dir = a3m_dir
+        self.parsimony_dir = parsimony_dir
+        self.n_process = n_process
+        self.expected_number_of_MSAs = expected_number_of_MSAs
+        self.outdir = outdir
+        self.max_families = max_families
+        self.contact_dir = contact_dir
 
-if __name__ == "__main__":
-    np.random.seed(1)
+    def run(self):
+        a3m_dir = self.a3m_dir
+        parsimony_dir = self.parsimony_dir
+        n_process = self.n_process
+        expected_number_of_MSAs = self.expected_number_of_MSAs
+        outdir = self.outdir
+        max_families = self.max_families
+        contact_dir = self.contact_dir
 
+        init_logger()
+        logger = logging.getLogger("co_transition_extraction")
+        logger.info("Starting ... ")
+
+        if os.path.exists(outdir):
+            raise ValueError(
+                f"outdir {outdir} already exists. Aborting not to " f"overwrite!"
+            )
+        os.makedirs(outdir)
+
+        if not os.path.exists(a3m_dir):
+            raise ValueError(f"Could not find a3m_dir {a3m_dir}")
+
+        filenames = list(os.listdir(a3m_dir))
+        if not len(filenames) == expected_number_of_MSAs:
+            raise ValueError(
+                f"Number of MSAs is {len(filenames)}, does not match "
+                f"expected {expected_number_of_MSAs}"
+            )
+        protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
+
+        # print(f"protein_family_names = {protein_family_names}")
+
+        map_args = [
+            (a3m_dir, parsimony_dir, protein_family_name, outdir, contact_dir)
+            for protein_family_name in protein_family_names
+        ]
+        with multiprocessing.Pool(n_process) as pool:
+            list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
+
+
+def _main():
     # Pull out arguments
     args = parser.parse_args()
-    a3m_dir = args.a3m_dir
-    parsimony_dir = args.parsimony_dir
-    n_process = args.n_process
-    expected_number_of_MSAs = args.expected_number_of_MSAs
-    outdir = args.outdir
-    max_families = args.max_families
-    contact_dir = args.contact_dir
+    cotransition_extractor = CoTransitionExtractor(
+        a3m_dir=args.a3m_dir,
+        parsimony_dir=args.parsimony_dir,
+        n_process=args.n_process,
+        expected_number_of_MSAs=args.expected_number_of_MSAs,
+        outdir=args.outdir,
+        max_families=args.max_families,
+        contact_dir=args.contact_dir,
+    )
+    cotransition_extractor.run()
 
-    init_logger()
-    logger = logging.getLogger("transition_extraction")
-    logger.info("Starting ... ")
 
-    if os.path.exists(outdir):
-        raise ValueError(
-            f"outdir {outdir} already exists. Aborting not to " f"overwrite!"
-        )
-    os.makedirs(outdir)
-
-    if not os.path.exists(a3m_dir):
-        raise ValueError(f"Could not find a3m_dir {a3m_dir}")
-
-    filenames = list(os.listdir(a3m_dir))
-    if not len(filenames) == expected_number_of_MSAs:
-        raise ValueError(
-            f"Number of MSAs is {len(filenames)}, does not match "
-            f"expected {expected_number_of_MSAs}"
-        )
-    protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
-
-    # print(f"protein_family_names = {protein_family_names}")
-
-    map_args = [
-        (a3m_dir, parsimony_dir, protein_family_name, outdir, contact_dir)
-        for protein_family_name in protein_family_names
-    ]
-    with multiprocessing.Pool(n_process) as pool:
-        list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
+if __name__ == "__main__":
+    _main()

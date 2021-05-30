@@ -2,13 +2,13 @@ import os
 import sys
 from typing import Optional
 
-from phylogeny_generation import PhylogenyGenerator
-from contact_generation import ContactGenerator
-from maximum_parsimony import MaximumParsimonyReconstructor
-from transition_extraction import TransitionExtractor
-from co_transition_extraction import CoTransitionExtractor
-from matrix_generation import MatrixGenerator
-from simulation import Simulator
+from src.phylogeny_generation import PhylogenyGenerator
+from src.contact_generation import ContactGenerator
+from src.maximum_parsimony import MaximumParsimonyReconstructor
+from src.transition_extraction import TransitionExtractor
+from src.co_transition_extraction import CoTransitionExtractor
+from src.matrix_generation import MatrixGenerator
+from src.simulation import Simulator
 
 import logging
 
@@ -30,6 +30,54 @@ def init_logger():
 
 
 class Pipeline():
+    r"""
+    A Pipeline estimates rate matrices from MSAs and structures.
+
+    Given MSAs (.a3m files) and PDB structure files (.pdb), the Pipeline
+    consumes all this data and estimates rate matrices. The Pipeline consists
+    of several steps:
+    - Contact calling.
+    - Phylogeny generation.
+    - Maximum parsimony reconstruction.
+    - Transition extraction.
+    - Filtering and counting of transitions.
+    - Rate matrix estimation.
+    As such, the Pipeline takes as argument hyperparameters concerning all
+    these steps too, for example, the armstrong_cutoff used to call contacts.
+    The Pipeline is initialized with __init__() and only run when called with
+    the run() method.
+
+    Args:
+        outdir: Directory where the estimated matrices will be found.
+            All the intermediate data will also be written here.
+        max_seqs: MSAs will be subsampled down to this number of sequences.
+        max_sites: MSAs will be subsampled down to this number of sites.
+        armstrong_cutoff: Contact threshold
+        rate_matrix: What rate matrix to use in FastTree for the phylogeny
+            reconstruction step.
+        n_process: How many processes to use.
+        expected_number_of_MSAs: This is just used to check that the
+            directory with the MSAs has the expected number of files.
+            I.e. just used to perform a pedantic check.
+        max_families: One can choose to run the pipeline on ONLY the
+            first 'max_families'. This is super useful for testing the pipeline
+            before running it on all data.
+        a3m_dir: Directory where the MSAs (.a3m files) are found.
+        pdb_dir: Directory where the PDB (.pdb) structure files are found.
+        precomputed_contact_dir: If this is supplied, the contact estimation
+            step will be skipped and 'precomputed_contact_dir' will be used as
+            the contact matrices.
+
+    Attributes:
+        tree_dir: Where the estimated phylogenies lie
+        contact_dir: Where the contact matrices lie
+        maximum_parsimony_dir: Where the estimated phylogenies with maximum
+            parsimony reconstructions lie.
+        transitions_dir: Where the single-site transitions lie
+        matrices_dir: Where the single-site transition frequency matrices lie.
+        co_transitions_dir: Where the pair-of-site transitions lie
+        co_matrices_dir: Where the pair-of-site frequency matrices lie.
+    """
     def __init__(
         self,
         outdir: str,
@@ -183,6 +231,30 @@ class Pipeline():
 
 
 class EndToEndSimulator:
+    r"""
+    Given a Pipeline, the EndToEndSimulator uses ground-truth rate matrices to
+    simulate contact maps and MSAs using the trees of that pipeline, then
+    re-runs the pipeline on the simulated data. This allows one to test the
+    quality of the Pipeline as the estimator, and evaluate design decisions
+    such as bias of maximum parsimony. The pipeline is specified in __init__()
+    and only run when the run() method is called.
+
+    Args:
+        outdir: Directory where the simulated data, as well as the output of
+            running the pipeline on the simulated data, will be found.
+        pipeline: Pipeline to perform end-to-end simulation on.
+        simulation_pct_interacting_positions: What percent of sites will be
+            considered contacting.
+        Q1_ground_truth: Ground-truth single-site rate matrix.
+        Q2_ground_truth: Ground-truth co-evolution rate matrix.
+        fast_tree_rate_matrix: When the pipeline is run on the simulated data,
+            this rate matrix will be used in FastTree instead. This is helpful
+            because one might want to test the pipeline on data that was
+            generated with a single-site model (Q1_ground_truth) that is
+            different from standard amino-acid matrices. In that case,
+            the phylogeny reconstruction step should use a matrix that
+            aligns with Q1_ground_truth instead.
+    """
     def __init__(
         self,
         outdir: str,

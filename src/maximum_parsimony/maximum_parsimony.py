@@ -19,7 +19,7 @@ from ete3 import Tree
 
 sys.path.append('../')
 
-from phylogeny_generation import MSA
+from src.phylogeny_generation import MSA
 
 
 def init_logger():

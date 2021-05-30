@@ -8,7 +8,7 @@ import hashlib
 import numpy as np
 import random
 
-from contact_generation.ContactMatrix import ContactMatrix
+from .ContactMatrix import ContactMatrix
 
 
 parser = argparse.ArgumentParser(

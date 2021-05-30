@@ -9,7 +9,7 @@ import numpy as np
 import random
 import tqdm
 
-from phylogeny_generation.FastTreePhylogeny import FastTreePhylogeny
+from .FastTreePhylogeny import FastTreePhylogeny
 
 
 def init_logger():

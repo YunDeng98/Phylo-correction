@@ -19,7 +19,7 @@ from typing import Dict, List, Tuple
 from ete3 import Tree
 
 sys.path.append('../')
-from maximum_parsimony import name_internal_nodes
+from src.maximum_parsimony import name_internal_nodes
 import Phylo_util
 
 

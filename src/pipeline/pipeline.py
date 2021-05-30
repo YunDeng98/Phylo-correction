@@ -36,8 +36,10 @@ class Pipeline:
     Args:
         outdir: Directory where the estimated matrices will be found.
             All the intermediate data will also be written here.
-        max_seqs: MSAs will be subsampled down to this number of sequences.
-        max_sites: MSAs will be subsampled down to this number of sites.
+        max_seqs: MSAs will be subsampled down to this number of sequences
+            for the purpose of phylogeny generation with FastTree.
+        max_sites: MSAs will be subsampled down to this number of sites
+            for the purpose of phylogeny generation with FastTree.
         armstrong_cutoff: Contact threshold
         rate_matrix: What rate matrix to use in FastTree for the phylogeny
             reconstruction step.
@@ -48,11 +50,21 @@ class Pipeline:
         max_families: One can choose to run the pipeline on ONLY the
             first 'max_families'. This is super useful for testing the pipeline
             before running it on all data.
-        a3m_dir: Directory where the MSAs (.a3m files) are found.
-        pdb_dir: Directory where the PDB (.pdb) structure files are found.
+        a3m_dir: Directory where the MSAs (.a3m files) are found, for the
+            purpose of phylogeny reconstruction, maximum parsomony
+            reconstruction and finally frequency matrix construction.
+        pdb_dir: Directory where the PDB (.pdb) structure files are found,
+            for the purpose of contact matrix construction.
         precomputed_contact_dir: If this is supplied, the contact estimation
             step will be skipped and 'precomputed_contact_dir' will be used as
             the contact matrices.
+        precomputed_tree_dir: If this is supplied, the tree estimation step
+            will be skipped and 'precomputed_tree_dir' will be used as the
+            phylogenies.
+        precomputed_maximum_parsimony_dir: If this is suppled, the maximum
+            parsimony reconstruction step will be skipped and
+            'precomputed_maximum_parsimony_dir' will be used as the
+            maximum parsimony reconstructions.
 
     Attributes:
         tree_dir: Where the estimated phylogenies lie
@@ -68,17 +80,35 @@ class Pipeline:
     def __init__(
         self,
         outdir: str,
-        max_seqs: int,
-        max_sites: int,
+        max_seqs: Optional[int],
+        max_sites: Optional[int],
         armstrong_cutoff: Optional[str],
-        rate_matrix: str,
+        rate_matrix: Optional[str],
         n_process: int,
         expected_number_of_MSAs: int,
         max_families: int,
         a3m_dir: str,
         pdb_dir: Optional[str],
         precomputed_contact_dir: Optional[str] = None,
+        precomputed_tree_dir: Optional[str] = None,
+        precomputed_maximum_parsimony_dir: Optional[str] = None,
     ):
+        # Check input validity
+        if precomputed_tree_dir is not None or precomputed_maximum_parsimony_dir is not None:
+            if max_seqs is not None or max_sites is not None or rate_matrix is not None:
+                raise ValueError("If trees are provided, FastTree parameters should all be None!")
+        if precomputed_maximum_parsimony_dir is not None:
+            if precomputed_tree_dir is not None:
+                raise ValueError(
+                    "If precomputed_maximum_parsimony_dir is provided, then there is no point in providing"
+                    " precomputed_tree_dir"
+                )
+        if precomputed_contact_dir is not None:
+            if armstrong_cutoff is not None or pdb_dir is not None:
+                raise ValueError(
+                    "If precomputed_contact_dir is provided, then there is no point in providing"
+                    " armstrong_cutoff or pdb_dir."
+                )
         self.outdir = outdir
         self.max_seqs = max_seqs
         self.max_sites = max_sites
@@ -90,6 +120,8 @@ class Pipeline:
         self.a3m_dir = a3m_dir
         self.pdb_dir = pdb_dir
         self.precomputed_contact_dir = precomputed_contact_dir
+        self.precomputed_tree_dir = precomputed_tree_dir
+        self.precomputed_maximum_parsimony_dir = precomputed_maximum_parsimony_dir
 
         # Output data directories
         # Where the phylogenies will be stored
@@ -131,19 +163,26 @@ class Pipeline:
         co_transitions_dir = self.co_transitions_dir
         co_matrices_dir = self.co_matrices_dir
         precomputed_contact_dir = self.precomputed_contact_dir
+        precomputed_tree_dir = self.precomputed_tree_dir
+        precomputed_maximum_parsimony_dir = self.precomputed_maximum_parsimony_dir
 
         # First we need to generate the phylogenies
-        phylogeny_generator = PhylogenyGenerator(
-            a3m_dir=a3m_dir,
-            n_process=n_process,
-            expected_number_of_MSAs=expected_number_of_MSAs,
-            outdir=tree_dir,
-            max_seqs=max_seqs,
-            max_sites=max_sites,
-            max_families=max_families,
-            rate_matrix=rate_matrix,
-        )
-        phylogeny_generator.run()
+        if precomputed_tree_dir is None and precomputed_maximum_parsimony_dir is None:
+            phylogeny_generator = PhylogenyGenerator(
+                a3m_dir=a3m_dir,
+                n_process=n_process,
+                expected_number_of_MSAs=expected_number_of_MSAs,
+                outdir=tree_dir,
+                max_seqs=max_seqs,
+                max_sites=max_sites,
+                max_families=max_families,
+                rate_matrix=rate_matrix,
+            )
+            phylogeny_generator.run()
+        else:
+            if precomputed_tree_dir is None:
+                assert precomputed_maximum_parsimony_dir is not None
+                tree_dir = precomputed_tree_dir
 
         # Generate the contacts
         if precomputed_contact_dir is None:
@@ -165,15 +204,19 @@ class Pipeline:
             contact_dir = precomputed_contact_dir
 
         # Generate the maximum parsimony reconstructions
-        maximum_parsimony_reconstructor = MaximumParsimonyReconstructor(
-            a3m_dir=a3m_dir,
-            tree_dir=tree_dir,
-            n_process=n_process,
-            expected_number_of_MSAs=expected_number_of_MSAs,
-            outdir=maximum_parsimony_dir,
-            max_families=max_families,
-        )
-        maximum_parsimony_reconstructor.run()
+        if precomputed_maximum_parsimony_dir is None:
+            maximum_parsimony_reconstructor = MaximumParsimonyReconstructor(
+                a3m_dir=a3m_dir,
+                tree_dir=tree_dir,
+                n_process=n_process,
+                expected_number_of_MSAs=expected_number_of_MSAs,
+                outdir=maximum_parsimony_dir,
+                max_families=max_families,
+            )
+            maximum_parsimony_reconstructor.run()
+        else:
+            assert precomputed_tree_dir is None
+            maximum_parsimony_dir = precomputed_maximum_parsimony_dir
 
         # Generate single-site transitions
         transition_extractor = TransitionExtractor(

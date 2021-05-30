@@ -44,6 +44,9 @@ def _end_to_end_simulator_test_minimal():
         Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_ground_truth.txt",
         Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_ground_truth.txt",
         fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
+        simulate_end_to_end=True,
+        simulate_from_trees_wo_ancestral_states=True,
+        simulate_from_trees_w_ancestral_states=True,
     )
     end_to_end_simulator.run()
 
@@ -70,6 +73,7 @@ def _end_to_end_simulator_test_uniform():
         Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
         Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform.txt",
         fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
+        simulate_end_to_end=True,
     )
     end_to_end_simulator.run()
 
@@ -96,6 +100,7 @@ def _end_to_end_simulator_test_uniform_constrained():
         Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
         Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform_constrained.txt",
         fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
+        simulate_end_to_end=True,
     )
     end_to_end_simulator.run()
 
@@ -122,6 +127,7 @@ def _end_to_end_simulator_test_large_matrices():
         Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
         Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform.txt",
         fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
+        simulate_end_to_end=True,
     )
     end_to_end_simulator.run()
 
@@ -151,6 +157,7 @@ def _end_to_end_simulator_test_real_data_small():
         Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
         Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform.txt",
         fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
+        simulate_end_to_end=True,
     )
     end_to_end_simulator.run()
 
@@ -161,6 +168,7 @@ def _end_to_end_simulator_test_real_data_small():
         Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
         Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform_constrained.txt",
         fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
+        simulate_end_to_end=True,
     )
     end_to_end_simulator.run()
 
@@ -196,6 +204,7 @@ def _end_to_end_simulator_test_real_data_mediumish():
         Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
         Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform.txt",
         fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
+        simulate_end_to_end=True,
     )
     end_to_end_simulator.run()
 
@@ -206,6 +215,7 @@ def _end_to_end_simulator_test_real_data_mediumish():
         Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
         Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform_constrained.txt",
         fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
+        simulate_end_to_end=True,
     )
     end_to_end_simulator.run()
 
@@ -235,6 +245,7 @@ def _end_to_end_simulator_test_real_data_medium():
         Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
         Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform.txt",
         fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
+        simulate_end_to_end=True,
     )
     end_to_end_simulator.run()
 
@@ -245,6 +256,7 @@ def _end_to_end_simulator_test_real_data_medium():
         Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
         Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform_constrained.txt",
         fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
+        simulate_end_to_end=True,
     )
     end_to_end_simulator.run()
 
@@ -278,6 +290,7 @@ def _test_fast_tree():
         Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
         Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform.txt",  # Doesn't matter bc 0% interactions
         fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
+        simulate_end_to_end=True,
     )
     end_to_end_simulator.run()
 
@@ -311,6 +324,7 @@ def _test_fast_tree_2():
         Q1_ground_truth="input_data/synthetic_rate_matrices/WAG_matrix.txt",
         Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform.txt",  # Doesn't matter bc 0% interactions
         fast_tree_rate_matrix="None",
+        simulate_end_to_end=True,
     )
     end_to_end_simulator.run()
 

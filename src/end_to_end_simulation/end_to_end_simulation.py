@@ -3,6 +3,8 @@ import os
 from src.pipeline import Pipeline
 from src.simulation import Simulator
 
+from typing import Optional
+
 
 class EndToEndSimulator:
     r"""
@@ -28,6 +30,12 @@ class EndToEndSimulator:
             different from standard amino-acid matrices. In that case,
             the phylogeny reconstruction step should use a matrix that
             aligns with Q1_ground_truth instead.
+        simulate_end_to_end: If to run end-to-end simulation, which starts from
+            only the MSAs and contact maps.
+        simulate_from_trees_wo_ancestral_states: If to run simulation starting
+            from the MSAs and contact maps and *ground truth trees wo/ancestral states*.
+        simulate_from_trees_w_ancestral_states: If to run simulation starting
+            from the MSAs and contact maps and *ground truth trees w/ancestral states*.
     """
 
     def __init__(
@@ -38,6 +46,9 @@ class EndToEndSimulator:
         Q1_ground_truth: str,
         Q2_ground_truth: str,
         fast_tree_rate_matrix: str,
+        simulate_end_to_end: Optional[bool] = False,
+        simulate_from_trees_wo_ancestral_states: Optional[bool] = False,
+        simulate_from_trees_w_ancestral_states: Optional[bool] = False,
     ):
         self.outdir = outdir
         self.pipeline = pipeline
@@ -45,6 +56,9 @@ class EndToEndSimulator:
         self.Q1_ground_truth = Q1_ground_truth
         self.Q2_ground_truth = Q2_ground_truth
         self.fast_tree_rate_matrix = fast_tree_rate_matrix
+        self.simulate_end_to_end = simulate_end_to_end
+        self.simulate_from_trees_wo_ancestral_states = simulate_from_trees_wo_ancestral_states
+        self.simulate_from_trees_w_ancestral_states = simulate_from_trees_w_ancestral_states
 
     def run(self):
         outdir = self.outdir
@@ -56,6 +70,23 @@ class EndToEndSimulator:
         a3m_simulated_dir = os.path.join(outdir, "a3m_simulated")
         contact_simulated_dir = os.path.join(outdir, "contacts_simulated")
         ancestral_states_simulated_dir = os.path.join(outdir, "ancestral_states_simulated")
+        simulate_end_to_end = self.simulate_end_to_end
+        simulate_from_trees_wo_ancestral_states = self.simulate_from_trees_wo_ancestral_states
+        simulate_from_trees_w_ancestral_states = self.simulate_from_trees_w_ancestral_states
+
+        if not os.path.exists(pipeline.tree_dir):
+            raise ValueError("pipeline's trees do not exist! Have you already run the pipeline?")
+        if not os.path.exists(pipeline.maximum_parsimony_dir):
+            raise ValueError("pipeline's maximum_parsimony_dir does not exist! Have you already run the pipeline?")
+        if (
+            pipeline.precomputed_contact_dir is not None
+            or pipeline.precomputed_tree_dir is not None
+            or pipeline.precomputed_maximum_parsimony_dir is not None
+        ):
+            raise ValueError(
+                "Trying to perform simulation on a pipeline that already uses simulated data! This is"
+                " certainly a user bug."
+            )
 
         simulator = Simulator(
             a3m_dir=pipeline.a3m_dir,
@@ -72,18 +103,56 @@ class EndToEndSimulator:
         )
         simulator.run()
 
-        # Run pipeline on simulated data.
-        end_to_end_pipeline_on_simulated_data = Pipeline(
-            outdir=os.path.join(outdir, pipeline.outdir),
-            max_seqs=pipeline.max_seqs,
-            max_sites=pipeline.max_sites,
-            armstrong_cutoff=None,
-            rate_matrix=fast_tree_rate_matrix,
-            n_process=pipeline.n_process,
-            expected_number_of_MSAs=pipeline.max_families,  # BC we only generated max_families MSAs!
-            max_families=pipeline.max_families,
-            a3m_dir=a3m_simulated_dir,
-            pdb_dir=None,
-            precomputed_contact_dir=contact_simulated_dir,
-        )
-        end_to_end_pipeline_on_simulated_data.run()
+        if simulate_end_to_end:
+            pipeline_on_simulated_data_end_to_end = Pipeline(
+                outdir=os.path.join(outdir, "end_to_end", pipeline.outdir),
+                max_seqs=pipeline.max_seqs,
+                max_sites=pipeline.max_sites,
+                armstrong_cutoff=None,
+                rate_matrix=fast_tree_rate_matrix,
+                n_process=pipeline.n_process,
+                expected_number_of_MSAs=pipeline.max_families,  # BC we only generated max_families MSAs!
+                max_families=pipeline.max_families,
+                a3m_dir=a3m_simulated_dir,
+                pdb_dir=None,
+                precomputed_contact_dir=contact_simulated_dir,
+                precomputed_tree_dir=None,
+                precomputed_maximum_parsimony_dir=None,
+            )
+            pipeline_on_simulated_data_end_to_end.run()
+
+        if simulate_from_trees_wo_ancestral_states:
+            pipeline_on_simulated_data_from_trees_wo_ancestral_states = Pipeline(
+                outdir=os.path.join(outdir, "from_trees_wo_ancestral_states", pipeline.outdir),
+                max_seqs=None,
+                max_sites=None,
+                armstrong_cutoff=None,
+                rate_matrix=None,
+                n_process=pipeline.n_process,
+                expected_number_of_MSAs=pipeline.max_families,  # BC we only generated max_families MSAs!
+                max_families=pipeline.max_families,
+                a3m_dir=a3m_simulated_dir,
+                pdb_dir=None,
+                precomputed_contact_dir=contact_simulated_dir,
+                precomputed_tree_dir=pipeline.tree_dir,
+                precomputed_maximum_parsimony_dir=None,
+            )
+            pipeline_on_simulated_data_from_trees_wo_ancestral_states.run()
+
+        if simulate_from_trees_w_ancestral_states:
+            pipeline_on_simulated_data_from_trees_w_ancestral_states = Pipeline(
+                outdir=os.path.join(outdir, "from_trees_w_ancestral_states", pipeline.outdir),
+                max_seqs=None,
+                max_sites=None,
+                armstrong_cutoff=None,
+                rate_matrix=None,
+                n_process=pipeline.n_process,
+                expected_number_of_MSAs=pipeline.max_families,  # BC we only generated max_families MSAs!
+                max_families=pipeline.max_families,
+                a3m_dir=a3m_simulated_dir,
+                pdb_dir=None,
+                precomputed_contact_dir=contact_simulated_dir,
+                precomputed_tree_dir=None,
+                precomputed_maximum_parsimony_dir=ancestral_states_simulated_dir,
+            )
+            pipeline_on_simulated_data_from_trees_w_ancestral_states.run()

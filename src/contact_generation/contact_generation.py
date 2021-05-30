@@ -1,4 +1,3 @@
-import argparse
 import logging
 import multiprocessing
 import os
@@ -9,54 +8,6 @@ import numpy as np
 import random
 
 from .ContactMatrix import ContactMatrix
-
-
-parser = argparse.ArgumentParser(
-    description="Generate contacts for all protein families."
-)
-parser.add_argument(
-    "--a3m_dir",
-    type=str,
-    help="Directory where the MSAs are found (.a3m files)",
-    required=True,
-)
-parser.add_argument(
-    "--pdb_dir",
-    type=str,
-    help="Directory where the PDB files are found (.pdb files)",
-    required=True,
-)
-parser.add_argument(
-    "--outdir",
-    type=str,
-    help="Directory where the contact matrices will be found.",
-    required=True,
-)
-parser.add_argument(
-    "--armstrong_cutoff",
-    type=float,
-    help="Armstrong cutoff to use",
-    required=True,
-)
-parser.add_argument(
-    "--n_process",
-    type=int,
-    help="Number of processes to use",
-    required=True,
-)
-parser.add_argument(
-    "--expected_number_of_families",
-    type=int,
-    help="Expected number of families",
-    required=True,
-)
-parser.add_argument(
-    "--max_families",
-    type=int,
-    help="Maximum number of families to run on.",
-    required=False,
-    default=100000000,
-)
 
 
 def init_logger():
@@ -152,22 +103,3 @@ class ContactGenerator:
         ]
         with multiprocessing.Pool(n_process) as pool:
             list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
-
-
-def _main():
-    # Pull out arguments
-    args = parser.parse_args()
-    contact_generator = ContactGenerator(
-        a3m_dir=args.a3m_dir,
-        pdb_dir=args.pdb_dir,
-        armstrong_cutoff=args.armstrong_cutoff,
-        n_process=args.n_process,
-        expected_number_of_families=args.expected_number_of_families,
-        outdir=args.outdir,
-        max_families=args.max_families,
-    )
-    contact_generator.run()
-
-
-if __name__ == "__main__":
-    _main()

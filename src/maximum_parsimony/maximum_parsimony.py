@@ -2,7 +2,6 @@ r"""
 Runs maximum parsimony reconstruction for a given protein family.
 Uses call to C++ implementation.
 """
-import argparse
 import multiprocessing
 import os
 import sys
@@ -36,58 +35,6 @@ def init_logger():
     fileHandler = logging.FileHandler("maximum_parsimony.log")
     fileHandler.setFormatter(formatter)
     logger.addHandler(fileHandler)
-
-
-parser = argparse.ArgumentParser(description="Reconstruct ancestral states with maximum parsimony for the given protein family.")
-parser.add_argument(
-    "--a3m_dir",
-    type=str,
-    help="Directory where the MSAs are found (.a3m files)",
-    required=True,
-)
-parser.add_argument(
-    "--tree_dir",
-    type=str,
-    help="Directory where the trees are found (.newick files)",
-    required=True,
-)
-parser.add_argument(
-    "--outdir",
-    type=str,
-    help="Directory where the maximum parsimony reconstruction will be found.",
-    required=True,
-)
-parser.add_argument(
-    "--n_process",
-    type=int,
-    help="Number of processes to use",
-    required=True,
-)
-parser.add_argument(
-    "--expected_number_of_MSAs",
-    type=int,
-    help="Expected number of MSAs",
-    required=True,
-)
-# parser.add_argument(
-#     "--max_seqs",
-#     type=int,
-#     help="Maximum number of sequences to use per family",
-#     required=True,
-# )
-# parser.add_argument(
-#     "--max_sites",
-#     type=int,
-#     help="Maximum number of sites to use per family",
-#     required=True,
-# )
-parser.add_argument(
-    "--max_families",
-    type=int,
-    help="Maximum number of family to run on.",
-    required=False,
-    default=100000000
-)
 
 
 def name_internal_nodes(t: Tree):
@@ -302,23 +249,3 @@ class MaximumParsimonyReconstructor():
         ]
         with multiprocessing.Pool(n_process) as pool:
             list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
-
-
-def _main():
-    # Pull out arguments
-    args = parser.parse_args()
-
-    maximum_parsimony_reconstructor =\
-        MaximumParsimonyReconstructor(
-            a3m_dir=args.a3m_dir,
-            tree_dir=args.tree_dir,
-            n_process=args.n_process,
-            expected_number_of_MSAs=args.expected_number_of_MSAs,
-            outdir=args.outdir,
-            max_families=args.max_families,
-        )
-    maximum_parsimony_reconstructor.run()
-
-
-if __name__ == "__main__":
-    _main()

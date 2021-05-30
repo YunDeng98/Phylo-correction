@@ -613,21 +613,21 @@ def _test_fast_tree_2():
 
 
 def _tests():
-    _end_to_end_simulator_test_minimal()
-    _end_to_end_simulator_test_uniform()
-    _end_to_end_simulator_test_uniform_constrained()
-    _end_to_end_simulator_test_large_matrices()
-    _end_to_end_simulator_test_real_data_small()
-    _end_to_end_simulator_test_real_data_mediumish()
-    _end_to_end_simulator_test_real_data_medium()
-    _test_fast_tree()
+    # _end_to_end_simulator_test_minimal()
+    # _end_to_end_simulator_test_uniform()
+    # _end_to_end_simulator_test_uniform_constrained()
+    # _end_to_end_simulator_test_large_matrices()
+    # _end_to_end_simulator_test_real_data_small()
+    # _end_to_end_simulator_test_real_data_mediumish()
+    # _end_to_end_simulator_test_real_data_medium()
+    # _test_fast_tree()
     _test_fast_tree_2()
 
 
 def _main():
     init_logger()
 
-    # _tests()
+    _tests()
 
     # # Takes a loooooong time (days)
     # pipeline = Pipeline(
@@ -644,49 +644,49 @@ def _main():
     # )
     # pipeline.run()
 
-    # For the end-to-end simulation, I'll first use only 3 families
-    # to test it.
-    pipeline = Pipeline(
-        outdir='output_data/pipeline_output',
-        max_seqs=1024,
-        max_sites=1024,
-        armstrong_cutoff=None,
-        rate_matrix='None',
-        n_process=3,
-        expected_number_of_MSAs=15051,
-        max_families=3,
-        a3m_dir='input_data/a3m',
-        pdb_dir=None,
-    )
-    end_to_end_simulator = EndToEndSimulator(
-        outdir='output_data/end_to_end_simulation_with_independent_sites',
-        pipeline=pipeline,
-        simulation_pct_interacting_positions=0.0,
-        Q1_ground_truth='input_data/synthetic_rate_matrices/WAG_matrix.txt',
-        Q2_ground_truth='input_data/synthetic_rate_matrices/Q2_uniform.txt',
-        fast_tree_rate_matrix='None',
-    )
-    end_to_end_simulator.run()
-
+    # # For the end-to-end simulation, I'll first use only 3 families
+    # # to test it.
+    # pipeline = Pipeline(
+    #     outdir='output_data/pipeline_output',
+    #     max_seqs=1024,
+    #     max_sites=1024,
+    #     armstrong_cutoff=None,
+    #     rate_matrix='None',
+    #     n_process=3,
+    #     expected_number_of_MSAs=15051,
+    #     max_families=3,
+    #     a3m_dir='input_data/a3m',
+    #     pdb_dir=None,
+    # )
     # end_to_end_simulator = EndToEndSimulator(
-    #     outdir='output_data/end_to_end_simulation_uniform',
+    #     outdir='output_data/end_to_end_simulation_with_independent_sites',
     #     pipeline=pipeline,
-    #     simulation_pct_interacting_positions=0.66,
-    #     Q1_ground_truth='input_data/synthetic_rate_matrices/Q1_uniform.txt',
+    #     simulation_pct_interacting_positions=0.0,
+    #     Q1_ground_truth='input_data/synthetic_rate_matrices/WAG_matrix.txt',
     #     Q2_ground_truth='input_data/synthetic_rate_matrices/Q2_uniform.txt',
-    #     fast_tree_rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt',
+    #     fast_tree_rate_matrix='None',
     # )
     # end_to_end_simulator.run()
 
-    # end_to_end_simulator = EndToEndSimulator(
-    #     outdir='test_outputs/_end_to_end_simulator_test_real_data_medium_uniform_constrained',
-    #     pipeline=pipeline,
-    #     simulation_pct_interacting_positions=0.66,
-    #     Q1_ground_truth='input_data/synthetic_rate_matrices/Q1_uniform.txt',
-    #     Q2_ground_truth='input_data/synthetic_rate_matrices/Q2_uniform_constrained.txt',
-    #     fast_tree_rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt',
-    # )
-    # end_to_end_simulator.run()
+    # # end_to_end_simulator = EndToEndSimulator(
+    # #     outdir='output_data/end_to_end_simulation_uniform',
+    # #     pipeline=pipeline,
+    # #     simulation_pct_interacting_positions=0.66,
+    # #     Q1_ground_truth='input_data/synthetic_rate_matrices/Q1_uniform.txt',
+    # #     Q2_ground_truth='input_data/synthetic_rate_matrices/Q2_uniform.txt',
+    # #     fast_tree_rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt',
+    # # )
+    # # end_to_end_simulator.run()
+
+    # # end_to_end_simulator = EndToEndSimulator(
+    # #     outdir='test_outputs/_end_to_end_simulator_test_real_data_medium_uniform_constrained',
+    # #     pipeline=pipeline,
+    # #     simulation_pct_interacting_positions=0.66,
+    # #     Q1_ground_truth='input_data/synthetic_rate_matrices/Q1_uniform.txt',
+    # #     Q2_ground_truth='input_data/synthetic_rate_matrices/Q2_uniform_constrained.txt',
+    # #     fast_tree_rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt',
+    # # )
+    # # end_to_end_simulator.run()
 
 
 if __name__ == "__main__":

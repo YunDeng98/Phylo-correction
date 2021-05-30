@@ -1,4 +1,3 @@
-import argparse
 import multiprocessing
 import os
 import sys
@@ -26,58 +25,6 @@ def init_logger():
     fileHandler = logging.FileHandler("generate_fast_tree_phylogenies.log")
     fileHandler.setFormatter(formatter)
     logger.addHandler(fileHandler)
-
-
-parser = argparse.ArgumentParser(description="Run FastTree on all MSAs")
-parser.add_argument(
-    "--a3m_dir",
-    type=str,
-    help="Directory where the MSAs are found (.a3m files)",
-    required=True,
-)
-parser.add_argument(
-    "--outdir",
-    type=str,
-    help="Directory where the reconstructed phylogenies will be found.",
-    required=True,
-)
-parser.add_argument(
-    "--n_process",
-    type=int,
-    help="Number of processes to use",
-    required=True,
-)
-parser.add_argument(
-    "--expected_number_of_MSAs",
-    type=int,
-    help="Expected number of MSAs",
-    required=True,
-)
-parser.add_argument(
-    "--max_seqs",
-    type=int,
-    help="Maximum number of sequences to use per family",
-    required=True,
-)
-parser.add_argument(
-    "--max_sites",
-    type=int,
-    help="Maximum number of sites to use per family",
-    required=True,
-)
-parser.add_argument(
-    "--max_families",
-    type=int,
-    help="Maximum number of family to run on.",
-    required=False,
-    default=100000000
-)
-parser.add_argument(
-    "--rate_matrix",
-    type=str,
-    help="Rate matrix to be used in FastTree.",
-    required=True,
-)
 
 
 def _map_func(args):
@@ -163,25 +110,3 @@ class PhylogenyGenerator():
         ]
         with multiprocessing.Pool(n_process) as pool:
             list(tqdm.tqdm(pool.imap(_map_func, map_args), total=len(map_args)))
-
-
-def _main():
-    # Pull out arguments
-    args = parser.parse_args()
-
-    phylogeny_generator = PhylogenyGenerator(
-        a3m_dir=args.a3m_dir,
-        n_process=args.n_process,
-        expected_number_of_MSAs=args.expected_number_of_MSAs,
-        outdir=args.outdir,
-        max_seqs=args.max_seqs,
-        max_sites=args.max_sites,
-        max_families=args.max_families,
-        rate_matrix=args.rate_matrix,
-    )
-
-    phylogeny_generator.run()
-
-
-if __name__ == "__main__":
-    _main()

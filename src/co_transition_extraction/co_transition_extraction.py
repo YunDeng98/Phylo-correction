@@ -2,7 +2,6 @@ r"""
 Reads phylogenies with ancestral states and produces a list of all transitions observed,
 annotated with useful information such as height, branch length, etc.
 """
-import argparse
 import multiprocessing
 import os
 import sys
@@ -34,64 +33,6 @@ def init_logger():
     fileHandler = logging.FileHandler("co_transition_extraction.log")
     fileHandler.setFormatter(formatter)
     logger.addHandler(fileHandler)
-
-
-parser = argparse.ArgumentParser(description="Generate dataset of transitions based on phylogenies with ancestral states.")
-parser.add_argument(
-    "--a3m_dir",
-    type=str,
-    help="Directory where the MSAs are found (.a3m files)",
-    required=True,
-)
-parser.add_argument(
-    "--parsimony_dir",
-    type=str,
-    help="Directory where the phylogenies with ancestral states are (.newick files and .parsimony files)",
-    required=True,
-)
-parser.add_argument(
-    "--outdir",
-    type=str,
-    help="Directory where the transitions will be written to.",
-    required=True,
-)
-parser.add_argument(
-    "--n_process",
-    type=int,
-    help="Number of processes to use",
-    required=True,
-)
-parser.add_argument(
-    "--expected_number_of_MSAs",
-    type=int,
-    help="Expected number of MSAs",
-    required=True,
-)
-# parser.add_argument(
-#     "--max_seqs",
-#     type=int,
-#     help="Maximum number of sequences to use per family",
-#     required=True,
-# )
-# parser.add_argument(
-#     "--max_sites",
-#     type=int,
-#     help="Maximum number of sites to use per family",
-#     required=True,
-# )
-parser.add_argument(
-    "--max_families",
-    type=int,
-    help="Maximum number of family to run on.",
-    required=False,
-    default=100000000
-)
-parser.add_argument(
-    "--contact_dir",
-    type=str,
-    help="Directory where the co-transitions will be written to.",
-    required=True,
-)
 
 
 def get_transitions(tree, sequences, contact_matrix):
@@ -240,22 +181,3 @@ class CoTransitionExtractor:
         ]
         with multiprocessing.Pool(n_process) as pool:
             list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
-
-
-def _main():
-    # Pull out arguments
-    args = parser.parse_args()
-    cotransition_extractor = CoTransitionExtractor(
-        a3m_dir=args.a3m_dir,
-        parsimony_dir=args.parsimony_dir,
-        n_process=args.n_process,
-        expected_number_of_MSAs=args.expected_number_of_MSAs,
-        outdir=args.outdir,
-        max_families=args.max_families,
-        contact_dir=args.contact_dir,
-    )
-    cotransition_extractor.run()
-
-
-if __name__ == "__main__":
-    _main()

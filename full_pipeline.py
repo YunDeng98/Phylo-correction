@@ -593,9 +593,9 @@ def _test_fast_tree_2():
         max_sites=1024,
         armstrong_cutoff=8.0,
         rate_matrix='None',
-        n_process=3,
+        n_process=1,
         expected_number_of_MSAs=15051,
-        max_families=3,
+        max_families=1,
         a3m_dir='input_data/a3m',
         pdb_dir='input_data/pdb',
     )

@@ -163,8 +163,11 @@ class MatrixGenerator:
             for shard_id in range(n_process)
         ]
 
-        with multiprocessing.Pool(n_process) as pool:
-            shard_results = list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
+        if n_process > 1:
+            with multiprocessing.Pool(n_process) as pool:
+                shard_results = list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
+        else:
+            shard_results = list(tqdm.tqdm(map(map_func, map_args), total=len(map_args)))
 
         res = shard_results[0]
         for i in range(1, len(shard_results)):

@@ -179,5 +179,8 @@ class CoTransitionExtractor:
             (a3m_dir, parsimony_dir, protein_family_name, outdir, contact_dir)
             for protein_family_name in protein_family_names
         ]
-        with multiprocessing.Pool(n_process) as pool:
-            list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
+        if n_process > 1:
+            with multiprocessing.Pool(n_process) as pool:
+                list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
+        else:
+            list(tqdm.tqdm(map(map_func, map_args), total=len(map_args)))

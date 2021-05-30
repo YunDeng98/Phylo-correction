@@ -247,5 +247,8 @@ class MaximumParsimonyReconstructor():
             (a3m_dir, tree_dir, protein_family_name, outdir, max_seqs, max_sites)
             for protein_family_name in protein_family_names
         ]
-        with multiprocessing.Pool(n_process) as pool:
-            list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
+        if n_process > 1:
+            with multiprocessing.Pool(n_process) as pool:
+                list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
+        else:
+            list(tqdm.tqdm(map(map_func, map_args), total=len(map_args)))

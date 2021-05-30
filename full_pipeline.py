@@ -44,6 +44,11 @@ class Pipeline():
     - Rate matrix estimation.
     As such, the Pipeline takes as argument hyperparameters concerning all
     these steps too, for example, the armstrong_cutoff used to call contacts.
+
+    It is possible to skip steps of the pipeline by providing the ground truth
+    values for those steps. This allows testing the pipeline in an end-to-end
+    simulation.
+
     The Pipeline is initialized with __init__() and only run when called with
     the run() method.
 

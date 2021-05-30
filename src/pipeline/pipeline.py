@@ -180,8 +180,13 @@ class Pipeline:
             )
             phylogeny_generator.run()
         else:
+            # Trees provided!
             if precomputed_tree_dir is None:
+                # Case 1: We start from the trees w/ancestral states.
                 assert precomputed_maximum_parsimony_dir is not None
+            else:
+                # Case 2: We start from the trees wo/ancestral states.
+                assert precomputed_tree_dir is not None and precomputed_maximum_parsimony_dir is None
                 tree_dir = precomputed_tree_dir
 
         # Generate the contacts

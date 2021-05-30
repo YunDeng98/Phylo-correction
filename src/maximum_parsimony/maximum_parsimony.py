@@ -149,7 +149,7 @@ def map_func(args) -> None:
     try:
         tree = Tree(os.path.join(tree_dir, protein_family_name + ".newick"))
     except:
-        logger.error(f"Malformed tree for family: {protein_family_name}")
+        logger.error(f"Malformed tree for family: {protein_family_name} at {tree_dir}")
         return
     name_internal_nodes(tree)
     tree.write(format=3, outfile=os.path.join(outdir, protein_family_name + ".newick"))

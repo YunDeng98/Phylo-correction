@@ -84,7 +84,7 @@ class PhylogenyGenerator:
         protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
 
         map_args = [
-            (a3m_dir, protein_family_name, outdir, max_seqs, max_sites, rate_matrix)
+            [a3m_dir, protein_family_name, outdir, max_seqs, max_sites, rate_matrix]
             for protein_family_name in protein_family_names
         ]
         with multiprocessing.Pool(n_process) as pool:

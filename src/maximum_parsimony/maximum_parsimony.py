@@ -249,7 +249,7 @@ class MaximumParsimonyReconstructor:
         protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
 
         map_args = [
-            (a3m_dir, tree_dir, protein_family_name, outdir, max_seqs, max_sites)
+            [a3m_dir, tree_dir, protein_family_name, outdir, max_seqs, max_sites]
             for protein_family_name in protein_family_names
         ]
         if n_process > 1:

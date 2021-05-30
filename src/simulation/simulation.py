@@ -104,7 +104,7 @@ def run_chain(
     model_1 = Phylo_util.substitution_model(Q1, pi_1)
     pi_2 = Phylo_util.solve_stationery_dist(Q2)
     model_2 = Phylo_util.substitution_model(Q2, pi_2)
-    int_states = {}
+    int_states = {}  # type: Dict[str, List[int]]
 
     def dfs_run_chain(v):
         for u in v.get_children():
@@ -159,15 +159,15 @@ def map_func(args: List) -> None:
     Q1 = pd.read_csv(Q1_ground_truth, sep="\t", index_col=0, keep_default_na=False, na_values=[""])
     # Read co-evolution rate matrix
     Q2 = pd.read_csv(Q2_ground_truth, sep="\t", index_col=0, keep_default_na=False, na_values=[""])
-    states = list(Q1.index)
+    states_list = list(Q1.index)
     # logger.info(f"Q1 states = {list(Q1.index)}")
     # logger.info(f"Q2 states = {list(Q2.index)}")
     # Pedantically check that states in Q1 and Q2 are compatible.
     if not (len(Q1.index) ** 2 == len(Q2.index)):
         logger.error("Q1 and Q2 indices not compatible")
         return
-    for s1 in states:
-        for s2 in states:
+    for s1 in states_list:
+        for s2 in states_list:
             if not (s1 + s2 in Q2.index):
                 logger.error(f"Q1 and Q2 indices not compatible: {s1 + s2} not in Q2 index")
                 return
@@ -278,7 +278,7 @@ class Simulator:
         protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
 
         map_args = [
-            (
+            [
                 protein_family_name,
                 a3m_dir,
                 tree_dir,
@@ -288,7 +288,7 @@ class Simulator:
                 contact_simulated_dir,
                 a3m_simulated_dir,
                 ancestral_states_simulated_dir,
-            )
+            ]
             for protein_family_name in protein_family_names
         ]
         if n_process > 1:

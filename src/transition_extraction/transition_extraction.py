@@ -157,7 +157,7 @@ class TransitionExtractor:
         # print(f"protein_family_names = {protein_family_names}")
 
         map_args = [
-            (a3m_dir, parsimony_dir, protein_family_name, outdir) for protein_family_name in protein_family_names
+            [a3m_dir, parsimony_dir, protein_family_name, outdir] for protein_family_name in protein_family_names
         ]
         if n_process > 1:
             with multiprocessing.Pool(n_process) as pool:

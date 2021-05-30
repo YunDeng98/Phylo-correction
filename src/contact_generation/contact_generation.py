@@ -78,7 +78,7 @@ class ContactGenerator:
         protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
 
         map_args = [
-            (pdb_dir, protein_family_name, outdir, armstrong_cutoff) for protein_family_name in protein_family_names
+            [pdb_dir, protein_family_name, outdir, armstrong_cutoff] for protein_family_name in protein_family_names
         ]
         if n_process > 1:
             with multiprocessing.Pool(n_process) as pool:

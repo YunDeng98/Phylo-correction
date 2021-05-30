@@ -178,7 +178,7 @@ class CoTransitionExtractor:
         # print(f"protein_family_names = {protein_family_names}")
 
         map_args = [
-            (a3m_dir, parsimony_dir, protein_family_name, outdir, contact_dir)
+            [a3m_dir, parsimony_dir, protein_family_name, outdir, contact_dir]
             for protein_family_name in protein_family_names
         ]
         if n_process > 1:

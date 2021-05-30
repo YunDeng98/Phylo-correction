@@ -159,13 +159,13 @@ class MatrixGenerator:
         protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
 
         map_args = [
-            (
+            [
                 a3m_dir,
                 transitions_dir,
                 get_protein_family_names_for_shard(shard_id, n_process, protein_family_names),
                 outdir,
                 alphabet,
-            )
+            ]
             for shard_id in range(n_process)
         ]
 

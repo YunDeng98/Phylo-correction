@@ -6,10 +6,12 @@ import hashlib
 import numpy as np
 import random
 
+from typing import List
+
 from .ContactMatrix import ContactMatrix
 
 
-def map_func(args):
+def map_func(args: List) -> None:
     pdb_dir = args[0]
     protein_family_name = args[1]
     outdir = args[2]
@@ -49,7 +51,7 @@ class ContactGenerator:
         self.outdir = outdir
         self.max_families = max_families
 
-    def run(self):
+    def run(self) -> None:
         a3m_dir = self.a3m_dir
         pdb_dir = self.pdb_dir
         armstrong_cutoff = self.armstrong_cutoff

@@ -10,7 +10,7 @@ import tqdm
 from .FastTreePhylogeny import FastTreePhylogeny
 
 
-def _map_func(args):
+def _map_func(args) -> None:
     a3m_dir = args[0]
     protein_family_name = args[1]
     outdir = args[2]
@@ -59,7 +59,7 @@ class PhylogenyGenerator:
         self.max_families = max_families
         self.rate_matrix = rate_matrix
 
-    def run(self):
+    def run(self) -> None:
         a3m_dir = self.a3m_dir
         n_process = self.n_process
         expected_number_of_MSAs = self.expected_number_of_MSAs

@@ -20,7 +20,7 @@ from typing import List
 sys.path.append("../")
 
 
-def map_func(args):
+def map_func(args: List) -> pd.DataFrame:
     # a3m_dir = args[0]
     transitions_dir = args[1]
     protein_family_names_for_shard = args[2]
@@ -59,7 +59,10 @@ def map_func(args):
     return res
 
 
-def write_out_matrices(res, outdir):
+def write_out_matrices(
+    res: pd.DataFrame,
+    outdir: str,
+) -> None:
     out_filepath = os.path.join(outdir, "matrices.txt")
     res.to_csv(out_filepath, sep="\t")
 
@@ -72,13 +75,13 @@ def get_protein_family_names_for_shard(shard_id: int, n_process: int, protein_fa
 class MatrixGenerator:
     def __init__(
         self,
-        a3m_dir,
-        transitions_dir,
-        n_process,
-        expected_number_of_MSAs,
-        outdir,
-        max_families,
-        num_sites,
+        a3m_dir: str,
+        transitions_dir: str,
+        n_process: int,
+        expected_number_of_MSAs: int,
+        outdir: str,
+        max_families: int,
+        num_sites: int,
     ):
         self.a3m_dir = a3m_dir
         self.transitions_dir = transitions_dir
@@ -88,7 +91,7 @@ class MatrixGenerator:
         self.max_families = max_families
         self.num_sites = num_sites
 
-    def run(self):
+    def run(self) -> None:
         a3m_dir = self.a3m_dir
         transitions_dir = self.transitions_dir
         n_process = self.n_process

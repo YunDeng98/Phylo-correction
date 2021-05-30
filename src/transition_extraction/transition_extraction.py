@@ -12,19 +12,24 @@ import tqdm
 import random
 import hashlib
 
+from typing import Dict, List, Tuple
+
 from ete3 import Tree
 
 sys.path.append("../")
 
 
-def get_transitions(tree, sequences):
+def get_transitions(
+    tree: Tree,
+    sequences: Dict[str, str],
+) -> List[Tuple[str, str, float, float, int, str, str, int]]:
     # The root's name was not written out by ete3 in the maximum_parsimony script,
     # so we name it ourselves.
     assert tree.name == ""
     tree.name = "internal-1"
-    res = []
-    height = {}
-    path_height = {}
+    res = []  # type: List[Tuple[str, str, float, float, int, str, str, int]]
+    height = {}  # type: Dict[str, float]
+    path_height = {}  # type: Dict[str, int]
 
     def dfs_get_transitions(v, site_id):
         height[v.name] = 0
@@ -53,7 +58,7 @@ def get_transitions(tree, sequences):
     return res
 
 
-def map_func(args):
+def map_func(args: List) -> None:
     # a3m_dir = args[0]
     parsimony_dir = args[1]
     protein_family_name = args[2]
@@ -110,12 +115,12 @@ def map_func(args):
 class TransitionExtractor:
     def __init__(
         self,
-        a3m_dir,
-        parsimony_dir,
-        n_process,
-        expected_number_of_MSAs,
-        outdir,
-        max_families,
+        a3m_dir: str,
+        parsimony_dir: str,
+        n_process: int,
+        expected_number_of_MSAs: int,
+        outdir: str,
+        max_families: int,
     ):
         self.a3m_dir = a3m_dir
         self.parsimony_dir = parsimony_dir
@@ -124,7 +129,7 @@ class TransitionExtractor:
         self.outdir = outdir
         self.max_families = max_families
 
-    def run(self):
+    def run(self) -> None:
         a3m_dir = self.a3m_dir
         parsimony_dir = self.parsimony_dir
         n_process = self.n_process

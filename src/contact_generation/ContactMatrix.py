@@ -6,7 +6,7 @@ from biotite.structure.io.pdb import PDBFile
 from scipy.spatial.distance import pdist, squareform
 
 
-def extend(a, b, c, L, A, D):
+def extend(a, b, c, L, A, D) -> float:
     """
     input:  3 coords (a,b,c), (L)ength, (A)ngle, and (D)ihedral
     output: 4th coord
@@ -70,10 +70,3 @@ class ContactMatrix:
             res += "\n"
         with open(outfile, "w") as file:
             file.write(res)
-
-
-if __name__ == "__main__":
-    contact_matrix = ContactMatrix(
-        pdb_dir="pdb", protein_family_name="13gs_1_A", armstrong_cutoff=8.0
-    )
-    print(contact_matrix.nsites)

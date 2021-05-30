@@ -10,7 +10,7 @@ import logging
 import numpy as np
 import tempfile
 import tqdm
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 import hashlib
 import random
 
@@ -21,7 +21,7 @@ from src.phylogeny_generation import MSA
 sys.path.append("../")
 
 
-def name_internal_nodes(t: Tree):
+def name_internal_nodes(t: Tree) -> None:
     r"""
     Assigns names to the internal nodes of tree t if they don't already have a name.
     """
@@ -35,7 +35,7 @@ def name_internal_nodes(t: Tree):
 
     names = node_name_generator()
 
-    def dfs_name_internal_nodes(p, v):
+    def dfs_name_internal_nodes(p: Optional[Tree], v: Tree) -> None:
         global internal_node_id
         if v.name == "":
             v.name = next(names)
@@ -48,9 +48,11 @@ def name_internal_nodes(t: Tree):
     dfs_name_internal_nodes(None, t)
 
 
-def create_node_name_vs_int_mappings(tree) -> Tuple[Dict, Dict]:
-    node_name_to_int = {}
-    int_to_node_name = {}
+def create_node_name_vs_int_mappings(
+    tree: Tree,
+) -> Tuple[Dict[str, int], Dict[int, str]]:
+    node_name_to_int = {}  # type: Dict[str, int]
+    int_to_node_name = {}  # type: Dict[int, str]
 
     def int_id_generator():
         """Generates unique node names for the tree."""
@@ -73,7 +75,11 @@ def create_node_name_vs_int_mappings(tree) -> Tuple[Dict, Dict]:
     return node_name_to_int, int_to_node_name
 
 
-def write_out_tree(tree, node_name_to_int, tree_filepath) -> str:
+def write_out_tree(
+    tree: Tree,
+    node_name_to_int: Dict[str, int],
+    tree_filepath: str,
+) -> None:
     res = []
 
     def dfs_write_out_tree(p, v):
@@ -89,7 +95,11 @@ def write_out_tree(tree, node_name_to_int, tree_filepath) -> str:
         file.write("".join(res))
 
 
-def write_out_msa(msa: MSA, node_name_to_int, msa_filepath) -> str:
+def write_out_msa(
+    msa: MSA,
+    node_name_to_int: Dict[str, int],
+    msa_filepath: str,
+) -> None:
     res = ""
     nleaves = 0
     for (protein_name, sequence) in msa.get_msa().items():
@@ -102,7 +112,11 @@ def write_out_msa(msa: MSA, node_name_to_int, msa_filepath) -> str:
         outfile.write(res)
 
 
-def map_parsimony_indexing_back_to_str(int_to_node_name, cpp_parsimony_filepath, parsimony_filepath) -> None:
+def map_parsimony_indexing_back_to_str(
+    int_to_node_name: Dict[int, str],
+    cpp_parsimony_filepath: str,
+    parsimony_filepath: str,
+) -> None:
     # Read parsimony_filepath and replace each header by the node name, then write back to the same file.
     res = ""
     with open(cpp_parsimony_filepath, "r") as infile:
@@ -116,7 +130,7 @@ def map_parsimony_indexing_back_to_str(int_to_node_name, cpp_parsimony_filepath,
             outfile.write(res)
 
 
-def map_func(args):
+def map_func(args) -> None:
     a3m_dir = args[0]
     tree_dir = args[1]
     protein_family_name = args[2]
@@ -179,12 +193,12 @@ def map_func(args):
 class MaximumParsimonyReconstructor:
     def __init__(
         self,
-        a3m_dir,
-        tree_dir,
-        n_process,
-        expected_number_of_MSAs,
-        outdir,
-        max_families,
+        a3m_dir: str,
+        tree_dir: str,
+        n_process: int,
+        expected_number_of_MSAs: int,
+        outdir: str,
+        max_families: int,
     ):
         logger = logging.getLogger("maximum_parsimony")
         self.a3m_dir = a3m_dir
@@ -206,7 +220,7 @@ class MaximumParsimonyReconstructor:
             # $ ./maximum_parsimony test_data/tree.txt test_data/sequences.txt
             #   test_data/solution.txt
 
-    def run(self):
+    def run(self) -> None:
         a3m_dir = self.a3m_dir
         tree_dir = self.tree_dir
         n_process = self.n_process

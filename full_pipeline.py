@@ -568,9 +568,9 @@ def _test_fast_tree():
         max_sites=1024,
         armstrong_cutoff=8.0,
         rate_matrix="None",
-        n_process=3,
+        n_process=1,
         expected_number_of_MSAs=15051,
-        max_families=3,
+        max_families=1,
         a3m_dir="input_data/a3m",
         pdb_dir="input_data/pdb",
     )
@@ -621,15 +621,15 @@ def _test_fast_tree_2():
 
 
 def _tests():
-    # _end_to_end_simulator_test_minimal()
-    # _end_to_end_simulator_test_uniform()
-    # _end_to_end_simulator_test_uniform_constrained()
-    # _end_to_end_simulator_test_large_matrices()
-    # _end_to_end_simulator_test_real_data_small()
-    # _end_to_end_simulator_test_real_data_mediumish()
-    # _end_to_end_simulator_test_real_data_medium()
-    # _test_fast_tree()
+    _test_fast_tree()
     _test_fast_tree_2()
+    _end_to_end_simulator_test_minimal()
+    _end_to_end_simulator_test_uniform()
+    _end_to_end_simulator_test_uniform_constrained()
+    _end_to_end_simulator_test_large_matrices()
+    _end_to_end_simulator_test_real_data_small()
+    _end_to_end_simulator_test_real_data_mediumish()
+    _end_to_end_simulator_test_real_data_medium()
 
 
 def _main():

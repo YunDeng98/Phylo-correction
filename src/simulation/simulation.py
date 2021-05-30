@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import random
 import tqdm
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from ete3 import Tree
 
@@ -29,7 +29,14 @@ def get_L(msa_path: str) -> int:
                 return len(line.strip())
 
 
-def chain_jump(int_state: List[int], model_1, model_2, contacting_pairs, independent_sites, dist) -> List[int]:
+def chain_jump(
+    int_state: List[int],
+    model_1: Phylo_util.substitution_model,
+    model_2: Phylo_util.substitution_model,
+    contacting_pairs: List[Tuple[int, int]],
+    independent_sites: List[int],
+    dist: float,
+) -> List[int]:
     res = []
     for i in range(len(independent_sites)):
         res.append(Phylo_util.ending_state(initial_state_index=int_state[i], model=model_1, t=dist))
@@ -40,7 +47,12 @@ def chain_jump(int_state: List[int], model_1, model_2, contacting_pairs, indepen
     return res
 
 
-def chain_stationary(pi_1, pi_2, contacting_pairs, independent_sites) -> List[int]:
+def chain_stationary(
+    pi_1: np.array,
+    pi_2: np.array,
+    contacting_pairs: List[Tuple[int, int]],
+    independent_sites: List[int],
+) -> List[int]:
     res = []
     for _ in range(len(independent_sites)):
         res.append(np.random.choice(list(range(len(pi_1))), p=pi_1))
@@ -49,8 +61,14 @@ def chain_stationary(pi_1, pi_2, contacting_pairs, independent_sites) -> List[in
     return res
 
 
-def translate_states(int_states, Q1_df, Q2_df, contacting_pairs, independent_sites) -> Dict:
-    res = {}
+def translate_states(
+    int_states: Dict[str, List[int]],
+    Q1_df: pd.DataFrame,
+    Q2_df: pd.DataFrame,
+    contacting_pairs: List[Tuple[int, int]],
+    independent_sites: List[int],
+) -> Dict[str, str]:
+    res = {}  # type: Dict[str, str]
     L = len(contacting_pairs) + len(independent_sites)
     for v, int_state in int_states.items():
         state = ["@"] * L
@@ -68,7 +86,13 @@ def translate_states(int_states, Q1_df, Q2_df, contacting_pairs, independent_sit
     return res
 
 
-def run_chain(tree, Q1_df, Q2_df, contacting_pairs, independent_sites) -> Dict:
+def run_chain(
+    tree: Tree,
+    Q1_df: pd.DataFrame,
+    Q2_df: pd.DataFrame,
+    contacting_pairs: List[Tuple[int, int]],
+    independent_sites: List[int],
+) -> Dict[str, str]:
     r"""
     Run the chain down the tree, starting from the stationary distribution.
     Use Q1 for the independent sites, Q2 for the contacting sites.
@@ -97,7 +121,7 @@ def run_chain(tree, Q1_df, Q2_df, contacting_pairs, independent_sites) -> Dict:
     return states
 
 
-def map_func(args):
+def map_func(args: List) -> None:
     logger = logging.getLogger("simulation")
     protein_family_name = args[0]
     a3m_dir = args[1]
@@ -197,17 +221,17 @@ def map_func(args):
 class Simulator:
     def __init__(
         self,
-        a3m_dir,
-        tree_dir,
-        a3m_simulated_dir,
-        contact_simulated_dir,
-        ancestral_states_simulated_dir,
-        n_process,
-        expected_number_of_MSAs,
-        max_families,
+        a3m_dir: str,
+        tree_dir: str,
+        a3m_simulated_dir: str,
+        contact_simulated_dir: str,
+        ancestral_states_simulated_dir: str,
+        n_process: int,
+        expected_number_of_MSAs: int,
+        max_families: int,
         simulation_pct_interacting_positions,
-        Q1_ground_truth,
-        Q2_ground_truth,
+        Q1_ground_truth: str,
+        Q2_ground_truth: str,
     ):
         self.a3m_dir = a3m_dir
         self.tree_dir = tree_dir
@@ -221,7 +245,7 @@ class Simulator:
         self.Q1_ground_truth = Q1_ground_truth
         self.Q2_ground_truth = Q2_ground_truth
 
-    def run(self):
+    def run(self) -> None:
         a3m_dir = self.a3m_dir
         tree_dir = self.tree_dir
         a3m_simulated_dir = self.a3m_simulated_dir

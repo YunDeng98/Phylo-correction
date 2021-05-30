@@ -8,22 +8,20 @@ import sys
 
 import logging
 import numpy as np
-import tempfile
 import tqdm
-from typing import Dict, Tuple
 import random
 import hashlib
 
 from ete3 import Tree
 
-sys.path.append('../')
+sys.path.append("../")
 
 
 def get_transitions(tree, sequences, contact_matrix):
     # The root's name was not written out by ete3 in the maximum_parsimony script,
     # so we name it ourselves.
-    assert(tree.name == "")
-    tree.name = 'internal-1'
+    assert tree.name == ""
+    tree.name = "internal-1"
     res = []
     height = {}
     path_height = {}
@@ -36,21 +34,25 @@ def get_transitions(tree, sequences, contact_matrix):
             height[v.name] = max(height[v.name], height[u.name] + u.dist)
             path_height[v.name] = max(path_height[v.name], path_height[u.name] + 1)
         for u in v.get_children():
-            res.append((
-                sequences[v.name][site1_id] + sequences[v.name][site2_id],
-                sequences[u.name][site1_id] + sequences[u.name][site2_id],
-                u.dist,
-                height[v.name],
-                path_height[v.name],
-                v.name,
-                u.name,
-                site1_id,
-                site2_id
-            ))
-    
-    L = len(sequences['internal-1'])
-    assert(contact_matrix.shape == (L, L))
-    sites_in_contact = np.array([(i, j) for i in range(L) for j in range(i + 1, L) if contact_matrix[i, j] == 1 and abs(i - j) >= 7])
+            res.append(
+                (
+                    sequences[v.name][site1_id] + sequences[v.name][site2_id],
+                    sequences[u.name][site1_id] + sequences[u.name][site2_id],
+                    u.dist,
+                    height[v.name],
+                    path_height[v.name],
+                    v.name,
+                    u.name,
+                    site1_id,
+                    site2_id,
+                )
+            )
+
+    L = len(sequences["internal-1"])
+    assert contact_matrix.shape == (L, L)
+    sites_in_contact = np.array(
+        [(i, j) for i in range(L) for j in range(i + 1, L) if contact_matrix[i, j] == 1 and abs(i - j) >= 7]
+    )
     # chosen_sites_in_contact = sites_in_contact[
     #     np.random.choice(
     #         range(len(sites_in_contact)),
@@ -58,21 +60,21 @@ def get_transitions(tree, sequences, contact_matrix):
     #         replace=False)]
     chosen_sites_in_contact = sites_in_contact  # Just choose all
     for (site1_id, site2_id) in chosen_sites_in_contact:
-        assert(contact_matrix[site1_id, site2_id] == 1)
-        assert(contact_matrix[site2_id, site1_id] == 1)
+        assert contact_matrix[site1_id, site2_id] == 1
+        assert contact_matrix[site2_id, site1_id] == 1
         dfs_get_transitions(tree, site1_id, site2_id)
     return res
 
 
 def map_func(args):
-    a3m_dir = args[0]
+    # a3m_dir = args[0]
     parsimony_dir = args[1]
     protein_family_name = args[2]
     outdir = args[3]
     contact_dir = args[4]
 
     logger = logging.getLogger("co_transition_extraction")
-    seed = int(hashlib.md5((protein_family_name + 'co_transition_extraction').encode()).hexdigest()[:8], 16)
+    seed = int(hashlib.md5((protein_family_name + "co_transition_extraction").encode()).hexdigest()[:8], 16)
     logger.info(f"Setting random seed to: {seed}")
     np.random.seed(seed)
     random.seed(seed)
@@ -82,18 +84,15 @@ def map_func(args):
     try:
         tree = Tree(os.path.join(parsimony_dir, protein_family_name + ".newick"), format=3)
     except:
-        logger.info(f"Malformed tree for family: {protein_family_name} . Skipping")
+        logger.error(f"Malformed tree for family: {protein_family_name}")
         return
     # Read sequences
-    nseqs = 0
     sequences = {}
     with open(os.path.join(parsimony_dir, protein_family_name + ".parsimony"), "r") as infile:
         for i, line in enumerate(infile):
-            line_contents = line.split(' ')
-            if i == 0:
-                nseqs = int(line_contents[0])
-            else:
-                sequences[line_contents[0]] = line_contents[1].rstrip('\n')
+            line_contents = line.split(" ")
+            if i != 0:
+                sequences[line_contents[0]] = line_contents[1].rstrip("\n")
 
     # Read contact matrix
     contact_matrix = np.loadtxt(os.path.join(contact_dir, protein_family_name + ".cm"))
@@ -101,7 +100,26 @@ def map_func(args):
     transitions = get_transitions(tree, sequences, contact_matrix)
     res = "starting_state,ending_state,length,height,path_height,starting_node,ending_node,site1_id,site2_id\n"
     for transition in transitions:
-        res += transition[0] + "," + transition[1] +  "," + str(transition[2]) + "," + str(transition[3]) + "," + str(transition[4]) + "," + str(transition[5]) + "," + str(transition[6]) + "," + str(transition[7]) + "," + str(transition[8]) + "\n"
+        res += (
+            transition[0]
+            + ","
+            + transition[1]
+            + ","
+            + str(transition[2])
+            + ","
+            + str(transition[3])
+            + ","
+            + str(transition[4])
+            + ","
+            + str(transition[5])
+            + ","
+            + str(transition[6])
+            + ","
+            + str(transition[7])
+            + ","
+            + str(transition[8])
+            + "\n"
+        )
 
     transition_filename = os.path.join(outdir, protein_family_name + ".transitions")
     with open(transition_filename, "w") as transition_file:
@@ -140,9 +158,7 @@ class CoTransitionExtractor:
         logger.info("Starting ... ")
 
         if os.path.exists(outdir):
-            raise ValueError(
-                f"outdir {outdir} already exists. Aborting not to " f"overwrite!"
-            )
+            raise ValueError(f"outdir {outdir} already exists. Aborting not to " f"overwrite!")
         os.makedirs(outdir)
 
         if not os.path.exists(a3m_dir):
@@ -151,8 +167,7 @@ class CoTransitionExtractor:
         filenames = list(os.listdir(a3m_dir))
         if not len(filenames) == expected_number_of_MSAs:
             raise ValueError(
-                f"Number of MSAs is {len(filenames)}, does not match "
-                f"expected {expected_number_of_MSAs}"
+                f"Number of MSAs is {len(filenames)}, does not match " f"expected {expected_number_of_MSAs}"
             )
         protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
 

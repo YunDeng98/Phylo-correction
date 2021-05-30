@@ -8,29 +8,29 @@ import sys
 
 import logging
 import numpy as np
-import tempfile
 import tqdm
-from typing import Dict, List, Tuple
 
-from ete3 import Tree
-import numpy as np
 import pandas as pd
 import string
 import random
 import hashlib
 
-sys.path.append('../')
+from typing import List
+
+sys.path.append("../")
 
 
 def map_func(args):
-    a3m_dir = args[0]
+    # a3m_dir = args[0]
     transitions_dir = args[1]
     protein_family_names_for_shard = args[2]
-    outdir = args[3]
+    # outdir = args[3]
     alphabet = args[4]
 
     logger = logging.getLogger("matrix_generation")
-    seed = int(hashlib.md5((''.join(protein_family_names_for_shard) + 'matrix_generation').encode()).hexdigest()[:8], 16)
+    seed = int(
+        hashlib.md5(("".join(protein_family_names_for_shard) + "matrix_generation").encode()).hexdigest()[:8], 16
+    )
     logger.info(f"Setting random seed to: {seed}")
     np.random.seed(seed)
     random.seed(seed)
@@ -44,10 +44,10 @@ def map_func(args):
         transitions_df = pd.read_csv(os.path.join(transitions_dir, protein_family_name + ".transitions"), sep=",")
 
         # Filter transitions based on citeria
-        print(f"TODO: Filter transitions based on criteria! (low, short branches)")
+        logger.info("TODO: Filter transitions based on criteria! (low, short branches)")
 
         # Now add quantization column and group by it too.
-        print(f"TODO: Add quantization column and group by it too!")
+        logger.info("TODO: Add quantization column and group by it too!")
 
         # Summarize remaining transitions into the matrices
         summarized_transitions = transitions_df.groupby(["starting_state", "ending_state"]).size()
@@ -64,11 +64,7 @@ def write_out_matrices(res, outdir):
     res.to_csv(out_filepath, sep="\t")
 
 
-def get_protein_family_names_for_shard(
-    shard_id: int,
-    n_process: int,
-    protein_family_names: List[str]
-) -> List[str]:
+def get_protein_family_names_for_shard(shard_id: int, n_process: int, protein_family_names: List[str]) -> List[str]:
     res = [protein_family_names[i] for i in range(len(protein_family_names)) if i % n_process == shard_id]
     return res
 
@@ -101,10 +97,31 @@ class MatrixGenerator:
         max_families = self.max_families
         num_sites = self.num_sites
 
-        assert(num_sites in [1, 2])
+        assert num_sites in [1, 2]
 
         # Create list of amino acids
-        amino_acids = ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V'] + ['-']
+        amino_acids = [
+            "A",
+            "R",
+            "N",
+            "D",
+            "C",
+            "Q",
+            "E",
+            "G",
+            "H",
+            "I",
+            "L",
+            "K",
+            "M",
+            "F",
+            "P",
+            "S",
+            "T",
+            "W",
+            "Y",
+            "V",
+        ] + ["-"]
         for letter in string.ascii_uppercase:
             if letter not in amino_acids:
                 amino_acids += [letter]
@@ -116,18 +133,16 @@ class MatrixGenerator:
                 for aa2 in amino_acids:
                     alphabet.append(f"{aa1}{aa2}")
         else:
-            assert(num_sites == 1)
+            assert num_sites == 1
             alphabet = amino_acids[:]
 
         logger = logging.getLogger("matrix_generation")
         logger.info("Starting ... ")
 
-        print(f"TODO: Accept branch length quantization as input!")
+        logger.info("TODO: Accept branch length quantization as input!")
 
         if os.path.exists(outdir):
-            raise ValueError(
-                f"outdir {outdir} already exists. Aborting not to " f"overwrite!"
-            )
+            raise ValueError(f"outdir {outdir} already exists. Aborting not to " f"overwrite!")
         os.makedirs(outdir)
 
         if not os.path.exists(a3m_dir):
@@ -136,13 +151,18 @@ class MatrixGenerator:
         filenames = list(os.listdir(a3m_dir))
         if not len(filenames) == expected_number_of_MSAs:
             raise ValueError(
-                f"Number of MSAs is {len(filenames)}, does not match "
-                f"expected {expected_number_of_MSAs}"
+                f"Number of MSAs is {len(filenames)}, does not match " f"expected {expected_number_of_MSAs}"
             )
         protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
 
         map_args = [
-            (a3m_dir, transitions_dir, get_protein_family_names_for_shard(shard_id, n_process, protein_family_names), outdir, alphabet)
+            (
+                a3m_dir,
+                transitions_dir,
+                get_protein_family_names_for_shard(shard_id, n_process, protein_family_names),
+                outdir,
+                alphabet,
+            )
             for shard_id in range(n_process)
         ]
 

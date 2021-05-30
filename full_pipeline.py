@@ -29,7 +29,7 @@ def init_logger():
     logger.addHandler(fileHandler)
 
 
-class Pipeline():
+class Pipeline:
     r"""
     A Pipeline estimates rate matrices from MSAs and structures.
 
@@ -83,6 +83,7 @@ class Pipeline():
         co_transitions_dir: Where the pair-of-site transitions lie
         co_matrices_dir: Where the pair-of-site frequency matrices lie.
     """
+
     def __init__(
         self,
         outdir: str,
@@ -121,9 +122,15 @@ class Pipeline():
         # Where the transition matrices obtained by quantizing transition edges will be stored
         self.matrices_dir = os.path.join(outdir, f"matrices_{max_seqs}_seqs_{max_sites}_sites")
         # Where the co-transitions obtained from the maximum parsimony phylogenies will be stored
-        self.co_transitions_dir = os.path.join(outdir, f"co_transitions_{max_seqs}_seqs_{max_sites}_sites_{armstrong_cutoff}")
+        self.co_transitions_dir = os.path.join(
+            outdir,
+            f"co_transitions_{max_seqs}_seqs_{max_sites}_sites_{armstrong_cutoff}",
+        )
         # Where the co-transition matrices obtained by quantizing transition edges will be stored
-        self.co_matrices_dir = os.path.join(outdir, f"co_matrices_{max_seqs}_seqs_{max_sites}_sites_{armstrong_cutoff}")
+        self.co_matrices_dir = os.path.join(
+            outdir,
+            f"co_matrices_{max_seqs}_seqs_{max_sites}_sites_{armstrong_cutoff}",
+        )
 
     def run(self):
         max_seqs = self.max_seqs
@@ -159,8 +166,8 @@ class Pipeline():
 
         # Generate the contacts
         if precomputed_contact_dir is None:
-            assert(armstrong_cutoff is not None)
-            assert(pdb_dir is not None)
+            assert armstrong_cutoff is not None
+            assert pdb_dir is not None
             contact_generator = ContactGenerator(
                 a3m_dir=a3m_dir,
                 pdb_dir=pdb_dir,
@@ -172,8 +179,8 @@ class Pipeline():
             )
             contact_generator.run()
         else:
-            assert(armstrong_cutoff is None)
-            assert(pdb_dir is None)
+            assert armstrong_cutoff is None
+            assert pdb_dir is None
             contact_dir = precomputed_contact_dir
 
         # Generate the maximum parsimony reconstructions
@@ -260,6 +267,7 @@ class EndToEndSimulator:
             the phylogeny reconstruction step should use a matrix that
             aligns with Q1_ground_truth instead.
     """
+
     def __init__(
         self,
         outdir: str,
@@ -283,9 +291,9 @@ class EndToEndSimulator:
         Q1_ground_truth = self.Q1_ground_truth
         Q2_ground_truth = self.Q2_ground_truth
         fast_tree_rate_matrix = self.fast_tree_rate_matrix
-        a3m_simulated_dir = os.path.join(outdir, 'a3m_simulated')
-        contact_simulated_dir = os.path.join(outdir, 'contacts_simulated')
-        ancestral_states_simulated_dir = os.path.join(outdir, 'ancestral_states_simulated')
+        a3m_simulated_dir = os.path.join(outdir, "a3m_simulated")
+        contact_simulated_dir = os.path.join(outdir, "contacts_simulated")
+        ancestral_states_simulated_dir = os.path.join(outdir, "ancestral_states_simulated")
 
         simulator = Simulator(
             a3m_dir=pipeline.a3m_dir,
@@ -321,104 +329,104 @@ class EndToEndSimulator:
 
 def _end_to_end_simulator_test_minimal():
     pipeline = Pipeline(
-        outdir='pipeline_output_test',
+        outdir="pipeline_output_test",
         max_seqs=1024,
         max_sites=1024,
         armstrong_cutoff=None,
-        rate_matrix='None',
+        rate_matrix="None",
         n_process=3,
         expected_number_of_MSAs=3,
         max_families=3,
-        a3m_dir='input_data/a3m_test',
+        a3m_dir="input_data/a3m_test",
         pdb_dir=None,
         precomputed_contact_dir=None,
     )
 
     end_to_end_simulator = EndToEndSimulator(
-        outdir='test_outputs/_end_to_end_simulator_test_minimal',
+        outdir="test_outputs/_end_to_end_simulator_test_minimal",
         pipeline=pipeline,
         simulation_pct_interacting_positions=0.66,
-        Q1_ground_truth='input_data/synthetic_rate_matrices/Q1_ground_truth.txt',
-        Q2_ground_truth='input_data/synthetic_rate_matrices/Q2_ground_truth.txt',
-        fast_tree_rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt',
+        Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_ground_truth.txt",
+        Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_ground_truth.txt",
+        fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
     )
     end_to_end_simulator.run()
 
 
 def _end_to_end_simulator_test_uniform():
     pipeline = Pipeline(
-        outdir='pipeline_output_test',
+        outdir="pipeline_output_test",
         max_seqs=1024,
         max_sites=1024,
         armstrong_cutoff=None,
-        rate_matrix='None',
+        rate_matrix="None",
         n_process=3,
         expected_number_of_MSAs=3,
         max_families=3,
-        a3m_dir='input_data/a3m_test',
+        a3m_dir="input_data/a3m_test",
         pdb_dir=None,
         precomputed_contact_dir=None,
     )
 
     end_to_end_simulator = EndToEndSimulator(
-        outdir='test_outputs/_end_to_end_simulator_test_uniform',
+        outdir="test_outputs/_end_to_end_simulator_test_uniform",
         pipeline=pipeline,
         simulation_pct_interacting_positions=0.66,
-        Q1_ground_truth='input_data/synthetic_rate_matrices/Q1_uniform.txt',
-        Q2_ground_truth='input_data/synthetic_rate_matrices/Q2_uniform.txt',
-        fast_tree_rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt',
+        Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
+        Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform.txt",
+        fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
     )
     end_to_end_simulator.run()
 
 
 def _end_to_end_simulator_test_uniform_constrained():
     pipeline = Pipeline(
-        outdir='pipeline_output_test',
+        outdir="pipeline_output_test",
         max_seqs=1024,
         max_sites=1024,
         armstrong_cutoff=None,
-        rate_matrix='None',
+        rate_matrix="None",
         n_process=3,
         expected_number_of_MSAs=3,
         max_families=3,
-        a3m_dir='input_data/a3m_test',
+        a3m_dir="input_data/a3m_test",
         pdb_dir=None,
         precomputed_contact_dir=None,
     )
 
     end_to_end_simulator = EndToEndSimulator(
-        outdir='test_outputs/_end_to_end_simulator_test_uniform_constrained',
+        outdir="test_outputs/_end_to_end_simulator_test_uniform_constrained",
         pipeline=pipeline,
         simulation_pct_interacting_positions=0.66,
-        Q1_ground_truth='input_data/synthetic_rate_matrices/Q1_uniform.txt',
-        Q2_ground_truth='input_data/synthetic_rate_matrices/Q2_uniform_constrained.txt',
-        fast_tree_rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt',
+        Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
+        Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform_constrained.txt",
+        fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
     )
     end_to_end_simulator.run()
 
 
 def _end_to_end_simulator_test_large_matrices():
     pipeline = Pipeline(
-        outdir='test_outputs/_end_to_end_simulator_test_large_matrices_pipeline_output',
+        outdir="test_outputs/_end_to_end_simulator_test_large_matrices_pipeline_output",
         max_seqs=4,
         max_sites=4,
         armstrong_cutoff=9.0,
-        rate_matrix='None',
+        rate_matrix="None",
         n_process=3,
         expected_number_of_MSAs=15051,
         max_families=3,
-        a3m_dir='input_data/a3m',
-        pdb_dir='input_data/pdb',
+        a3m_dir="input_data/a3m",
+        pdb_dir="input_data/pdb",
     )
     pipeline.run()
 
     end_to_end_simulator = EndToEndSimulator(
-        outdir='test_outputs/_end_to_end_simulator_test_large_matrices',
+        outdir="test_outputs/_end_to_end_simulator_test_large_matrices",
         pipeline=pipeline,
         simulation_pct_interacting_positions=0.66,
-        Q1_ground_truth='input_data/synthetic_rate_matrices/Q1_uniform.txt',
-        Q2_ground_truth='input_data/synthetic_rate_matrices/Q2_uniform.txt',
-        fast_tree_rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt',
+        Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
+        Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform.txt",
+        fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
     )
     end_to_end_simulator.run()
 
@@ -428,36 +436,36 @@ def _end_to_end_simulator_test_real_data_small():
     Takes 2 min.
     """
     pipeline = Pipeline(
-        outdir='test_outputs/_end_to_end_simulator_test_real_data_small_pipeline_output',
+        outdir="test_outputs/_end_to_end_simulator_test_real_data_small_pipeline_output",
         max_seqs=4,
         max_sites=4,
         armstrong_cutoff=8.0,
-        rate_matrix='None',
+        rate_matrix="None",
         n_process=3,
         expected_number_of_MSAs=15051,
         max_families=3,
-        a3m_dir='input_data/a3m',
-        pdb_dir='input_data/pdb',
+        a3m_dir="input_data/a3m",
+        pdb_dir="input_data/pdb",
     )
     pipeline.run()
 
     end_to_end_simulator = EndToEndSimulator(
-        outdir='test_outputs/_end_to_end_simulator_test_real_data_small_uniform',
+        outdir="test_outputs/_end_to_end_simulator_test_real_data_small_uniform",
         pipeline=pipeline,
         simulation_pct_interacting_positions=0.66,
-        Q1_ground_truth='input_data/synthetic_rate_matrices/Q1_uniform.txt',
-        Q2_ground_truth='input_data/synthetic_rate_matrices/Q2_uniform.txt',
-        fast_tree_rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt',
+        Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
+        Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform.txt",
+        fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
     )
     end_to_end_simulator.run()
 
     end_to_end_simulator = EndToEndSimulator(
-        outdir='test_outputs/_end_to_end_simulator_test_real_data_small_uniform_constrained',
+        outdir="test_outputs/_end_to_end_simulator_test_real_data_small_uniform_constrained",
         pipeline=pipeline,
         simulation_pct_interacting_positions=0.66,
-        Q1_ground_truth='input_data/synthetic_rate_matrices/Q1_uniform.txt',
-        Q2_ground_truth='input_data/synthetic_rate_matrices/Q2_uniform_constrained.txt',
-        fast_tree_rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt',
+        Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
+        Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform_constrained.txt",
+        fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
     )
     end_to_end_simulator.run()
 
@@ -473,36 +481,36 @@ def _end_to_end_simulator_test_real_data_mediumish():
     in the trees.
     """
     pipeline = Pipeline(
-        outdir='test_outputs/_end_to_end_simulator_test_real_data_mediumish_pipeline_output',
+        outdir="test_outputs/_end_to_end_simulator_test_real_data_mediumish_pipeline_output",
         max_seqs=4,
         max_sites=128,
         armstrong_cutoff=8.0,
-        rate_matrix='None',
+        rate_matrix="None",
         n_process=3,
         expected_number_of_MSAs=15051,
         max_families=3,
-        a3m_dir='input_data/a3m',
-        pdb_dir='input_data/pdb',
+        a3m_dir="input_data/a3m",
+        pdb_dir="input_data/pdb",
     )
     pipeline.run()
 
     end_to_end_simulator = EndToEndSimulator(
-        outdir='test_outputs/_end_to_end_simulator_test_real_data_mediumish_uniform',
+        outdir="test_outputs/_end_to_end_simulator_test_real_data_mediumish_uniform",
         pipeline=pipeline,
         simulation_pct_interacting_positions=0.66,
-        Q1_ground_truth='input_data/synthetic_rate_matrices/Q1_uniform.txt',
-        Q2_ground_truth='input_data/synthetic_rate_matrices/Q2_uniform.txt',
-        fast_tree_rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt',
+        Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
+        Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform.txt",
+        fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
     )
     end_to_end_simulator.run()
 
     end_to_end_simulator = EndToEndSimulator(
-        outdir='test_outputs/_end_to_end_simulator_test_real_data_mediumish_uniform_constrained',
+        outdir="test_outputs/_end_to_end_simulator_test_real_data_mediumish_uniform_constrained",
         pipeline=pipeline,
         simulation_pct_interacting_positions=0.66,
-        Q1_ground_truth='input_data/synthetic_rate_matrices/Q1_uniform.txt',
-        Q2_ground_truth='input_data/synthetic_rate_matrices/Q2_uniform_constrained.txt',
-        fast_tree_rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt',
+        Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
+        Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform_constrained.txt",
+        fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
     )
     end_to_end_simulator.run()
 
@@ -512,36 +520,36 @@ def _end_to_end_simulator_test_real_data_medium():
     Takes 10 min.
     """
     pipeline = Pipeline(
-        outdir='test_outputs/_end_to_end_simulator_test_real_data_medium_pipeline_output',
+        outdir="test_outputs/_end_to_end_simulator_test_real_data_medium_pipeline_output",
         max_seqs=128,
         max_sites=128,
         armstrong_cutoff=8.0,
-        rate_matrix='None',
+        rate_matrix="None",
         n_process=3,
         expected_number_of_MSAs=15051,
         max_families=3,
-        a3m_dir='input_data/a3m',
-        pdb_dir='input_data/pdb',
+        a3m_dir="input_data/a3m",
+        pdb_dir="input_data/pdb",
     )
     pipeline.run()
 
     end_to_end_simulator = EndToEndSimulator(
-        outdir='test_outputs/_end_to_end_simulator_test_real_data_medium_uniform',
+        outdir="test_outputs/_end_to_end_simulator_test_real_data_medium_uniform",
         pipeline=pipeline,
         simulation_pct_interacting_positions=0.66,
-        Q1_ground_truth='input_data/synthetic_rate_matrices/Q1_uniform.txt',
-        Q2_ground_truth='input_data/synthetic_rate_matrices/Q2_uniform.txt',
-        fast_tree_rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt',
+        Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
+        Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform.txt",
+        fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
     )
     end_to_end_simulator.run()
 
     end_to_end_simulator = EndToEndSimulator(
-        outdir='test_outputs/_end_to_end_simulator_test_real_data_medium_uniform_constrained',
+        outdir="test_outputs/_end_to_end_simulator_test_real_data_medium_uniform_constrained",
         pipeline=pipeline,
         simulation_pct_interacting_positions=0.66,
-        Q1_ground_truth='input_data/synthetic_rate_matrices/Q1_uniform.txt',
-        Q2_ground_truth='input_data/synthetic_rate_matrices/Q2_uniform_constrained.txt',
-        fast_tree_rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt',
+        Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
+        Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform_constrained.txt",
+        fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
     )
     end_to_end_simulator.run()
 
@@ -555,26 +563,26 @@ def _test_fast_tree():
     data with the same single-site matrix as was used to generate the data.
     """
     pipeline = Pipeline(
-        outdir='test_outputs/_test_fast_tree_pipeline_output',
+        outdir="test_outputs/_test_fast_tree_pipeline_output",
         max_seqs=4,
         max_sites=1024,
         armstrong_cutoff=8.0,
-        rate_matrix='None',
+        rate_matrix="None",
         n_process=3,
         expected_number_of_MSAs=15051,
         max_families=3,
-        a3m_dir='input_data/a3m',
-        pdb_dir='input_data/pdb',
+        a3m_dir="input_data/a3m",
+        pdb_dir="input_data/pdb",
     )
     pipeline.run()
 
     end_to_end_simulator = EndToEndSimulator(
-        outdir='test_outputs/_test_fast_tree_uniform',
+        outdir="test_outputs/_test_fast_tree_uniform",
         pipeline=pipeline,
         simulation_pct_interacting_positions=0.0,
-        Q1_ground_truth='input_data/synthetic_rate_matrices/Q1_uniform.txt',
-        Q2_ground_truth='input_data/synthetic_rate_matrices/Q2_uniform.txt',    # Doesn't matter bc 0% interactions
-        fast_tree_rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt',
+        Q1_ground_truth="input_data/synthetic_rate_matrices/Q1_uniform.txt",
+        Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform.txt",  # Doesn't matter bc 0% interactions
+        fast_tree_rate_matrix="input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt",
     )
     end_to_end_simulator.run()
 
@@ -588,26 +596,26 @@ def _test_fast_tree_2():
     data with the same single-site matrix as was used to generate the data.
     """
     pipeline = Pipeline(
-        outdir='test_outputs/_test_fast_tree_2_pipeline_output',
+        outdir="test_outputs/_test_fast_tree_2_pipeline_output",
         max_seqs=4,
         max_sites=1024,
         armstrong_cutoff=8.0,
-        rate_matrix='None',
+        rate_matrix="None",
         n_process=1,
         expected_number_of_MSAs=15051,
         max_families=1,
-        a3m_dir='input_data/a3m',
-        pdb_dir='input_data/pdb',
+        a3m_dir="input_data/a3m",
+        pdb_dir="input_data/pdb",
     )
     pipeline.run()
 
     end_to_end_simulator = EndToEndSimulator(
-        outdir='test_outputs/_test_fast_tree_2_uniform',
+        outdir="test_outputs/_test_fast_tree_2_uniform",
         pipeline=pipeline,
         simulation_pct_interacting_positions=0.0,
-        Q1_ground_truth='input_data/synthetic_rate_matrices/WAG_matrix.txt',
-        Q2_ground_truth='input_data/synthetic_rate_matrices/Q2_uniform.txt',  # Doesn't matter bc 0% interactions
-        fast_tree_rate_matrix='None',
+        Q1_ground_truth="input_data/synthetic_rate_matrices/WAG_matrix.txt",
+        Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform.txt",  # Doesn't matter bc 0% interactions
+        fast_tree_rate_matrix="None",
     )
     end_to_end_simulator.run()
 

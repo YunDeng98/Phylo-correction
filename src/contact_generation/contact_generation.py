@@ -1,7 +1,6 @@
 import logging
 import multiprocessing
 import os
-import sys
 import tqdm
 import hashlib
 import numpy as np
@@ -17,7 +16,7 @@ def map_func(args):
     armstrong_cutoff = args[3]
 
     logger = logging.getLogger("contact_generation")
-    seed = int(hashlib.md5((protein_family_name + 'contact_generation').encode()).hexdigest()[:8], 16)
+    seed = int(hashlib.md5((protein_family_name + "contact_generation").encode()).hexdigest()[:8], 16)
     logger.info(f"Setting random seed to: {seed}")
     np.random.seed(seed)
     random.seed(seed)
@@ -60,9 +59,7 @@ class ContactGenerator:
         max_families = self.max_families
 
         if os.path.exists(outdir):
-            raise ValueError(
-                f"outdir {outdir} already exists. Aborting not to " f"overwrite!"
-            )
+            raise ValueError(f"outdir {outdir} already exists. Aborting not to " f"overwrite!")
         os.makedirs(outdir)
 
         if not os.path.exists(pdb_dir):
@@ -74,14 +71,12 @@ class ContactGenerator:
         filenames = list(os.listdir(a3m_dir))
         if not len(filenames) == expected_number_of_families:
             raise ValueError(
-                f"Number of families is {len(filenames)}, does not match "
-                f"expected {expected_number_of_families}"
+                f"Number of families is {len(filenames)}, does not match " f"expected {expected_number_of_families}"
             )
         protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
 
         map_args = [
-            (pdb_dir, protein_family_name, outdir, armstrong_cutoff)
-            for protein_family_name in protein_family_names
+            (pdb_dir, protein_family_name, outdir, armstrong_cutoff) for protein_family_name in protein_family_names
         ]
         if n_process > 1:
             with multiprocessing.Pool(n_process) as pool:

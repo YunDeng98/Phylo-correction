@@ -11,14 +11,14 @@ import logging
 import numpy as np
 import pandas as pd
 import random
-import tempfile
 import tqdm
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 from ete3 import Tree
 
-sys.path.append('../')
 from src.maximum_parsimony import name_internal_nodes
+
+sys.path.append("../")
 import Phylo_util
 
 
@@ -34,26 +34,18 @@ def chain_jump(int_state: List[int], model_1, model_2, contacting_pairs, indepen
     for i in range(len(independent_sites)):
         res.append(Phylo_util.ending_state(initial_state_index=int_state[i], model=model_1, t=dist))
     for i in range(len(contacting_pairs)):
-        res.append(Phylo_util.ending_state(initial_state_index=int_state[len(independent_sites) + i], model=model_2, t=dist))
+        res.append(
+            Phylo_util.ending_state(initial_state_index=int_state[len(independent_sites) + i], model=model_2, t=dist)
+        )
     return res
 
 
 def chain_stationary(pi_1, pi_2, contacting_pairs, independent_sites) -> List[int]:
     res = []
     for _ in range(len(independent_sites)):
-        res.append(
-            np.random.choice(
-                list(range(len(pi_1))),
-                p=pi_1
-            )
-        )
+        res.append(np.random.choice(list(range(len(pi_1))), p=pi_1))
     for _ in range(len(contacting_pairs)):
-        res.append(
-            np.random.choice(
-                list(range(len(pi_2))),
-                p=pi_2
-            )
-        )
+        res.append(np.random.choice(list(range(len(pi_2))), p=pi_2))
     return res
 
 
@@ -71,7 +63,7 @@ def translate_states(int_states, Q1_df, Q2_df, contacting_pairs, independent_sit
             state_1, state_2 = states[0], states[1]
             state[site_1] = state_1
             state[site_2] = state_2
-        assert(all([s != "@" for s in state]))
+        assert all([s != "@" for s in state])
         res[v] = "".join(state)
     return res
 
@@ -93,7 +85,9 @@ def run_chain(tree, Q1_df, Q2_df, contacting_pairs, independent_sites) -> Dict:
     def dfs_run_chain(v):
         for u in v.get_children():
             # Set state of u
-            int_states[u.name] = chain_jump(int_states[v.name], model_1, model_2, contacting_pairs, independent_sites, u.dist)
+            int_states[u.name] = chain_jump(
+                int_states[v.name], model_1, model_2, contacting_pairs, independent_sites, u.dist
+            )
             dfs_run_chain(u)
 
     int_states[tree.name] = chain_stationary(pi_1, pi_2, contacting_pairs, independent_sites)
@@ -116,7 +110,7 @@ def map_func(args):
     ancestral_states_simulated_dir = args[8]
 
     # Set seed for reproducibility
-    seed = int(hashlib.md5((protein_family_name + 'simulation').encode()).hexdigest()[:8], 16)
+    seed = int(hashlib.md5((protein_family_name + "simulation").encode()).hexdigest()[:8], 16)
     logger.info(f"Setting random seed to: {seed}")
     np.random.seed(seed)
     random.seed(seed)
@@ -134,13 +128,13 @@ def map_func(args):
         return
     name_internal_nodes(tree)
     # Write parsimony tree (is same as original tree but with internal nodes named)
-    parsimony_tree_path = os.path.join(ancestral_states_simulated_dir, protein_family_name + '.newick')
+    parsimony_tree_path = os.path.join(ancestral_states_simulated_dir, protein_family_name + ".newick")
     tree.write(format=3, outfile=os.path.join(parsimony_tree_path))
 
     # Read single-site transition rate matrix
-    Q1 = pd.read_csv(Q1_ground_truth, sep="\t", index_col=0, keep_default_na=False, na_values=[''])
+    Q1 = pd.read_csv(Q1_ground_truth, sep="\t", index_col=0, keep_default_na=False, na_values=[""])
     # Read co-evolution rate matrix
-    Q2 = pd.read_csv(Q2_ground_truth, sep="\t", index_col=0, keep_default_na=False, na_values=[''])
+    Q2 = pd.read_csv(Q2_ground_truth, sep="\t", index_col=0, keep_default_na=False, na_values=[""])
     states = list(Q1.index)
     # logger.info(f"Q1 states = {list(Q1.index)}")
     # logger.info(f"Q2 states = {list(Q2.index)}")
@@ -161,7 +155,7 @@ def map_func(args):
         (all_site_indices[2 * i], all_site_indices[2 * i + 1])
         for i in range(int(L * simulation_pct_interacting_positions / 2.0))
     ]
-    independent_sites = all_site_indices[len(contacting_pairs):]
+    independent_sites = all_site_indices[len(contacting_pairs) :]
     contact_matrix = np.zeros(shape=(L, L), dtype=int)
     for (site1, site2) in contacting_pairs:
         contact_matrix[site1, site2] = contact_matrix[site2, site1] = 1
@@ -172,7 +166,7 @@ def map_func(args):
     states = run_chain(tree, Q1, Q2, contacting_pairs, independent_sites)
 
     # Write out contact matrix
-    contact_matrix_path = os.path.join(contact_simulated_dir, protein_family_name + '.cm')
+    contact_matrix_path = os.path.join(contact_simulated_dir, protein_family_name + ".cm")
     np.savetxt(contact_matrix_path, contact_matrix, fmt="%d")
 
     # Write out MSA
@@ -185,7 +179,7 @@ def map_func(args):
         if leaf.name != "seq1":
             msa += ">" + leaf.name + "\n"
             msa += states[leaf.name] + "\n"
-    msa_path = os.path.join(a3m_simulated_dir, protein_family_name + '.a3m')
+    msa_path = os.path.join(a3m_simulated_dir, protein_family_name + ".a3m")
     with open(msa_path, "w") as file:
         file.write(msa)
 
@@ -195,7 +189,7 @@ def map_func(args):
     for node in tree.traverse("levelorder"):
         num_nodes += 1
         maximum_parsimony += node.name + " " + states[node.name] + "\n"
-    ancestral_states_path = os.path.join(ancestral_states_simulated_dir, protein_family_name + '.parsimony')
+    ancestral_states_path = os.path.join(ancestral_states_simulated_dir, protein_family_name + ".parsimony")
     with open(ancestral_states_path, "w") as file:
         file.write(f"{num_nodes}\n" + maximum_parsimony)
 
@@ -249,29 +243,28 @@ class Simulator:
 
         for dire in [a3m_simulated_dir, contact_simulated_dir, ancestral_states_simulated_dir]:
             if os.path.exists(dire):
-                raise ValueError(
-                    f"outdir {dire} already exists. Aborting not to " f"overwrite!"
-                )
+                raise ValueError(f"outdir {dire} already exists. Aborting not to " f"overwrite!")
             os.makedirs(dire)
 
         filenames = list(os.listdir(a3m_dir))
         if not len(filenames) == expected_number_of_MSAs:
             raise ValueError(
-                f"Number of MSAs is {len(filenames)}, does not match "
-                f"expected {expected_number_of_MSAs}"
+                f"Number of MSAs is {len(filenames)}, does not match " f"expected {expected_number_of_MSAs}"
             )
         protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
 
         map_args = [
-            (protein_family_name,
-             a3m_dir,
-             tree_dir,
-             simulation_pct_interacting_positions,
-             Q1_ground_truth,
-             Q2_ground_truth,
-             contact_simulated_dir,
-             a3m_simulated_dir,
-             ancestral_states_simulated_dir)
+            (
+                protein_family_name,
+                a3m_dir,
+                tree_dir,
+                simulation_pct_interacting_positions,
+                Q1_ground_truth,
+                Q2_ground_truth,
+                contact_simulated_dir,
+                a3m_simulated_dir,
+                ancestral_states_simulated_dir,
+            )
             for protein_family_name in protein_family_names
         ]
         if n_process > 1:

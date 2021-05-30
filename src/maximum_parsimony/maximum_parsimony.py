@@ -16,15 +16,16 @@ import random
 
 from ete3 import Tree
 
-sys.path.append('../')
-
 from src.phylogeny_generation import MSA
+
+sys.path.append("../")
 
 
 def name_internal_nodes(t: Tree):
     r"""
     Assigns names to the internal nodes of tree t if they don't already have a name.
     """
+
     def node_name_generator():
         """Generates unique node names for the tree."""
         internal_node_id = 1
@@ -36,7 +37,7 @@ def name_internal_nodes(t: Tree):
 
     def dfs_name_internal_nodes(p, v):
         global internal_node_id
-        if v.name == '':
+        if v.name == "":
             v.name = next(names)
         if p:
             # print(f"{p.name} -> {v.name}")
@@ -66,7 +67,7 @@ def create_node_name_vs_int_mappings(tree) -> Tuple[Dict, Dict]:
         int_to_node_name[key] = v.name
         for u in v.get_children():
             dfs_create_mapping(u)
-    
+
     dfs_create_mapping(tree)
 
     return node_name_to_int, int_to_node_name
@@ -85,7 +86,7 @@ def write_out_tree(tree, node_name_to_int, tree_filepath) -> str:
 
     with open(tree_filepath, "w") as file:
         file.write(f"{len(res) + 1}\n")
-        file.write(''.join(res))
+        file.write("".join(res))
 
 
 def write_out_msa(msa: MSA, node_name_to_int, msa_filepath) -> str:
@@ -110,7 +111,7 @@ def map_parsimony_indexing_back_to_str(int_to_node_name, cpp_parsimony_filepath,
                 if i == 0:
                     res += line
                 else:
-                    line_contents = line.split(' ')
+                    line_contents = line.split(" ")
                     res += f"{int_to_node_name[int(line_contents[0])]} {line_contents[1]}"
             outfile.write(res)
 
@@ -124,17 +125,12 @@ def map_func(args):
     max_sites = args[5]
 
     logger = logging.getLogger("maximum_parsimony")
-    seed = int(hashlib.md5((protein_family_name + 'maximum_parsimony').encode()).hexdigest()[:8], 16)
+    seed = int(hashlib.md5((protein_family_name + "maximum_parsimony").encode()).hexdigest()[:8], 16)
     logger.info(f"Setting random seed to: {seed}")
     np.random.seed(seed)
     random.seed(seed)
 
-    msa = MSA(
-        a3m_dir=a3m_dir,
-        protein_family_name=protein_family_name,
-        max_seqs=max_seqs,
-        max_sites=max_sites
-    )
+    msa = MSA(a3m_dir=a3m_dir, protein_family_name=protein_family_name, max_seqs=max_seqs, max_sites=max_sites)
     # Read tree. Careful: Some trees might be corrupted / not exist due to MSA issues.
     try:
         tree = Tree(os.path.join(tree_dir, protein_family_name + ".newick"))
@@ -166,19 +162,21 @@ def map_func(args):
 
                 # Run C++ maximum parsimony
                 dir_path = os.path.dirname(os.path.realpath(__file__))
-                call_result = os.system(f"{dir_path}/maximum_parsimony {tree_filepath} {msa_filepath} {cpp_parsimony_filepath}")
+                call_result = os.system(
+                    f"{dir_path}/maximum_parsimony {tree_filepath} {msa_filepath} {cpp_parsimony_filepath}"
+                )
                 # logger.info(f"Call result for family {protein_family_name} = {call_result}")
                 if call_result != 0:
-                    logger.info(f"Failed to run C++ maximum parsimony on family {protein_family_name}")
+                    logger.error(f"Failed to run C++ maximum parsimony on family {protein_family_name}")
                 # Convert .parsimony's indexing into string based.
                 try:
                     parsimony_filepath = os.path.join(outdir, protein_family_name + ".parsimony")
                     map_parsimony_indexing_back_to_str(int_to_node_name, cpp_parsimony_filepath, parsimony_filepath)
                 except:
-                    logger.info(f"Failed to process C++ output for {protein_family_name}")
+                    logger.error(f"Failed to process C++ output for {protein_family_name}")
 
 
-class MaximumParsimonyReconstructor():
+class MaximumParsimonyReconstructor:
     def __init__(
         self,
         a3m_dir,
@@ -196,13 +194,13 @@ class MaximumParsimonyReconstructor():
         self.outdir = outdir
         self.max_families = max_families
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        maximum_parsimony_bin_path = os.path.join(dir_path, 'maximum_parsimony')
-        maximum_parsimony_path = os.path.join(dir_path, 'maximum_parsimony.cpp')
+        maximum_parsimony_bin_path = os.path.join(dir_path, "maximum_parsimony")
+        maximum_parsimony_path = os.path.join(dir_path, "maximum_parsimony.cpp")
         if not os.path.exists(maximum_parsimony_bin_path):
             logger.info("Compiling maximum_parsimony.cpp")
             os.system(
-                'g++ -std=c++17 -O3 -Wshadow -Wall  -Wextra -D_GLIBCXX_DEBUG'
-                f' -o {maximum_parsimony_bin_path} {maximum_parsimony_path}'
+                "g++ -std=c++17 -O3 -Wshadow -Wall  -Wextra -D_GLIBCXX_DEBUG"
+                f" -o {maximum_parsimony_bin_path} {maximum_parsimony_path}"
             )
             # Test maximum_parsimony.cpp with:
             # $ ./maximum_parsimony test_data/tree.txt test_data/sequences.txt
@@ -223,9 +221,7 @@ class MaximumParsimonyReconstructor():
         logger.info("Starting ... ")
 
         if os.path.exists(outdir):
-            raise ValueError(
-                f"outdir {outdir} already exists. Aborting not to " f"overwrite!"
-            )
+            raise ValueError(f"outdir {outdir} already exists. Aborting not to " f"overwrite!")
         os.makedirs(outdir)
 
         if not os.path.exists(a3m_dir):
@@ -234,8 +230,7 @@ class MaximumParsimonyReconstructor():
         filenames = list(os.listdir(a3m_dir))
         if not len(filenames) == expected_number_of_MSAs:
             raise ValueError(
-                f"Number of MSAs is {len(filenames)}, does not match "
-                f"expected {expected_number_of_MSAs}"
+                f"Number of MSAs is {len(filenames)}, does not match " f"expected {expected_number_of_MSAs}"
             )
         protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
 

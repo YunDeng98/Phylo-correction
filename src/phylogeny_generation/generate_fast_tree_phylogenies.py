@@ -1,6 +1,5 @@
 import multiprocessing
 import os
-import sys
 
 import hashlib
 import logging
@@ -20,7 +19,7 @@ def _map_func(args):
     rate_matrix = args[5]
 
     logger = logging.getLogger("phylogeny_generation")
-    seed = int(hashlib.md5((protein_family_name + 'phylogeny_generation').encode()).hexdigest()[:8], 16)
+    seed = int(hashlib.md5((protein_family_name + "phylogeny_generation").encode()).hexdigest()[:8], 16)
     logger.info(f"Setting random seed to: {seed}")
     np.random.seed(seed)
     random.seed(seed)
@@ -35,10 +34,11 @@ def _map_func(args):
     )
 
 
-class PhylogenyGenerator():
+class PhylogenyGenerator:
     r"""
     Given a directory with MSAs, generates a directory with one tree for each MSA.
     """
+
     def __init__(
         self,
         a3m_dir: str,
@@ -48,7 +48,7 @@ class PhylogenyGenerator():
         max_seqs: int,
         max_sites: int,
         max_families: int,
-        rate_matrix: str
+        rate_matrix: str,
     ):
         self.a3m_dir = a3m_dir
         self.n_process = n_process
@@ -70,9 +70,7 @@ class PhylogenyGenerator():
         rate_matrix = self.rate_matrix
 
         if os.path.exists(outdir):
-            raise ValueError(
-                f"outdir {outdir} already exists. Aborting not to " f"overwrite!"
-            )
+            raise ValueError(f"outdir {outdir} already exists. Aborting not to " f"overwrite!")
         os.makedirs(outdir)
 
         if not os.path.exists(a3m_dir):
@@ -81,8 +79,7 @@ class PhylogenyGenerator():
         filenames = list(os.listdir(a3m_dir))
         if not len(filenames) == expected_number_of_MSAs:
             raise ValueError(
-                f"Number of MSAs is {len(filenames)}, does not match "
-                f"expected {expected_number_of_MSAs}"
+                f"Number of MSAs is {len(filenames)}, does not match " f"expected {expected_number_of_MSAs}"
             )
         protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
 

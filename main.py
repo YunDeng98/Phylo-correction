@@ -24,17 +24,17 @@ def init_logger():
 
 def test_end_to_end_simulation_real_data():
     r"""
-    Takes ??? min.
+    Takes 2 min.
     """
     pipeline = Pipeline(
         outdir="test_outputs/test_end_to_end_simulation_real_data_pipeline_output",
-        max_seqs=2,
+        max_seqs=4,
         max_sites=128,
         armstrong_cutoff=8.0,
         rate_matrix="None",
-        n_process=1,
+        n_process=3,
         expected_number_of_MSAs=15051,
-        max_families=1,
+        max_families=3,
         a3m_dir="input_data/a3m",
         pdb_dir="input_data/pdb",
     )

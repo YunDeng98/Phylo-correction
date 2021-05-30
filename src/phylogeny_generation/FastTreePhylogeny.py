@@ -59,17 +59,17 @@ class FastTreePhylogeny:
             dir_path = os.path.dirname(os.path.realpath(__file__))
             if rate_matrix[-4:] == 'None':
                 assert(not os.path.exists(rate_matrix))
-                logger.debug(f"Running FastTree with default rate matrix on MSA:\n{msa}")
+                logger.info(f"Running FastTree with default rate matrix on MSA:\n{msa}")
                 os.system(f"{dir_path}/FastTree -quiet < {processed_msa_filename} > {outfile}")
             else:
                 if not os.path.exists(rate_matrix):
                     logger.error(f"Could not find rate matrix {rate_matrix}")
                     exit(1)
-                logger.debug(f"Running FastTree with rate matrix {rate_matrix} on MSA:\n{msa}")
+                logger.info(f"Running FastTree with rate matrix {rate_matrix} on MSA:\n{msa}")
                 os.system(f"{dir_path}/FastTree -quiet -trans {rate_matrix} < {processed_msa_filename} > {outfile}")
             time_end = time.time()
             self._total_time = time_end - time_start
-            logger.debug(f"Time taken: {self.total_time}")
+            logger.info(f"Time taken: {self.total_time}")
             self._msa = msa
             self._protein_family_name = protein_family_name
 

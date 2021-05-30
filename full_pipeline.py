@@ -502,6 +502,39 @@ def _test_fast_tree():
     end_to_end_simulator.run()
 
 
+def _test_fast_tree_2():
+    r"""
+    Takes 2 min.
+
+    I use it to test FastTree: There are only 4 leaves,
+    and there is no co-evolution. I use FastTree to infer
+    data with the same single-site matrix as was used to generate the data.
+    """
+    pipeline = Pipeline(
+        outdir='test_outputs/_test_fast_tree_2_pipeline_output',
+        max_seqs=4,
+        max_sites=1024,
+        armstrong_cutoff=8.0,
+        rate_matrix='synthetic_rate_matrices/WAG_FastTree.txt',
+        n_process=3,
+        expected_number_of_MSAs=15051,
+        max_families=3,
+        a3m_dir='a3m',
+        pdb_dir='pdb',
+    )
+    pipeline.run()
+
+    end_to_end_simulator = EndToEndSimulator(
+        outdir='test_outputs/_test_fast_tree_2_uniform',
+        pipeline=pipeline,
+        simulation_pct_interacting_positions=0.0,
+        Q1_ground_truth='synthetic_rate_matrices/WAG_FastTree.txt',
+        Q2_ground_truth='synthetic_rate_matrices/Q2_uniform.txt',
+        fast_tree_rate_matrix='synthetic_rate_matrices/WAG_FastTree.txt',
+    )
+    end_to_end_simulator.run()
+
+
 def _tests():
     # _end_to_end_simulator_test_minimal()
     # _end_to_end_simulator_test_uniform()
@@ -510,7 +543,8 @@ def _tests():
     # _end_to_end_simulator_test_real_data_small()
     # _end_to_end_simulator_test_real_data_mediumish()
     # _end_to_end_simulator_test_real_data_medium()
-    _test_fast_tree()
+    # _test_fast_tree()
+    _test_fast_tree_2()
 
 
 def _main():

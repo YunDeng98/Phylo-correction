@@ -26,6 +26,8 @@ def test_end_to_end_simulation_real_data():
     r"""
     Takes 2 min.
     """
+    logger = logging.getLogger()
+
     pipeline = Pipeline(
         outdir="test_outputs/test_end_to_end_simulation_real_data_pipeline_output",
         max_seqs=4,
@@ -39,13 +41,49 @@ def test_end_to_end_simulation_real_data():
         pdb_dir="input_data/pdb",
     )
     pipeline.run()
+    logger.info(f"time_Pipeline:\n{pipeline.get_times()}")
 
     end_to_end_simulator = EndToEndSimulator(
         outdir="test_outputs/test_end_to_end_simulation_real_data_simulation_output",
         pipeline=pipeline,
-        simulation_pct_interacting_positions=0.33,
+        simulation_pct_interacting_positions=0.66,
         Q1_ground_truth="input_data/synthetic_rate_matrices/WAG_matrix.txt",
-        Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform.txt",
+        Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform_constrained.txt",
+        fast_tree_rate_matrix='None',
+        simulate_end_to_end=True,
+        simulate_from_trees_wo_ancestral_states=True,
+        simulate_from_trees_w_ancestral_states=True,
+    )
+    end_to_end_simulator.run()
+
+
+def test_end_to_end_simulation_real_data_2():
+    r"""
+    Takes 1 hour.
+    """
+    logger = logging.getLogger()
+
+    pipeline = Pipeline(
+        outdir="test_outputs/test_end_to_end_simulation_real_data_2_pipeline_output",
+        max_seqs=1024,
+        max_sites=1024,
+        armstrong_cutoff=8.0,
+        rate_matrix="None",
+        n_process=3,
+        expected_number_of_MSAs=15051,
+        max_families=3,
+        a3m_dir="input_data/a3m",
+        pdb_dir="input_data/pdb",
+    )
+    pipeline.run()
+    logger.info(f"time_Pipeline:\n{pipeline.get_times()}")
+
+    end_to_end_simulator = EndToEndSimulator(
+        outdir="test_outputs/test_end_to_end_simulation_real_data_2_simulation_output",
+        pipeline=pipeline,
+        simulation_pct_interacting_positions=0.66,
+        Q1_ground_truth="input_data/synthetic_rate_matrices/WAG_matrix.txt",
+        Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform_constrained.txt",
         fast_tree_rate_matrix='None',
         simulate_end_to_end=True,
         simulate_from_trees_wo_ancestral_states=True,
@@ -58,6 +96,7 @@ def _main():
     init_logger()
 
     test_end_to_end_simulation_real_data()
+    test_end_to_end_simulation_real_data_2()
 
     # # Takes a loooooong time (days)
     # pipeline = Pipeline(

@@ -1,4 +1,5 @@
 import os
+import time
 
 from typing import Optional
 
@@ -75,6 +76,7 @@ class Pipeline:
         matrices_dir: Where the single-site transition frequency matrices lie.
         co_transitions_dir: Where the pair-of-site transitions lie
         co_matrices_dir: Where the pair-of-site frequency matrices lie.
+        time_***: The time taken for each step of the pipeline.
     """
 
     def __init__(
@@ -167,6 +169,7 @@ class Pipeline:
         precomputed_maximum_parsimony_dir = self.precomputed_maximum_parsimony_dir
 
         # First we need to generate the phylogenies
+        t_start = time.time()
         if precomputed_tree_dir is None and precomputed_maximum_parsimony_dir is None:
             phylogeny_generator = PhylogenyGenerator(
                 a3m_dir=a3m_dir,
@@ -188,8 +191,10 @@ class Pipeline:
                 # Case 2: We start from the trees wo/ancestral states.
                 assert precomputed_tree_dir is not None and precomputed_maximum_parsimony_dir is None
                 tree_dir = precomputed_tree_dir
+        self.time_PhylogenyGenerator = time.time() - t_start
 
         # Generate the contacts
+        t_start = time.time()
         if precomputed_contact_dir is None:
             assert armstrong_cutoff is not None
             assert pdb_dir is not None
@@ -207,8 +212,10 @@ class Pipeline:
             assert armstrong_cutoff is None
             assert pdb_dir is None
             contact_dir = precomputed_contact_dir
+        self.time_ContactGenerator = time.time() - t_start
 
         # Generate the maximum parsimony reconstructions
+        t_start = time.time()
         if precomputed_maximum_parsimony_dir is None:
             maximum_parsimony_reconstructor = MaximumParsimonyReconstructor(
                 a3m_dir=a3m_dir,
@@ -222,8 +229,10 @@ class Pipeline:
         else:
             assert precomputed_tree_dir is None
             maximum_parsimony_dir = precomputed_maximum_parsimony_dir
+        self.time_MaximumParsimonyReconstructor = time.time() - t_start
 
         # Generate single-site transitions
+        t_start = time.time()
         transition_extractor = TransitionExtractor(
             a3m_dir=a3m_dir,
             parsimony_dir=maximum_parsimony_dir,
@@ -233,8 +242,10 @@ class Pipeline:
             max_families=max_families,
         )
         transition_extractor.run()
+        self.time_TransitionExtractor = time.time() - t_start
 
         # Generate single-site transition matrices
+        t_start = time.time()
         matrix_generator = MatrixGenerator(
             a3m_dir=a3m_dir,
             transitions_dir=transitions_dir,
@@ -245,8 +256,10 @@ class Pipeline:
             num_sites=1,
         )
         matrix_generator.run()
+        self.time_MatrixGenerator_1 = time.time() - t_start
 
         # Generate co-transitions
+        t_start = time.time()
         co_transition_extractor = CoTransitionExtractor(
             a3m_dir=a3m_dir,
             parsimony_dir=maximum_parsimony_dir,
@@ -257,8 +270,10 @@ class Pipeline:
             contact_dir=contact_dir,
         )
         co_transition_extractor.run()
+        self.time_CoTransitionExtractor = time.time() - t_start
 
         # Generate co-transition matrices
+        t_start = time.time()
         matrix_generator_pairwise = MatrixGenerator(
             a3m_dir=a3m_dir,
             transitions_dir=co_transitions_dir,
@@ -269,3 +284,20 @@ class Pipeline:
             num_sites=2,
         )
         matrix_generator_pairwise.run()
+        self.time_MatrixGenerator_2 = time.time() - t_start
+
+    def get_times(self) -> str:
+        r"""
+        Returns a string message with the time taken for each part of the pipeline.
+        Useful for profiling and finding bottlenecks.
+        """
+        res = (
+            f"time_PhylogenyGenerator = {self.time_PhylogenyGenerator}\n"
+            + f"time_ContactGenerator = {self.time_ContactGenerator}\n"
+            + f"time_MaximumParsimonyReconstructor = {self.time_MaximumParsimonyReconstructor}\n"
+            + f"time_TransitionExtractor = {self.time_TransitionExtractor}\n"
+            + f"time_MatrixGenerator_1 = {self.time_MatrixGenerator_1}\n"
+            + f"time_CoTransitionExtractor = {self.time_CoTransitionExtractor}\n"
+            + f"time_MatrixGenerator_2 = {self.time_MatrixGenerator_2}\n"
+        )
+        return res

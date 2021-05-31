@@ -285,6 +285,15 @@ class Pipeline:
         )
         matrix_generator_pairwise.run()
         self.time_MatrixGenerator_2 = time.time() - t_start
+        self.time_total = (
+            self.time_PhylogenyGenerator
+            + self.time_ContactGenerator
+            + self.time_MaximumParsimonyReconstructor
+            + self.time_TransitionExtractor
+            + self.time_MatrixGenerator_1
+            + self.time_CoTransitionExtractor
+            + self.time_MatrixGenerator_2
+        )
 
     def get_times(self) -> str:
         r"""
@@ -292,7 +301,8 @@ class Pipeline:
         Useful for profiling and finding bottlenecks.
         """
         res = (
-            f"time_PhylogenyGenerator = {self.time_PhylogenyGenerator}\n"
+            f"time_total = {self.time_total}. Breakdown:\n"
+            + f"time_PhylogenyGenerator = {self.time_PhylogenyGenerator}\n"
             + f"time_ContactGenerator = {self.time_ContactGenerator}\n"
             + f"time_MaximumParsimonyReconstructor = {self.time_MaximumParsimonyReconstructor}\n"
             + f"time_TransitionExtractor = {self.time_TransitionExtractor}\n"

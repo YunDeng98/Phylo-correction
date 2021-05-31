@@ -112,7 +112,6 @@ class EndToEndSimulator:
         self.time_Simulator = time.time() - t_start
         logger.info(f"time_Simulator = {self.time_Simulator}")
 
-        t_start = time.time()
         if simulate_end_to_end:
             pipeline_on_simulated_data_end_to_end = Pipeline(
                 outdir=os.path.join(outdir, "end_to_end", pipeline.outdir),
@@ -130,13 +129,8 @@ class EndToEndSimulator:
                 precomputed_maximum_parsimony_dir=None,
             )
             pipeline_on_simulated_data_end_to_end.run()
-        self.time_simulate_end_to_end = time.time() - t_start
-        logger.info(
-            f"time_simulate_end_to_end = {self.time_simulate_end_to_end}. "
-            f"Breakdown:\n{pipeline_on_simulated_data_end_to_end.get_times()}"
-        )
+            logger.info(f"time_simulate_end_to_end:\n" f"{pipeline_on_simulated_data_end_to_end.get_times()}")
 
-        t_start = time.time()
         if simulate_from_trees_wo_ancestral_states:
             pipeline_on_simulated_data_from_trees_wo_ancestral_states = Pipeline(
                 outdir=os.path.join(outdir, "from_trees_wo_ancestral_states", pipeline.outdir),
@@ -154,13 +148,11 @@ class EndToEndSimulator:
                 precomputed_maximum_parsimony_dir=None,
             )
             pipeline_on_simulated_data_from_trees_wo_ancestral_states.run()
-        self.time_simulate_from_trees_wo_ancestral_states = time.time() - t_start
-        logger.info(
-            f"time_simulate_from_trees_wo_ancestral_states = {self.time_simulate_from_trees_wo_ancestral_states}. "
-            f"Breakdown:\n{pipeline_on_simulated_data_from_trees_wo_ancestral_states.get_times()}"
-        )
+            logger.info(
+                f"time_simulate_from_trees_wo_ancestral_states:\n"
+                f"{pipeline_on_simulated_data_from_trees_wo_ancestral_states.get_times()}"
+            )
 
-        t_start = time.time()
         if simulate_from_trees_w_ancestral_states:
             pipeline_on_simulated_data_from_trees_w_ancestral_states = Pipeline(
                 outdir=os.path.join(outdir, "from_trees_w_ancestral_states", pipeline.outdir),
@@ -178,8 +170,7 @@ class EndToEndSimulator:
                 precomputed_maximum_parsimony_dir=ancestral_states_simulated_dir,
             )
             pipeline_on_simulated_data_from_trees_w_ancestral_states.run()
-        self.time_simulate_from_trees_w_ancestral_states = time.time() - t_start
-        logger.info(
-            f"time_simulate_from_trees_w_ancestral_states = {self.time_simulate_from_trees_w_ancestral_states}. "
-            f"Breakdown:\n{pipeline_on_simulated_data_from_trees_w_ancestral_states.get_times()}"
-        )
+            logger.info(
+                f"time_simulate_from_trees_w_ancestral_states:\n"
+                f"{pipeline_on_simulated_data_from_trees_w_ancestral_states.get_times()}"
+            )

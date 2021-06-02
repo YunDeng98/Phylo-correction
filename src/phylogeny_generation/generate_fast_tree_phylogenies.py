@@ -17,6 +17,7 @@ def _map_func(args) -> None:
     max_seqs = args[3]
     max_sites = args[4]
     rate_matrix = args[5]
+    use_cached = args[6]
 
     logger = logging.getLogger("phylogeny_generation")
     seed = int(hashlib.md5((protein_family_name + "phylogeny_generation").encode()).hexdigest()[:8], 16)
@@ -31,6 +32,7 @@ def _map_func(args) -> None:
         max_seqs=max_seqs,
         max_sites=max_sites,
         rate_matrix=rate_matrix,
+        use_cached=use_cached,
     )
 
 
@@ -49,6 +51,7 @@ class PhylogenyGenerator:
         max_sites: int,
         max_families: int,
         rate_matrix: str,
+        use_cached: bool = False,
     ):
         self.a3m_dir = a3m_dir
         self.n_process = n_process
@@ -58,6 +61,7 @@ class PhylogenyGenerator:
         self.max_sites = max_sites
         self.max_families = max_families
         self.rate_matrix = rate_matrix
+        self.use_cached = use_cached
 
     def run(self) -> None:
         a3m_dir = self.a3m_dir
@@ -68,10 +72,12 @@ class PhylogenyGenerator:
         max_sites = self.max_sites
         max_families = self.max_families
         rate_matrix = self.rate_matrix
+        use_cached = self.use_cached
 
-        if os.path.exists(outdir):
+        if os.path.exists(outdir) and not use_cached:
             raise ValueError(f"outdir {outdir} already exists. Aborting not to " f"overwrite!")
-        os.makedirs(outdir)
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
 
         if not os.path.exists(a3m_dir):
             raise ValueError(f"Could not find a3m_dir {a3m_dir}")
@@ -79,12 +85,12 @@ class PhylogenyGenerator:
         filenames = list(os.listdir(a3m_dir))
         if not len(filenames) == expected_number_of_MSAs:
             raise ValueError(
-                f"Number of MSAs is {len(filenames)}, does not match " f"expected {expected_number_of_MSAs}"
+                f"Number of MSAs at {a3m_dir} is {len(filenames)}, does not match " f"expected {expected_number_of_MSAs}"
             )
         protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
 
         map_args = [
-            [a3m_dir, protein_family_name, outdir, max_seqs, max_sites, rate_matrix]
+            [a3m_dir, protein_family_name, outdir, max_seqs, max_sites, rate_matrix, use_cached]
             for protein_family_name in protein_family_names
         ]
         with multiprocessing.Pool(n_process) as pool:

@@ -132,6 +132,16 @@ def map_func(args: List) -> None:
     contact_simulated_dir = args[6]
     a3m_simulated_dir = args[7]
     ancestral_states_simulated_dir = args[8]
+    use_cached = args[9]
+
+    # Caching pattern: skip any computation as soon as possible
+    contact_matrix_path = os.path.join(contact_simulated_dir, protein_family_name + ".cm")
+    parsimony_tree_path = os.path.join(ancestral_states_simulated_dir, protein_family_name + ".newick")
+    ancestral_states_path = os.path.join(ancestral_states_simulated_dir, protein_family_name + ".parsimony")
+    output_msa_path = os.path.join(a3m_simulated_dir, protein_family_name + ".a3m")
+    if use_cached and os.path.exists(contact_matrix_path) and os.path.exists(parsimony_tree_path) and os.path.exists(ancestral_states_path) and os.path.exists(output_msa_path):
+        logger.info(f"Skipping. Cached simulation files for family {protein_family_name} at {contact_matrix_path} , {parsimony_tree_path} , {ancestral_states_path} , {output_msa_path}")
+        return
 
     # Set seed for reproducibility
     seed = int(hashlib.md5((protein_family_name + "simulation").encode()).hexdigest()[:8], 16)
@@ -203,8 +213,8 @@ def map_func(args: List) -> None:
         if leaf.name != "seq1":
             msa += ">" + leaf.name + "\n"
             msa += states[leaf.name] + "\n"
-    msa_path = os.path.join(a3m_simulated_dir, protein_family_name + ".a3m")
-    with open(msa_path, "w") as file:
+    output_msa_path = os.path.join(a3m_simulated_dir, protein_family_name + ".a3m")
+    with open(output_msa_path, "w") as file:
         file.write(msa)
 
     # Write out ancestral states
@@ -232,6 +242,7 @@ class Simulator:
         simulation_pct_interacting_positions,
         Q1_ground_truth: str,
         Q2_ground_truth: str,
+        use_cached: bool = False,
     ):
         self.a3m_dir = a3m_dir
         self.tree_dir = tree_dir
@@ -244,6 +255,7 @@ class Simulator:
         self.simulation_pct_interacting_positions = simulation_pct_interacting_positions
         self.Q1_ground_truth = Q1_ground_truth
         self.Q2_ground_truth = Q2_ground_truth
+        self.use_cached = use_cached
 
     def run(self) -> None:
         a3m_dir = self.a3m_dir
@@ -257,6 +269,7 @@ class Simulator:
         simulation_pct_interacting_positions = self.simulation_pct_interacting_positions
         Q1_ground_truth = self.Q1_ground_truth
         Q2_ground_truth = self.Q2_ground_truth
+        use_cached = self.use_cached
 
         logger = logging.getLogger("simulation")
         logger.info("Starting ... ")
@@ -266,9 +279,10 @@ class Simulator:
                 raise ValueError(f"Could not find directory {dire}")
 
         for dire in [a3m_simulated_dir, contact_simulated_dir, ancestral_states_simulated_dir]:
-            if os.path.exists(dire):
+            if os.path.exists(dire) and not use_cached:
                 raise ValueError(f"outdir {dire} already exists. Aborting not to " f"overwrite!")
-            os.makedirs(dire)
+            if not os.path.exists(dire):
+                os.makedirs(dire)
 
         filenames = list(os.listdir(a3m_dir))
         if not len(filenames) == expected_number_of_MSAs:
@@ -288,6 +302,7 @@ class Simulator:
                 contact_simulated_dir,
                 a3m_simulated_dir,
                 ancestral_states_simulated_dir,
+                use_cached,
             ]
             for protein_family_name in protein_family_names
         ]

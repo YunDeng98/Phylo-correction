@@ -76,8 +76,16 @@ def map_func(args: List) -> None:
     protein_family_name = args[2]
     outdir = args[3]
     contact_dir = args[4]
+    use_cached = args[5]
 
     logger = logging.getLogger("co_transition_extraction")
+
+    # Caching pattern: skip any computation as soon as possible
+    transition_filename = os.path.join(outdir, protein_family_name + ".transitions")
+    if use_cached and os.path.exists(transition_filename):
+        logger.info(f"Skipping. Cached co-transitions for family {protein_family_name} at {transition_filename}.")
+        return
+
     seed = int(hashlib.md5((protein_family_name + "co_transition_extraction").encode()).hexdigest()[:8], 16)
     logger.info(f"Setting random seed to: {seed}")
     np.random.seed(seed)
@@ -140,6 +148,7 @@ class CoTransitionExtractor:
         outdir: str,
         max_families: int,
         contact_dir: str,
+        use_cached: bool = False,
     ):
         self.a3m_dir = a3m_dir
         self.parsimony_dir = parsimony_dir
@@ -148,6 +157,7 @@ class CoTransitionExtractor:
         self.outdir = outdir
         self.max_families = max_families
         self.contact_dir = contact_dir
+        self.use_cached = use_cached
 
     def run(self) -> None:
         a3m_dir = self.a3m_dir
@@ -157,13 +167,16 @@ class CoTransitionExtractor:
         outdir = self.outdir
         max_families = self.max_families
         contact_dir = self.contact_dir
+        use_cached = self.use_cached
 
         logger = logging.getLogger("co_transition_extraction")
         logger.info("Starting ... ")
 
-        if os.path.exists(outdir):
+        if os.path.exists(outdir) and not use_cached:
             raise ValueError(f"outdir {outdir} already exists. Aborting not to " f"overwrite!")
-        os.makedirs(outdir)
+
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
 
         if not os.path.exists(a3m_dir):
             raise ValueError(f"Could not find a3m_dir {a3m_dir}")
@@ -178,7 +191,7 @@ class CoTransitionExtractor:
         # print(f"protein_family_names = {protein_family_names}")
 
         map_args = [
-            [a3m_dir, parsimony_dir, protein_family_name, outdir, contact_dir]
+            [a3m_dir, parsimony_dir, protein_family_name, outdir, contact_dir, use_cached]
             for protein_family_name in protein_family_names
         ]
         if n_process > 1:

@@ -39,6 +39,7 @@ def test_end_to_end_simulation_real_data():
         max_families=3,
         a3m_dir="input_data/a3m",
         pdb_dir="input_data/pdb",
+        use_cached=True,
     )
     pipeline.run()
     logger.info(f"time_Pipeline:\n{pipeline.get_times()}")
@@ -53,6 +54,7 @@ def test_end_to_end_simulation_real_data():
         simulate_end_to_end=True,
         simulate_from_trees_wo_ancestral_states=True,
         simulate_from_trees_w_ancestral_states=True,
+        use_cached=True,
     )
     end_to_end_simulator.run()
 
@@ -74,6 +76,7 @@ def test_end_to_end_simulation_real_data_2():
         max_families=3,
         a3m_dir="input_data/a3m",
         pdb_dir="input_data/pdb",
+        use_cached=True,
     )
     pipeline.run()
     logger.info(f"time_Pipeline:\n{pipeline.get_times()}")
@@ -88,6 +91,7 @@ def test_end_to_end_simulation_real_data_2():
         simulate_end_to_end=True,
         simulate_from_trees_wo_ancestral_states=True,
         simulate_from_trees_w_ancestral_states=True,
+        use_cached=True,
     )
     end_to_end_simulator.run()
 
@@ -96,7 +100,7 @@ def _main():
     init_logger()
 
     test_end_to_end_simulation_real_data()
-    test_end_to_end_simulation_real_data_2()
+    # test_end_to_end_simulation_real_data_2()
 
     # # Takes a loooooong time (days)
     # pipeline = Pipeline(

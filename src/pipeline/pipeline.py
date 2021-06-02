@@ -66,6 +66,8 @@ class Pipeline:
             parsimony reconstruction step will be skipped and
             'precomputed_maximum_parsimony_dir' will be used as the
             maximum parsimony reconstructions.
+        use_cached: If True, will do nothing for the output files that
+            already exists, effefctively re-using them.
 
     Attributes:
         tree_dir: Where the estimated phylogenies lie
@@ -94,6 +96,7 @@ class Pipeline:
         precomputed_contact_dir: Optional[str] = None,
         precomputed_tree_dir: Optional[str] = None,
         precomputed_maximum_parsimony_dir: Optional[str] = None,
+        use_cached: bool = False,
     ):
         # Check input validity
         if precomputed_tree_dir is not None or precomputed_maximum_parsimony_dir is not None:
@@ -124,6 +127,7 @@ class Pipeline:
         self.precomputed_contact_dir = precomputed_contact_dir
         self.precomputed_tree_dir = precomputed_tree_dir
         self.precomputed_maximum_parsimony_dir = precomputed_maximum_parsimony_dir
+        self.use_cached = use_cached
 
         # Output data directories
         # Where the phylogenies will be stored
@@ -167,6 +171,7 @@ class Pipeline:
         precomputed_contact_dir = self.precomputed_contact_dir
         precomputed_tree_dir = self.precomputed_tree_dir
         precomputed_maximum_parsimony_dir = self.precomputed_maximum_parsimony_dir
+        use_cached = self.use_cached
 
         # First we need to generate the phylogenies
         t_start = time.time()
@@ -180,6 +185,7 @@ class Pipeline:
                 max_sites=max_sites,
                 max_families=max_families,
                 rate_matrix=rate_matrix,
+                use_cached=use_cached,
             )
             phylogeny_generator.run()
         else:
@@ -206,6 +212,7 @@ class Pipeline:
                 expected_number_of_families=expected_number_of_MSAs,
                 outdir=contact_dir,
                 max_families=max_families,
+                use_cached=use_cached,
             )
             contact_generator.run()
         else:
@@ -224,6 +231,7 @@ class Pipeline:
                 expected_number_of_MSAs=expected_number_of_MSAs,
                 outdir=maximum_parsimony_dir,
                 max_families=max_families,
+                use_cached=use_cached,
             )
             maximum_parsimony_reconstructor.run()
         else:
@@ -240,6 +248,7 @@ class Pipeline:
             expected_number_of_MSAs=expected_number_of_MSAs,
             outdir=transitions_dir,
             max_families=max_families,
+            use_cached=use_cached,
         )
         transition_extractor.run()
         self.time_TransitionExtractor = time.time() - t_start
@@ -254,6 +263,7 @@ class Pipeline:
             outdir=matrices_dir,
             max_families=max_families,
             num_sites=1,
+            use_cached=use_cached,
         )
         matrix_generator.run()
         self.time_MatrixGenerator_1 = time.time() - t_start
@@ -268,6 +278,7 @@ class Pipeline:
             outdir=co_transitions_dir,
             max_families=max_families,
             contact_dir=contact_dir,
+            use_cached=use_cached,
         )
         co_transition_extractor.run()
         self.time_CoTransitionExtractor = time.time() - t_start
@@ -282,6 +293,7 @@ class Pipeline:
             outdir=co_matrices_dir,
             max_families=max_families,
             num_sites=2,
+            use_cached=use_cached,
         )
         matrix_generator_pairwise.run()
         self.time_MatrixGenerator_2 = time.time() - t_start

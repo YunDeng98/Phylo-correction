@@ -54,6 +54,7 @@ class EndToEndSimulator:
         simulate_end_to_end: Optional[bool] = False,
         simulate_from_trees_wo_ancestral_states: Optional[bool] = False,
         simulate_from_trees_w_ancestral_states: Optional[bool] = False,
+        use_cached: bool = False,
     ):
         self.outdir = outdir
         self.pipeline = pipeline
@@ -64,6 +65,7 @@ class EndToEndSimulator:
         self.simulate_end_to_end = simulate_end_to_end
         self.simulate_from_trees_wo_ancestral_states = simulate_from_trees_wo_ancestral_states
         self.simulate_from_trees_w_ancestral_states = simulate_from_trees_w_ancestral_states
+        self.use_cached = use_cached
 
     def run(self):
         logger = logging.getLogger("end_to_end_simulation")
@@ -79,6 +81,7 @@ class EndToEndSimulator:
         simulate_end_to_end = self.simulate_end_to_end
         simulate_from_trees_wo_ancestral_states = self.simulate_from_trees_wo_ancestral_states
         simulate_from_trees_w_ancestral_states = self.simulate_from_trees_w_ancestral_states
+        use_cached = self.use_cached
 
         if not os.path.exists(pipeline.tree_dir):
             raise ValueError("pipeline's trees do not exist! Have you already run the pipeline?")
@@ -107,6 +110,7 @@ class EndToEndSimulator:
             simulation_pct_interacting_positions=simulation_pct_interacting_positions,
             Q1_ground_truth=Q1_ground_truth,
             Q2_ground_truth=Q2_ground_truth,
+            use_cached=use_cached,
         )
         simulator.run()
         self.time_Simulator = time.time() - t_start
@@ -127,6 +131,7 @@ class EndToEndSimulator:
                 precomputed_contact_dir=contact_simulated_dir,
                 precomputed_tree_dir=None,
                 precomputed_maximum_parsimony_dir=None,
+                use_cached=use_cached,
             )
             pipeline_on_simulated_data_end_to_end.run()
             logger.info(f"time_simulate_end_to_end:\n" f"{pipeline_on_simulated_data_end_to_end.get_times()}")
@@ -146,6 +151,7 @@ class EndToEndSimulator:
                 precomputed_contact_dir=contact_simulated_dir,
                 precomputed_tree_dir=pipeline.tree_dir,
                 precomputed_maximum_parsimony_dir=None,
+                use_cached=use_cached,
             )
             pipeline_on_simulated_data_from_trees_wo_ancestral_states.run()
             logger.info(
@@ -168,6 +174,7 @@ class EndToEndSimulator:
                 precomputed_contact_dir=contact_simulated_dir,
                 precomputed_tree_dir=None,
                 precomputed_maximum_parsimony_dir=ancestral_states_simulated_dir,
+                use_cached=use_cached,
             )
             pipeline_on_simulated_data_from_trees_w_ancestral_states.run()
             logger.info(

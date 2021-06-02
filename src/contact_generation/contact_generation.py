@@ -16,8 +16,16 @@ def map_func(args: List) -> None:
     protein_family_name = args[1]
     outdir = args[2]
     armstrong_cutoff = args[3]
+    use_cached = args[4]
 
     logger = logging.getLogger("contact_generation")
+
+    # Caching pattern: skip any computation as soon as possible
+    outfile = os.path.join(outdir, protein_family_name + ".cm")
+    if use_cached and os.path.exists(outfile):
+        logger.info(f"Skipping. Cached contact matrix for family {protein_family_name} at {outfile}")
+        return
+
     seed = int(hashlib.md5((protein_family_name + "contact_generation").encode()).hexdigest()[:8], 16)
     logger.info(f"Setting random seed to: {seed}")
     np.random.seed(seed)
@@ -42,6 +50,7 @@ class ContactGenerator:
         expected_number_of_families: int,
         outdir: str,
         max_families: int,
+        use_cached: bool = False,
     ):
         self.a3m_dir = a3m_dir
         self.pdb_dir = pdb_dir
@@ -50,6 +59,7 @@ class ContactGenerator:
         self.expected_number_of_families = expected_number_of_families
         self.outdir = outdir
         self.max_families = max_families
+        self.use_cached = use_cached
 
     def run(self) -> None:
         a3m_dir = self.a3m_dir
@@ -59,10 +69,13 @@ class ContactGenerator:
         expected_number_of_families = self.expected_number_of_families
         outdir = self.outdir
         max_families = self.max_families
+        use_cached = self.use_cached
 
-        if os.path.exists(outdir):
+        if os.path.exists(outdir) and not use_cached:
             raise ValueError(f"outdir {outdir} already exists. Aborting not to " f"overwrite!")
-        os.makedirs(outdir)
+
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
 
         if not os.path.exists(pdb_dir):
             raise ValueError(f"Could not find pdb_dir {pdb_dir}")
@@ -78,7 +91,8 @@ class ContactGenerator:
         protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
 
         map_args = [
-            [pdb_dir, protein_family_name, outdir, armstrong_cutoff] for protein_family_name in protein_family_names
+            [pdb_dir, protein_family_name, outdir, armstrong_cutoff, use_cached]
+            for protein_family_name in protein_family_names
         ]
         if n_process > 1:
             with multiprocessing.Pool(n_process) as pool:

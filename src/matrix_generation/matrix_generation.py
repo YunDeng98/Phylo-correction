@@ -59,14 +59,6 @@ def map_func(args: List) -> pd.DataFrame:
     return res
 
 
-def write_out_matrices(
-    res: pd.DataFrame,
-    outdir: str,
-) -> None:
-    out_filepath = os.path.join(outdir, "matrices.txt")
-    res.to_csv(out_filepath, sep="\t")
-
-
 def get_protein_family_names_for_shard(shard_id: int, n_process: int, protein_family_names: List[str]) -> List[str]:
     res = [protein_family_names[i] for i in range(len(protein_family_names)) if i % n_process == shard_id]
     return res
@@ -82,6 +74,7 @@ class MatrixGenerator:
         outdir: str,
         max_families: int,
         num_sites: int,
+        use_cached: bool = False,
     ):
         self.a3m_dir = a3m_dir
         self.transitions_dir = transitions_dir
@@ -90,6 +83,7 @@ class MatrixGenerator:
         self.outdir = outdir
         self.max_families = max_families
         self.num_sites = num_sites
+        self.use_cached = use_cached
 
     def run(self) -> None:
         a3m_dir = self.a3m_dir
@@ -99,6 +93,15 @@ class MatrixGenerator:
         outdir = self.outdir
         max_families = self.max_families
         num_sites = self.num_sites
+        use_cached = self.use_cached
+
+        logger = logging.getLogger("matrix_generation")
+
+        # Caching pattern: skip any computation as soon as possible
+        out_filepath = os.path.join(outdir, "matrices.txt")
+        if use_cached and os.path.exists(out_filepath):
+            logger.info(f"Skipping. Cached matrices for {transitions_dir} at {out_filepath}.")
+            return
 
         assert num_sites in [1, 2]
 
@@ -139,14 +142,14 @@ class MatrixGenerator:
             assert num_sites == 1
             alphabet = amino_acids[:]
 
-        logger = logging.getLogger("matrix_generation")
         logger.info("Starting ... ")
 
         logger.info("TODO: Accept branch length quantization as input!")
 
-        if os.path.exists(outdir):
+        if os.path.exists(outdir) and not use_cached:
             raise ValueError(f"outdir {outdir} already exists. Aborting not to " f"overwrite!")
-        os.makedirs(outdir)
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
 
         if not os.path.exists(a3m_dir):
             raise ValueError(f"Could not find a3m_dir {a3m_dir}")
@@ -179,4 +182,5 @@ class MatrixGenerator:
         for i in range(1, len(shard_results)):
             res += shard_results[i]
 
-        write_out_matrices(res, outdir)
+        out_filepath = os.path.join(outdir, "matrices.txt")
+        res.to_csv(out_filepath, sep="\t")

@@ -137,8 +137,17 @@ def map_func(args) -> None:
     outdir = args[3]
     max_seqs = args[4]
     max_sites = args[5]
+    use_cached = args[6]
 
     logger = logging.getLogger("maximum_parsimony")
+
+    # Caching pattern: skip any computation as soon as possible
+    output_tree_filepath = os.path.join(outdir, protein_family_name + ".newick")
+    output_parsimony_filepath = os.path.join(outdir, protein_family_name + ".parsimony")
+    if use_cached and os.path.exists(output_tree_filepath) and os.path.exists(output_parsimony_filepath):
+        logger.info(f"Skipping. Cached maximum parsimony results for family {protein_family_name} at {output_tree_filepath} and {output_parsimony_filepath}")
+        return
+
     seed = int(hashlib.md5((protein_family_name + "maximum_parsimony").encode()).hexdigest()[:8], 16)
     logger.info(f"Setting random seed to: {seed}")
     np.random.seed(seed)
@@ -152,7 +161,8 @@ def map_func(args) -> None:
         logger.error(f"Malformed tree for family: {protein_family_name} at {tree_dir}")
         return
     name_internal_nodes(tree)
-    tree.write(format=3, outfile=os.path.join(outdir, protein_family_name + ".newick"))
+    output_tree_filepath = os.path.join(outdir, protein_family_name + ".newick")
+    tree.write(format=3, outfile=output_tree_filepath)
     # Create input for C++ maximum parsimony
     node_name_to_int, int_to_node_name = create_node_name_vs_int_mappings(tree)
 
@@ -184,8 +194,9 @@ def map_func(args) -> None:
                     logger.error(f"Failed to run C++ maximum parsimony on family {protein_family_name}")
                 # Convert .parsimony's indexing into string based.
                 try:
-                    parsimony_filepath = os.path.join(outdir, protein_family_name + ".parsimony")
-                    map_parsimony_indexing_back_to_str(int_to_node_name, cpp_parsimony_filepath, parsimony_filepath)
+                    output_parsimony_filepath = os.path.join(outdir, protein_family_name + ".parsimony")
+                    map_parsimony_indexing_back_to_str(int_to_node_name, cpp_parsimony_filepath,
+                                                       output_parsimony_filepath)
                 except:
                     logger.error(f"Failed to process C++ output for {protein_family_name}")
 
@@ -199,6 +210,7 @@ class MaximumParsimonyReconstructor:
         expected_number_of_MSAs: int,
         outdir: str,
         max_families: int,
+        use_cached: bool = False,
     ):
         logger = logging.getLogger("maximum_parsimony")
         self.a3m_dir = a3m_dir
@@ -207,6 +219,7 @@ class MaximumParsimonyReconstructor:
         self.expected_number_of_MSAs = expected_number_of_MSAs
         self.outdir = outdir
         self.max_families = max_families
+        self.use_cached = use_cached
         dir_path = os.path.dirname(os.path.realpath(__file__))
         maximum_parsimony_bin_path = os.path.join(dir_path, "maximum_parsimony")
         maximum_parsimony_path = os.path.join(dir_path, "maximum_parsimony.cpp")
@@ -227,6 +240,7 @@ class MaximumParsimonyReconstructor:
         expected_number_of_MSAs = self.expected_number_of_MSAs
         outdir = self.outdir
         max_families = self.max_families
+        use_cached = self.use_cached
 
         max_seqs = 0
         max_sites = 0
@@ -234,9 +248,11 @@ class MaximumParsimonyReconstructor:
         logger = logging.getLogger("maximum_parsimony")
         logger.info("Starting ... ")
 
-        if os.path.exists(outdir):
+        if os.path.exists(outdir) and not use_cached:
             raise ValueError(f"outdir {outdir} already exists. Aborting not to " f"overwrite!")
-        os.makedirs(outdir)
+
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
 
         if not os.path.exists(a3m_dir):
             raise ValueError(f"Could not find a3m_dir {a3m_dir}")
@@ -249,7 +265,7 @@ class MaximumParsimonyReconstructor:
         protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
 
         map_args = [
-            [a3m_dir, tree_dir, protein_family_name, outdir, max_seqs, max_sites]
+            [a3m_dir, tree_dir, protein_family_name, outdir, max_seqs, max_sites, use_cached]
             for protein_family_name in protein_family_names
         ]
         if n_process > 1:

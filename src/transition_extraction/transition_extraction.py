@@ -63,8 +63,16 @@ def map_func(args: List) -> None:
     parsimony_dir = args[1]
     protein_family_name = args[2]
     outdir = args[3]
+    use_cached = args[4]
 
     logger = logging.getLogger("transition_extraction")
+
+    # Caching pattern: skip any computation as soon as possible
+    transition_filename = os.path.join(outdir, protein_family_name + ".transitions")
+    if use_cached and os.path.exists(transition_filename):
+        logger.info(f"Skipping. Cached transitions for family {protein_family_name} at {transition_filename}")
+        return
+
     seed = int(hashlib.md5((protein_family_name + "transition_extraction").encode()).hexdigest()[:8], 16)
     logger.info(f"Setting random seed to: {seed}")
     np.random.seed(seed)
@@ -121,6 +129,7 @@ class TransitionExtractor:
         expected_number_of_MSAs: int,
         outdir: str,
         max_families: int,
+        use_cached: bool = False,
     ):
         self.a3m_dir = a3m_dir
         self.parsimony_dir = parsimony_dir
@@ -128,6 +137,7 @@ class TransitionExtractor:
         self.expected_number_of_MSAs = expected_number_of_MSAs
         self.outdir = outdir
         self.max_families = max_families
+        self.use_cached = use_cached
 
     def run(self) -> None:
         a3m_dir = self.a3m_dir
@@ -136,13 +146,16 @@ class TransitionExtractor:
         expected_number_of_MSAs = self.expected_number_of_MSAs
         outdir = self.outdir
         max_families = self.max_families
+        use_cached = self.use_cached
 
         logger = logging.getLogger("transition_extraction")
         logger.info("Starting ... ")
 
-        if os.path.exists(outdir):
+        if os.path.exists(outdir) and not use_cached:
             raise ValueError(f"outdir {outdir} already exists. Aborting not to " f"overwrite!")
-        os.makedirs(outdir)
+
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
 
         if not os.path.exists(a3m_dir):
             raise ValueError(f"Could not find a3m_dir {a3m_dir}")
@@ -157,7 +170,8 @@ class TransitionExtractor:
         # print(f"protein_family_names = {protein_family_names}")
 
         map_args = [
-            [a3m_dir, parsimony_dir, protein_family_name, outdir] for protein_family_name in protein_family_names
+            [a3m_dir, parsimony_dir, protein_family_name, outdir, use_cached]
+            for protein_family_name in protein_family_names
         ]
         if n_process > 1:
             with multiprocessing.Pool(n_process) as pool:

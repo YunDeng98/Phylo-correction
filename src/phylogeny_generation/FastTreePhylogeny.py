@@ -15,7 +15,8 @@ class FastTreePhylogeny:
         outdir: str,
         max_seqs: int = 0,
         max_sites: int = 0,
-        rate_matrix: str = ''
+        rate_matrix: str = '',
+        use_cached: bool = False,
     ) -> None:
         r"""
         Run FastTree on a given MSA.
@@ -27,6 +28,13 @@ class FastTreePhylogeny:
         the default FastTree rate matrix is used.
         """
         logger = logging.getLogger("FastTreePhylogeny")
+
+        # Caching pattern: skip any computation as soon as possible
+        outfile = os.path.join(outdir, protein_family_name) + ".newick"
+        if use_cached and os.path.exists(outfile):
+            logger.info(f"Skipping. Cached FastTree output for family {protein_family_name} at {outfile}")
+            return
+
         dir_path = os.path.dirname(os.path.realpath(__file__))
         fast_tree_bin_path = os.path.join(dir_path, 'FastTree')
         fast_tree_path = os.path.join(dir_path, 'FastTree.c')

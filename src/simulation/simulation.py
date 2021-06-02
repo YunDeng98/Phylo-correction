@@ -145,7 +145,7 @@ def map_func(args: List) -> None:
 
     # Set seed for reproducibility
     seed = int(hashlib.md5((protein_family_name + "simulation").encode()).hexdigest()[:8], 16)
-    logger.info(f"Setting random seed to: {seed}")
+    logger.info(f"Starting on family {protein_family_name}. Setting random seed to: {seed}")
     np.random.seed(seed)
     random.seed(seed)
 

@@ -95,3 +95,5 @@ class PhylogenyGenerator:
         ]
         with multiprocessing.Pool(n_process) as pool:
             list(tqdm.tqdm(pool.imap(_map_func, map_args), total=len(map_args)))
+
+        os.system(f"chmod -R 555 {outdir}")

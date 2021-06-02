@@ -311,3 +311,6 @@ class Simulator:
                 list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
         else:
             list(tqdm.tqdm(map(map_func, map_args), total=len(map_args)))
+
+        for dire in [a3m_simulated_dir, contact_simulated_dir, ancestral_states_simulated_dir]:
+            os.system(f"chmod -R 555 {dire}")

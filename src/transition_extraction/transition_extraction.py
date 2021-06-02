@@ -178,3 +178,5 @@ class TransitionExtractor:
                 list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
         else:
             list(tqdm.tqdm(map(map_func, map_args), total=len(map_args)))
+
+        os.system(f"chmod -R 555 {outdir}")

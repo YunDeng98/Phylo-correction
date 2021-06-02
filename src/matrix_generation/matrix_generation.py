@@ -184,3 +184,5 @@ class MatrixGenerator:
 
         out_filepath = os.path.join(outdir, "matrices.txt")
         res.to_csv(out_filepath, sep="\t")
+
+        os.system(f"chmod -R 555 {outdir}")

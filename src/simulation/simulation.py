@@ -39,10 +39,10 @@ def chain_jump(
 ) -> List[int]:
     res = []
     for i in range(len(independent_sites)):
-        res.append(Phylo_util.ending_state(initial_state_index=int_state[i], model=model_1, t=dist))
+        res.append(Phylo_util.ending_state_without_expm(initial_state_index=int_state[i], model=model_1, t=dist))
     for i in range(len(contacting_pairs)):
         res.append(
-            Phylo_util.ending_state(initial_state_index=int_state[len(independent_sites) + i], model=model_2, t=dist)
+            Phylo_util.ending_state_without_expm(initial_state_index=int_state[len(independent_sites) + i], model=model_2, t=dist)
         )
     return res
 

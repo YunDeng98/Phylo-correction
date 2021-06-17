@@ -45,6 +45,42 @@ def ending_state(initial_state_index, model, t):
     return ending_state_index
 
 
+def ending_state_without_expm(initial_state_index, model, t):
+    """
+    Computes the next state by sampling the whole intermediate history.
+    I.e., we just sample from exponential distributions; we never compute the
+    matrix exponential.
+    """
+    rate_matrix = model.rate_matrix
+    n = rate_matrix.shape[0]
+    curr_state_index = initial_state_index
+    current_t = 0  # We simulate the process starting from time 0.
+    while True:
+        # See when the next transition happens
+        waiting_time = np.random.exponential(1.0 / -rate_matrix[curr_state_index, curr_state_index])
+        current_t += waiting_time
+        if current_t >= t:
+            # We reached the end of the process
+            return curr_state_index
+        # Update the curr_state_index
+        weights =\
+            list(rate_matrix[
+                curr_state_index,
+                :curr_state_index]) +\
+            list(rate_matrix[
+                curr_state_index,
+                (curr_state_index + 1):])
+        assert(len(weights) == n - 1)
+        new_state_index = random.choices(
+            population=range(n - 1),
+            weights=weights,
+            k=1)[0]
+        # Because new_state_index is in [0, n - 2], we must map it back to [0, n - 1].
+        if new_state_index >= curr_state_index:
+            new_state_index += 1
+        curr_state_index = new_state_index
+
+
 def add_variation(tree, root_state, model, seq_dict):
     if tree.get_children():
         for subtree in tree.get_children():

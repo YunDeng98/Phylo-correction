@@ -47,9 +47,9 @@ def ending_state(initial_state_index, model, t):
 
 def ending_state_without_expm(initial_state_index, model, t):
     """
-    Computes the next state by sampling the whole intermediate history.
-    I.e., we just sample from exponential distributions; we never compute the
-    matrix exponential.
+    Computes the next state by sampling the whole history of the chain.
+    I.e. this code just samples from exponential distributions; it never
+    computes the matrix exponential, which can be significantly faster.
     """
     rate_matrix = model.rate_matrix
     n = rate_matrix.shape[0]

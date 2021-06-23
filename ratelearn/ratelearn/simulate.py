@@ -4,6 +4,7 @@ import torch
 import torch.distributions as db
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm.auto import tqdm
+import torch.nn as nn
 
 
 def generate_data(
@@ -15,6 +16,9 @@ def generate_data(
     upper_unif: float = None,
     quantile: float = 10,
     alpha: float = 0.05,
+    exact_matrix_exp: bool = True,
+    device="cuda",
+    pi = None
 ):
     """Generate triplet observations associated to a given rate matrix
 
@@ -33,7 +37,12 @@ def generate_data(
             2. the ending state
             3. the branch length
     """
-    Q_true = torch.tensor(Q_true, device="cuda")
+    Q_np = Q_true.cpu().numpy()
+    d, u = np.linalg.eigh(Q_np)
+
+    d = torch.tensor(d, device=device)
+    u = torch.tensor(u, device=device)
+    Q_true = torch.tensor(Q_true, device=device)
     assert Q_true.ndim == 2
     num_states = Q_true.shape[-1]
     print(
@@ -45,26 +54,46 @@ def generate_data(
         print("rate", rate)
         branch_lengths = db.Exponential(rate).sample((m,))
     elif distribution == "unif":
-        rate = -np.log(alpha) / quantile
-        print("rate", rate)
         branch_lengths = db.Uniform(low=lower_unif, high=upper_unif).sample((m,))
+    elif distribution == "logunif":
+        branch_lengths = db.Uniform(low=lower_unif, high=upper_unif).sample((m,)).exp()
+    elif distribution == "constant":
+        branch_lengths = quantile * torch.ones(m).long()
     else:
         raise ValueError
     assert branch_lengths.ndim == 1
     starting_state = torch.randint(0, num_states, (m,))
+    if pi is not None:
+        starting_state = db.Categorical(probs=pi).sample((m,))
     _data = TensorDataset(starting_state, branch_lengths)
     dl = DataLoader(_data, batch_size=batch_size, shuffle=False)
     ending_state = []
     for tensors in tqdm(dl):
         starting_state_, branch_length_ = tensors
-        starting_state_ = starting_state_.to("cuda")
-        branch_length_ = branch_length_.to("cuda")
-        transition_probs_from_starting_state = torch.matrix_exp(
-            branch_length_[:, None, None] * Q_true
-        )
+        starting_state_ = starting_state_.to(device)
+        branch_length_ = branch_length_.to(device)
+        if exact_matrix_exp:
+            diag_term = (branch_length_[:, None] * d).exp()
+            diag_term = torch.diag_embed(diag_term)
+            # print(u.shape, diag_term.shape)
+            transition_probs_from_starting_state = u @ (diag_term @ u.T)
+            transition_probs_from_starting_state2 = torch.matrix_exp(
+                branch_length_[:, None, None] * Q_true
+            )
+            err = (transition_probs_from_starting_state2 - transition_probs_from_starting_state).abs().max(1).values.max(1).values
+            id_branch_max = err.argmax()
+            id_branch_min = err.argmin()
+            print("max", branch_length_[id_branch_max], err.max())
+            print("min", branch_length_[id_branch_min], err.min())
+
+        else:
+            transition_probs_from_starting_state = torch.matrix_exp(
+                branch_length_[:, None, None] * Q_true
+            )
         transition_probs_from_starting_state = transition_probs_from_starting_state[
             torch.arange(len(starting_state_)), starting_state_
         ]
+        transition_probs_from_starting_state = nn.ReLU()(transition_probs_from_starting_state)
         ending_state_ = db.Categorical(transition_probs_from_starting_state).sample()
         ending_state.append(ending_state_.cpu())
     ending_state = torch.cat(ending_state)

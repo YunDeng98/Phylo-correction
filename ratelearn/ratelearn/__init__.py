@@ -1,6 +1,6 @@
 from .rate import RateMatrix
 from .simulate import convert_triplet_to_quantized, generate_data
-from .trainer import train_quantization, estimate_likelihood, train_quantization_N
+from .trainer import train_quantization, estimate_likelihood, train_quantization_N, train_diag_param
 
 __version__ = "0.1.0"
 __all__ = [
@@ -10,4 +10,5 @@ __all__ = [
     "train_quantization",
     "train_quantization_N",
     "estimate_likelihood",
+    "train_diag_param",
 ]

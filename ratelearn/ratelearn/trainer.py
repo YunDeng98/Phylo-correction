@@ -7,7 +7,6 @@ from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
 
-
 def train_sgd(
     rate_module,
     quantized_dataset,
@@ -24,9 +23,7 @@ def train_sgd(
     Quantization baseline
     """
     if optimizer is None:
-        optimizer = torch.optim.Adam(
-            rate_module.parameters(), lr=lr
-        )
+        optimizer = torch.optim.Adam(rate_module.parameters(), lr=lr)
 
     print(f"Training for {num_epochs} epochs")
     dlb = DataLoader(quantized_dataset, batch_size=batch_size, shuffle=True)
@@ -43,8 +40,17 @@ def train_sgd(
                 optimizer.zero_grad()
                 Q = rate_module()
                 datap = datapoint.cuda()
-                starting_state, ending_state, branch_length = datap[:, 0], datap[:, 1], datap[:, 2]
-                idx1 = ending_state.unsqueeze(-1).repeat(1, num_states).unsqueeze(-1).long()
+                starting_state, ending_state, branch_length = (
+                    datap[:, 0],
+                    datap[:, 1],
+                    datap[:, 2],
+                )
+                idx1 = (
+                    ending_state.unsqueeze(-1)
+                    .repeat(1, num_states)
+                    .unsqueeze(-1)
+                    .long()
+                )
                 mats = torch.log(torch.matrix_exp(branch_length[:, None, None] * Q))
                 mats = mats.gather(-1, idx1).squeeze(-1)
                 mats = mats.gather(1, starting_state.unsqueeze(1).long()).squeeze()
@@ -68,7 +74,9 @@ def train_sgd(
                         else 0.0
                     )
                     frob_norm_offdiag = (
-                        torch.sqrt(torch.sum(sqrt_dif - torch.diag(sqrt_dif.diag()))).item()
+                        torch.sqrt(
+                            torch.sum(sqrt_dif - torch.diag(sqrt_dif.diag()))
+                        ).item()
                         if Q_true is not None
                         else 0.0
                     )
@@ -135,29 +143,21 @@ def train_quantization(
             optimizer.step()
             rg.set_description(str(loss.item()), refresh=True)
 
-            dif = (Q - Q_true)
-            sqrt_dif = dif * dif
-            frob_norm = (
-                torch.sqrt(torch.sum(sqrt_dif)).item()
-                if Q_true is not None
-                else 0.0
-            )
-            e, v = torch.eig(dif)
-            nuc_norm = (
-                e[:, 0].abs().max().item()
-                if Q_true is not None
-                else 0.0
-            )
-            frob_norm_diag = (
-                torch.sqrt(torch.sum(sqrt_dif.diag())).item()
-                if Q_true is not None
-                else 0.0
-            )
-            frob_norm_offdiag = (
-                torch.sqrt(torch.sum(sqrt_dif - torch.diag(sqrt_dif.diag()))).item()
-                if Q_true is not None
-                else 0.0
-            )
+            if Q_true is not None:
+                dif = Q - Q_true
+                sqrt_dif = dif * dif
+                frob_norm = torch.sqrt(torch.sum(sqrt_dif)).item()
+                e, v = torch.eig(dif)
+                nuc_norm = e[:, 0].abs().max().item()
+                frob_norm_diag = torch.sqrt(torch.sum(sqrt_dif.diag())).item()
+                frob_norm_offdiag = torch.sqrt(
+                    torch.sum(sqrt_dif - torch.diag(sqrt_dif.diag()))
+                ).item()
+            else:
+                frob_norm = 0.0
+                nuc_norm = 0.0
+                frob_norm_diag = 0.0
+                frob_norm_offdiag = 0.0
             df_res = df_res.append(
                 dict(
                     nuc_norm=nuc_norm,
@@ -246,6 +246,7 @@ def train_quantization_N(
         )
     return df_res, Q
 
+
 def train_diag_param(
     rate_module,
     quantized_dataset,
@@ -256,6 +257,7 @@ def train_diag_param(
     optimizer=None,
 ):
     num_states = rate_module.num_states
+
     def construct_X(d, tau):
         # exp_tau_d = torch.expm1(tau * d) + 1.0
         exp_tau_d = torch.exp(tau * d)
@@ -265,7 +267,7 @@ def train_diag_param(
         offdiag = exp_tau_d.unsqueeze(-1) - exp_tau_d.unsqueeze(1)
         offdiag_coeff = d[:, None] - d[None]
         offdiag_coeff += 1e-8 * torch.eye(num_states, device=d.device)
-        offdiag_coeff = 1. / offdiag_coeff
+        offdiag_coeff = 1.0 / offdiag_coeff
         offdiag = offdiag * offdiag_coeff
         offdiag2 = offdiag * (1.0 - torch.eye(num_states, device=d.device))
         X1 = offdiag2 + diag
@@ -279,6 +281,7 @@ def train_diag_param(
 
         X = diag + offdiag
         return X
+
     if optimizer is None:
         optimizer = torch.optim.SGD(
             rate_module.parameters(), lr=lr, momentum=0.0, weight_decay=0
@@ -316,18 +319,9 @@ def train_diag_param(
                     middle = (vh @ d @ u) * X
                     Z = (u @ middle) @ vh
                 # subloss = (Q * Z).sum()
-                subloss = (
-                    d * (
-                        v
-                        @ (
-                            (uh @ Q @ v)
-                            * X
-                        )
-                        @ u.T
-                    )
-                ).sum()
+                subloss = (d * (v @ ((uh @ Q @ v) * X) @ u.T)).sum()
                 # subloss = (
-                #     d 
+                #     d
                 #     * (
                 #         v @ (
                 #             X * (u @ Q @ vh)

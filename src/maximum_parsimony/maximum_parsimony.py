@@ -202,6 +202,30 @@ def map_func(args) -> None:
 
 
 class MaximumParsimonyReconstructor:
+    r"""
+    Reconstructs ancestral proteins of trees with maximum parsimony.
+
+    The hyperparameters of the MaximumParsimonyReconstructor are provided in
+    '__init__', and the reconstructions are only performed once the 'run'
+    method is called.
+
+    Args:
+        a3m_dir: Directory where the MSA files (.a3m) are found.
+        tree_dir: Directory where the tree files (.newick) are found.
+        n_process: Number of processes used to parallelize computation.
+        expected_number_of_MSAs: The number of files in a3m_dir. This argument
+            is only used to sanity check that the correct a3m_dir is being used.
+            It has no functional implications.
+        outdir: Directory where the reconstructed ancestral states will be found.
+            There will be two files per protein family: a .newick file with the
+            tree with the internal nodes given a name, and a .a3m file with the
+            states of all nodes in the tree (including the internal ones, which
+            were reconstructed with maximum parsimony)
+        max_families: Only estimate trees for the first 'max_families' files in a3m_dir.
+            This is useful for testing and to see what happens if less data is used.
+        use_cached: If True and the output files already exist for a family,
+            all computation will be skipped for that family.
+    """
     def __init__(
         self,
         a3m_dir: str,

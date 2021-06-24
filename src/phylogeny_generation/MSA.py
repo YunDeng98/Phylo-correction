@@ -20,7 +20,7 @@ class MSA:
     To get the sequence of a specific protein, one can use the get_sequence method.
 
     Args:
-        a3m_dir: Directory where the MSA file is found.
+        a3m_dir: Directory where the MSA file (.a3m) is found.
         protein_family_name: Name of the protein family.
         max_seqs: If nonzero, this number of sequences in the MSA file will be subsampled
             uniformly at random. The first sequence in the MSA file will always be sampled.

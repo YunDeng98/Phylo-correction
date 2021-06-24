@@ -23,20 +23,28 @@ def extend(a, b, c, L, A, D) -> float:
 
 
 class ContactMatrix:
+    r"""
+    Creates a contact matrix from a PDB file.
+
+    Reads the PDB file at f'{pdb_dir}/{protein_family_name}.pdb' and
+    computes the binary contact matrix based on the provided armstrong_cutoff.
+    The contact matrix can be written out to a file with the write_to_file method.
+
+    Args:
+        pdb_dir: Directory where the pdb structure files (.pdb) are found.
+        protein_family_name: Name of the protein family.
+        armstrong_cutoff: Armstrong cutoff threshold used to determine if two
+            sites are in contact.
+
+    Attributes:
+        nsites: Number of sites in the protein.
+    """
     def __init__(
         self,
         pdb_dir: str,
         protein_family_name: str,
         armstrong_cutoff: float = 8.0,
     ):
-        r"""
-        Create a contact matrix from a PDB file.
-
-        Reads the PDB file at pdb_dir/protein_family_name.pdb and
-        computes the binary contact matrix based on the armstrong_cutoff.
-        The contact matrix can be writen out to a file with the
-        write_to_file method.
-        """
         pdb_file = os.path.join(pdb_dir, protein_family_name + ".pdb")
         pdbfile = PDBFile.read(str(pdb_file))
         structure = pdbfile.get_structure()
@@ -58,7 +66,7 @@ class ContactMatrix:
 
     def write_to_file(self, outfile: str) -> None:
         r"""
-        Writes the contact matrix to outfile.
+        Writes the contact matrix to outfile. Spaces are used as separators.
         """
         res = ""
         n = self.nsites

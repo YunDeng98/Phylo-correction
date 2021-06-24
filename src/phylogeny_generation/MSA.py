@@ -1,10 +1,32 @@
 import os
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 
 
 class MSA:
+    r"""
+    An MSA contains a multiple sequence alignment of proteins.
+
+    The MSA is read from the MSA file f'{a3m_dir}/{protein_family_name}.a3m'.
+    *Lowercase amino acids in the MSA file are ignored.*
+    After ignoring all lowercase letters, all sequences in the MSA should have
+    the same length. The main purpose of this class is to enable reading and
+    preprocessing of MSA files. By preprocessing we specifically mean removing all
+    lowercase letters from the alignment. The preprocessed MSA can be written out
+    to a file with the write_to_file method. The MSA can be obtained as a dictionary
+    mapping protein name to sequence with the get_msa method. The number of sequences
+    and sites after preprocessing can be obtained via the nseqs and nsites attributes.
+    To get the sequence of a specific protein, one can use the get_sequence method.
+
+    Args:
+        a3m_dir: Directory where the MSA file is found.
+        protein_family_name: Name of the protein family.
+        max_seqs: If nonzero, this number of sequences in the MSA file will be subsampled
+            uniformly at random. The first sequence in the MSA file will always be sampled.
+        max_sites: If nonzero, this number of sites in the MSA file will be subsampled
+            uniformly at random.
+    """
     def __init__(
         self,
         a3m_dir: str,
@@ -12,26 +34,12 @@ class MSA:
         max_seqs: int = 0,
         max_sites: int = 0,
     ) -> None:
-        r"""
-        Read an MSA.
-
-        Reads the MSA from a3m_dir/protein_family_name.a3m.
-        *Lowercase amino acids in the aligned sequences are ignored.* This is
-        thus a form of MSA pre-processing that makes the MSA into a *valid*
-        MSA (where all sequences have the same length) such that it can be
-        consumed by FastTree. (FastTree errors out when run on the raw
-        alignments!)
-        If max_seqs is provided, max_seqs will be subsampled at random. The
-        first sequence will always be kept (since it is the reference sequence).
-        If max_sites is provided, max_sites positions will be subsampled at
-        random.
-        """
         filename = f"{protein_family_name}.a3m"
         if not os.path.exists(a3m_dir):
-            raise ValueError(f"a3m_dir {a3m_dir} does not exist")
+            raise ValueError(f"a3m_dir {a3m_dir} does not exist!")
         filepath = os.path.join(a3m_dir, filename)
         if not os.path.exists(filepath):
-            raise ValueError(f"filepath {filepath} does not exist")
+            raise ValueError(f"MSA file {filepath} does not exist!")
 
         # Read MSA
         msa = []  # type: List[Tuple[str, str]]
@@ -39,6 +47,8 @@ class MSA:
             lines = list(file)
             n_lines = len(lines)
             for i in range(0, n_lines, 2):
+                if not lines[i][0] == '>':
+                    raise ValueError("Protein name line should start with '>'")
                 protein_name = lines[i][1:].strip()
                 protein_seq = lines[i + 1].strip()
                 # Lowercase amino acids in the sequence are repetitive
@@ -69,6 +79,14 @@ class MSA:
         return self._msa_dict[sequence_name]
 
     def get_msa(self, copy: bool = False) -> Dict[str, str]:
+        r"""
+        Return the MSA as a dictionary.
+
+        The MSA is a dictionary that maps protein names to sequence.
+        A reference to the internal structure of the MSA class is returned
+        by default ('copy=False') - breaking encapsulation - so use with care.
+        To return a copy, use 'copy=True'.
+        """
         if copy:
             return self._msa_dict.copy()
         else:
@@ -91,13 +109,18 @@ class MSA:
     @staticmethod
     def _subsample_msa(
         msa: List[Tuple[str, str]],
-        max_seqs: Optional[int],
-        max_sites: Optional[int],
+        max_seqs: int,
+        max_sites: int,
     ) -> List[Tuple[str, str]]:
         r"""
-        Subsample an MSA.
+        Subsample an MSA (not in-place).
 
-        Subsamples max_seqs and max_sites from the MSA. Returns the new MSA.
+        Subsamples max_seqs sequences and max_sites sites from the MSA.
+        Returns a new MSA. The first sequence in the MSA is always kept.
+        If max_seqs is 0 or None, all sequences will be kept.
+        If max_sites is 0 or None, all sites will be kept.
+        If max_seqs is greater than the number of sequences, all sequences will be kept.
+        If max_sites is greater than the number of sites, all sites will be kept.
         """
         nseqs = len(msa)
         nsites = len(msa[0][1])
@@ -135,7 +158,7 @@ class MSA:
 
     def write_to_file(self, outfile: str) -> None:
         r"""
-        Writes the MSA to outfile.
+        Writes the MSA to outfile in the a3m format.
         """
         with open(outfile, "w") as file:
             for protein_name, seq in self.msa:

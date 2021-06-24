@@ -8,25 +8,43 @@ import logging
 
 
 class FastTreePhylogeny:
+    r"""
+    Run FastTree on a given MSA file.
+
+    Runs FastTree on the MSA file at f'{a3m_dir}/{protein_family_name}.a3m' and writes
+    the output (a newick tree) to outdir/protein_family_name.newick. The MSA file
+    is preprocessed with the MSA class (so: lowercase letters are ignored, and
+    the sequences and sites are subsampled down to max_seqs and max_sites respectively).
+    Uses the rate matrix at 'rate_matrix'. If 'rate_matrix' ends in 'None',
+    the default FastTree rate matrix is used.
+
+    Args:
+        a3m_dir: Directory where the MSA file is found.
+        protein_family_name: Name of the protein family.
+        outdir: Directory where to write the output of FastTree - a .newick file.
+        max_seqs: If nonzero, this number of sequences in the MSA file will be subsampled
+            uniformly at random. The first sequence in the MSA file will always be sampled.
+        max_sites: If nonzero, this number of sites in the MSA file will be subsampled
+            uniformly at random.
+        rate_matrix: Path to the rate matrix to use within FastTree. If ends in 'None', then
+            the default rate matrix will be used in FastTree.
+        use_cached: If the output file already exists, FastTree will NOT be run.
+
+    Attributes:
+        nseqs: Number of sequences in the MSA (after subsamping)
+        nsites: Number of sites in the MSA (after subsampling)
+        total_time: Total time taken to run FastTree on the MSA file.
+    """
     def __init__(
         self,
         a3m_dir: str,
         protein_family_name: str,
         outdir: str,
-        max_seqs: int = 0,
-        max_sites: int = 0,
-        rate_matrix: str = '',
+        max_seqs: int,
+        max_sites: int,
+        rate_matrix: str,
         use_cached: bool = False,
     ) -> None:
-        r"""
-        Run FastTree on a given MSA.
-
-        Runs FastTree on the MSA at a3m_dir/protein_family_name.a3m and writes
-        the output (a newick tree) to outdir/protein_family_name.newick.
-
-        Uses the rate matrix at 'rate_matrix'. If 'rate_matrix' ends in 'None',
-        the default FastTree rate matrix is used.
-        """
         logger = logging.getLogger("FastTreePhylogeny")
 
         # Caching pattern: skip any computation as soon as possible
@@ -55,13 +73,16 @@ class FastTreePhylogeny:
 
         # Read MSA into standardized format (lowercase amino acids are removed.)
         msa = MSA(
-            a3m_dir, protein_family_name, max_seqs=max_seqs, max_sites=max_sites
+            a3m_dir=a3m_dir,
+            protein_family_name=protein_family_name,
+            max_seqs=max_seqs,
+            max_sites=max_sites
         )
         # Write (standardized) MSA
         with tempfile.NamedTemporaryFile("w") as processed_msa_file:
             processed_msa_filename = processed_msa_file.name
             msa.write_to_file(processed_msa_filename)
-            # Run FastTree on (standardized) MSA
+            # Run FastTree on (preprocessed) MSA file
             outfile = os.path.join(outdir, protein_family_name) + ".newick"
             time_start = time.time()
             dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -72,7 +93,7 @@ class FastTreePhylogeny:
             else:
                 if not os.path.exists(rate_matrix):
                     logger.error(f"Could not find rate matrix {rate_matrix}")
-                    exit(1)
+                    raise ValueError(f"Could not find rate matrix {rate_matrix}")
                 logger.info(f"Running FastTree with rate matrix {rate_matrix} on MSA:\n{msa}")
                 os.system(f"{dir_path}/FastTree -quiet -trans {rate_matrix} < {processed_msa_filename} > {outfile}")
             time_end = time.time()

@@ -56,16 +56,18 @@ class RateMatrixLearner:
             mask_mat = np.ones((self.n_states, self.n_states))
         self.mask_mat = torch.tensor(mask_mat)
 
+        pi_requires_grad = pi_path is None
         self.mat_module = RateMatrix(
             num_states=self.n_states,
             mode=self.rate_matrix_parameterization,
             pi=self.pi,
-            pi_requires_grad=True,
+            pi_requires_grad=pi_requires_grad,
         ).cuda()
 
     def train(
         self,
         lr=1e-1,
+        num_epochs=2000,
         do_adam: bool = True,
     ):
         self.lr = lr
@@ -79,7 +81,7 @@ class RateMatrixLearner:
         df_res, Q = train_quantization(
             rate_module=self.mat_module,
             quantized_dataset=self.quantized_data,
-            num_epochs=2000,
+            num_epochs=num_epochs,
             Q_true=None,
             optimizer=optim,
         )

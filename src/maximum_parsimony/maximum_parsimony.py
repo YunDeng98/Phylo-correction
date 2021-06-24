@@ -102,7 +102,7 @@ def write_out_msa(
 ) -> None:
     res = ""
     nleaves = 0
-    for (protein_name, sequence) in msa.get_msa().items():
+    for (protein_name, sequence) in msa.get_msa(copy=False).items():
         # Only write out sequences that are in the tree!
         if protein_name in node_name_to_int:
             res += f"{node_name_to_int[protein_name]} {sequence}\n"

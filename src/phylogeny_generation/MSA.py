@@ -26,13 +26,17 @@ class MSA:
             uniformly at random. The first sequence in the MSA file will always be sampled.
         max_sites: If nonzero, this number of sites in the MSA file will be subsampled
             uniformly at random.
+
+    Attributes:
+        nseqs: Number of sequences in the MSA (after subsamping)
+        nsites: Number of sites in the MSA (after subsampling)
     """
     def __init__(
         self,
         a3m_dir: str,
         protein_family_name: str,
-        max_seqs: int = 0,
-        max_sites: int = 0,
+        max_seqs: int,
+        max_sites: int,
     ) -> None:
         filename = f"{protein_family_name}.a3m"
         if not os.path.exists(a3m_dir):
@@ -78,13 +82,13 @@ class MSA:
         """
         return self._msa_dict[sequence_name]
 
-    def get_msa(self, copy: bool = False) -> Dict[str, str]:
+    def get_msa(self, copy: bool) -> Dict[str, str]:
         r"""
         Return the MSA as a dictionary.
 
         The MSA is a dictionary that maps protein names to sequence.
         A reference to the internal structure of the MSA class is returned
-        by default ('copy=False') - breaking encapsulation - so use with care.
+        by if 'copy=False' - breaking encapsulation - so use with care.
         To return a copy, use 'copy=True'.
         """
         if copy:

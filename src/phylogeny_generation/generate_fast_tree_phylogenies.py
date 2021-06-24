@@ -39,6 +39,25 @@ def _map_func(args) -> None:
 class PhylogenyGenerator:
     r"""
     Given a directory with MSAs, generates a directory with one tree for each MSA.
+    The hyperparameters of the PhylogenyGenerator object are provided in '__init__',
+    and the PhylogenyGenerator is run only when the 'run' method is called.
+
+    Args:
+        a3m_dir: Directory where the MSA files are found.
+        n_process: Number of processes used to parallelize computation.
+        expected_number_of_MSAs: The number of files in a3m_dir. This argument
+            is only used to sanity check that the correct a3m_dir is being used.
+            It has no functional implications.
+        outdir: Directory where the trees will be written out to (.newick files).
+        max_seqs: If nonzero, this number of sequences in the MSA files will be subsampled
+            uniformly at random. The first sequence in the MSA files will always be sampled.
+        max_sites: If nonzero, this number of sites in the MSA files will be subsampled
+            uniformly at random.
+        max_families: Only estimate trees for the 'max_families' files in a3m_dir.
+            This is useful for testing and to see what happens if less data is used.
+        rate_matrix: Path to the rate matrix to use within FastTree. If ends in 'None', then
+            the default rate matrix will be used in FastTree.
+        use_cached: If True and the output file already exists, FastTree will NOT be run.
     """
 
     def __init__(

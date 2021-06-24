@@ -28,7 +28,7 @@ class FastTreePhylogeny:
             uniformly at random.
         rate_matrix: Path to the rate matrix to use within FastTree. If ends in 'None', then
             the default rate matrix will be used in FastTree.
-        use_cached: If the output file already exists, FastTree will NOT be run.
+        use_cached: If True and the output file already exists, FastTree will NOT be run.
 
     Attributes:
         nseqs: Number of sequences in the MSA (after subsamping)

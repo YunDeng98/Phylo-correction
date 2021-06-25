@@ -105,7 +105,7 @@ class ContactGenerator:
         if not os.path.exists(a3m_dir):
             raise ValueError(f"Could not find pdb_dir {a3m_dir}")
 
-        filenames = list(os.listdir(a3m_dir))
+        filenames = sorted(list(os.listdir(a3m_dir)))
         if not len(filenames) == expected_number_of_families:
             raise ValueError(
                 f"Number of families is {len(filenames)}, does not match " f"expected {expected_number_of_families}"

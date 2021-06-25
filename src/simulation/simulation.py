@@ -284,7 +284,7 @@ class Simulator:
             if not os.path.exists(dire):
                 os.makedirs(dire)
 
-        filenames = list(os.listdir(a3m_dir))
+        filenames = sorted(list(os.listdir(a3m_dir)))
         if not len(filenames) == expected_number_of_MSAs:
             raise ValueError(
                 f"Number of MSAs is {len(filenames)}, does not match " f"expected {expected_number_of_MSAs}"

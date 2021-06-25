@@ -106,6 +106,7 @@ class ContactGenerator:
             raise ValueError(f"Could not find pdb_dir {a3m_dir}")
 
         filenames = sorted(list(os.listdir(a3m_dir)))
+        random.Random(123).shuffle(filenames)
         if not len(filenames) == expected_number_of_families:
             raise ValueError(
                 f"Number of families is {len(filenames)}, does not match " f"expected {expected_number_of_families}"

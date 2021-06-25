@@ -161,6 +161,7 @@ class TransitionExtractor:
             raise ValueError(f"Could not find a3m_dir {a3m_dir}")
 
         filenames = sorted(list(os.listdir(a3m_dir)))
+        random.Random(123).shuffle(filenames)
         if not len(filenames) == expected_number_of_MSAs:
             raise ValueError(
                 f"Number of MSAs is {len(filenames)}, does not match " f"expected {expected_number_of_MSAs}"

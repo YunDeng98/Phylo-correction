@@ -121,6 +121,26 @@ def map_func(args: List) -> None:
 
 
 class TransitionExtractor:
+    r"""
+    Generate *SINGLE-SITE* transitions from a phylogenetic tree with annotated ancestral states.
+
+    The hyperparameters are passed in '__init__', and the transitions are only
+    computed upon call to the 'run' method.
+
+    Args:
+        a3m_dir: Directory where the MSA files (.a3m) are found. Although they
+            are never read, this must be provided to be able to subsample families via the 'max_families' argument.
+        parsimony_dir: Directory where the maximum parsimony reconstructions are found.
+        n_process: Number of processes used to parallelize computation.
+        expected_number_of_MSAs: The number of files in a3m_dir. This argument
+            is only used to sanity check that the correct a3m_dir is being used.
+            It has no functional implications.
+        outdir: Directory where the generated transitions will be found (.transitions files)
+        max_families: Only run on 'max_families' randomly chosen files in a3m_dir.
+            This is useful for testing and to see what happens if less data is used.
+        use_cached: If True and the output file already exists for a family,
+            all computation will be skipped for that family.
+    """
     def __init__(
         self,
         a3m_dir: str,

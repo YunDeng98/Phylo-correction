@@ -41,6 +41,28 @@ def map_func(args: List) -> None:
 
 
 class ContactGenerator:
+    r"""
+    Generates contact matrices from PDB files.
+
+    All hyperparameters are provided upon '__init__', and the contact
+    matrices are only generated when the 'run' method is called.
+
+    Args:
+        a3m_dir: Directory where the MSA files (.a3m) are found. Although they
+            are never read, this must be provided for pendantic reasons.
+        pdb_dir: Directory where the PDB structure files (.pdb) are found.
+        armstrong_cutoff: Armstrong cutoff threshold used to determine if two
+            sites are in contact.
+        n_process: Number of processes used to parallelize computation.
+        expected_number_of_families: The number of files in a3m_dir. This argument
+            is only used to sanity check that the correct a3m_dir is being used.
+            It has no functional implications.
+        outdir: Directory where the generated contact matrices will be found (.cm files)
+        max_families: Only run on the first 'max_families' files in a3m_dir.
+            This is useful for testing and to see what happens if less data is used.
+        use_cached: If True and the output file already exists for a family,
+            all computation will be skipped for that family.
+    """
     def __init__(
         self,
         a3m_dir: str,

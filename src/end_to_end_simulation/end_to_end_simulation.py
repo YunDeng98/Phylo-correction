@@ -10,6 +10,8 @@ from typing import Optional
 
 class EndToEndSimulator:
     r"""
+    Perform End-To-End simulation of a rate matrix estimation pipeline.
+
     Given a Pipeline, the EndToEndSimulator uses ground-truth rate matrices to
     simulate contact maps and MSAs using the trees of that pipeline, then
     re-runs the pipeline on the simulated data. This allows one to test the

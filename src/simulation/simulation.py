@@ -229,6 +229,33 @@ def map_func(args: List) -> None:
 
 
 class Simulator:
+    r"""
+    Simulate MSAs given a contact map and a tree.
+
+    Args:
+        a3m_dir: Directory where the original MSA files (.a3m) are found.
+            They are only used to determine the length (number of amino acids)
+            of each protein family.
+        tree_dir: Directory where the tree files (.newick) are found.
+        a3m_simulated_dir: Directory where to write the simulated MSAs files (.a3m).
+        contact_simulated_dir: Directory where to write the simulated contact map files (.cm).
+        ancestral_states_simulated_dir: The ancestral states of the simulation will be
+            stored here. These files look just like for the MaximumParsimonyReconstructor,
+            but contain ground truth ancestral states instead of estimated states.
+            (This is the whole purpose of simulation! To see how maximum parsimony
+            screws up our estimates.)
+        n_process: How many processes to use to parallelize computation.
+        expected_number_of_MSAs: The number of files in a3m_dir. This argument
+            is only used to sanity check that the correct a3m_dir is being used.
+            It has no functional implications.
+        max_families: Only simulate MSAs for 'max_families' randomly chosen files in a3m_dir.
+            This is useful for testing and to see what happens if less data is used.
+        simulation_pct_interacting_positions: What percent of the positions in each protein
+            family will be in contact.
+        Q1_ground_truth: Rate matrix for the evolution of single sites.
+        Q2_ground_truth: Rate matrix for pairs of sites that are in contact.
+        use_cached: If True and an output file already exists, all computation will be skipped.
+    """
     def __init__(
         self,
         a3m_dir: str,

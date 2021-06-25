@@ -52,7 +52,7 @@ class Pipeline:
             first 'max_families'. This is super useful for testing the pipeline
             before running it on all data.
         a3m_dir: Directory where the MSAs (.a3m files) are found, for the
-            purpose of phylogeny reconstruction, maximum parsomony
+            purpose of phylogeny reconstruction, maximum parsimony
             reconstruction and finally frequency matrix construction.
         pdb_dir: Directory where the PDB (.pdb) structure files are found,
             for the purpose of contact matrix construction.
@@ -67,7 +67,7 @@ class Pipeline:
             'precomputed_maximum_parsimony_dir' will be used as the
             maximum parsimony reconstructions.
         use_cached: If True, will do nothing for the output files that
-            already exists, effefctively re-using them.
+            already exists, effectively re-using them.
 
     Attributes:
         tree_dir: Where the estimated phylogenies lie

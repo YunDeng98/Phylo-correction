@@ -221,7 +221,7 @@ class MaximumParsimonyReconstructor:
             tree with the internal nodes given a name, and a .a3m file with the
             states of all nodes in the tree (including the internal ones, which
             were reconstructed with maximum parsimony)
-        max_families: Only estimate trees for the first 'max_families' files in a3m_dir.
+        max_families: Only estimate trees for 'max_families' randomly chosen files in a3m_dir.
             This is useful for testing and to see what happens if less data is used.
         use_cached: If True and the output files already exist for a family,
             all computation will be skipped for that family.

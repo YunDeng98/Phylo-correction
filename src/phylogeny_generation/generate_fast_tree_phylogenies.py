@@ -53,7 +53,7 @@ class PhylogenyGenerator:
             uniformly at random. The first sequence in the MSA files will always be sampled.
         max_sites: If nonzero, this number of sites in the MSA files will be subsampled
             uniformly at random.
-        max_families: Only estimate trees for the first 'max_families' files in a3m_dir.
+        max_families: Only estimate trees for 'max_families' randomly chosen files in a3m_dir.
             This is useful for testing and to see what happens if less data is used.
         rate_matrix: Path to the rate matrix to use within FastTree. If ends in 'None', then
             the default rate matrix will be used in FastTree.

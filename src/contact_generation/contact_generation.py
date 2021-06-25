@@ -58,7 +58,7 @@ class ContactGenerator:
             is only used to sanity check that the correct a3m_dir is being used.
             It has no functional implications.
         outdir: Directory where the generated contact matrices will be found (.cm files)
-        max_families: Only run on the first 'max_families' files in a3m_dir.
+        max_families: Only run on 'max_families' randomly chosen files in a3m_dir.
             This is useful for testing and to see what happens if less data is used.
         use_cached: If True and the output file already exists for a family,
             all computation will be skipped for that family.

@@ -49,7 +49,7 @@ class ContactGenerator:
 
     Args:
         a3m_dir: Directory where the MSA files (.a3m) are found. Although they
-            are never read, this must be provided for pendantic reasons.
+            are never read, this must be provided to be able to subsample families via the 'max_families' argument.
         pdb_dir: Directory where the PDB structure files (.pdb) are found.
         armstrong_cutoff: Armstrong cutoff threshold used to determine if two
             sites are in contact.

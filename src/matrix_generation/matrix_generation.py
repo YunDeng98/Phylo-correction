@@ -65,6 +65,28 @@ def get_protein_family_names_for_shard(shard_id: int, n_process: int, protein_fa
 
 
 class MatrixGenerator:
+    r"""
+    Generate frequency matrices from a transition file.
+
+    The hyperparameters are passed in '__init__', and the frequency matrices are only
+    computed upon call to the 'run' method.
+
+    Args:
+        a3m_dir: Directory where the MSA files (.a3m) are found. Although they
+            are never read, this must be provided to be able to subsample families via the 'max_families' argument.
+        transitions_dir: Directory where the transition files (.transitions) are found.
+        n_process: Number of processes used to parallelize computation.
+        expected_number_of_MSAs: The number of files in a3m_dir. This argument
+            is only used to sanity check that the correct a3m_dir is being used.
+            It has no functional implications.
+        outdir: Directory where the generated frequency matrices will be found (matrices.txt file)
+        max_families: Only run on 'max_families' randomly chosen files in a3m_dir.
+            This is useful for testing and to see what happens if less data is used.
+        num_sites: Whether the transitions are for single sites (num_sites=1) or for pairs
+            of sites (num_sites=2).
+        use_cached: If True and the output file already exists for a family,
+            all computation will be skipped for that family.
+    """
     def __init__(
         self,
         a3m_dir: str,

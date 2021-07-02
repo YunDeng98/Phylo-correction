@@ -78,7 +78,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
             with self.assertRaises(PhylogenyGeneratorError):
                 phylogeny_generator.run()
 
-    def test_malformed_a3m_file_raises(self):
+    def test_malformed_a3m_file_raises_error(self):
         """
         If the a3m data is corrupted, an error should be raised.
         """

@@ -5,6 +5,7 @@
 #include <map>
 #include <assert.h>
 #include <math.h>
+#include <random>
 
 #define forn(i, n) for(int i = 0; i < int(n); i++)
 #define pb push_back
@@ -18,6 +19,8 @@ const int maxS = 30;
 string sequences[maxN];
 vector<int> G[maxN];
 int dp[maxN][maxS];
+
+std::mt19937 rng;
 
 void read_tree(string tree_filepath){
     // cerr << "Reading graph ... " << endl;
@@ -108,7 +111,7 @@ void reconstruct_solution(int v, int i, int site_id){
                 optimal_assignments.pb(j);
         }
         // Choose the state at random from all valid states, and proceed.
-        int chosen_state = optimal_assignments[rand() % optimal_assignments.size()];
+        int chosen_state = optimal_assignments[rng() % optimal_assignments.size()];
         if(G[u].size() == 0){
             // Nothing to do really, just sanity check
             assert(optimal_assignments.size() == 1);
@@ -134,7 +137,7 @@ void solve_maximum_parsimony_for_site(int site_id){
     vector<int> optimal_root_states;
     forn(i, maxS) if(dp[ROOT][i] == maximum_parsimony) optimal_root_states.pb(i);
     // show(optimal_root_states);
-    int chosen_root_state = optimal_root_states[rand() % (optimal_root_states.size())];
+    int chosen_root_state = optimal_root_states[rng() % (optimal_root_states.size())];
     sequences[ROOT] += int_to_aa(chosen_root_state);
     reconstruct_solution(ROOT, chosen_root_state, site_id);
 }
@@ -161,7 +164,6 @@ void test(){
 }
 
 int main(int argc, char* argv[]){
-    srand(2);
     // cerr << "Running maximum parsimony C++ script ... " << endl;
     if(argc != 4){
         cerr << "ERROR: The tree_filepath, msa_filepath, and solution_filepath should be provided!" << endl;

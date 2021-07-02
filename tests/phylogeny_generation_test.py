@@ -10,7 +10,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
     def test_basic_regression(self):
         """
         Test that PhylogenyGenerator runs and its output matches the expected output.
-        The expected output is located at test_input_data/trees_small .
+        The expected output is located at test_input_data/trees_small
 
         We run the same PhylogenyGenerator twice: first without caching,
         then with caching, to make sure that caching works.

@@ -248,6 +248,7 @@ class MaximumParsimonyReconstructor:
         maximum_parsimony_bin_path = os.path.join(dir_path, "maximum_parsimony")
         maximum_parsimony_path = os.path.join(dir_path, "maximum_parsimony.cpp")
         if not os.path.exists(maximum_parsimony_bin_path):
+            # TODO: Make this part of installation?
             logger.info("Compiling maximum_parsimony.cpp")
             os.system(
                 "g++ -std=c++17 -O3 -Wshadow -Wall  -Wextra -D_GLIBCXX_DEBUG"

@@ -95,3 +95,24 @@ class TestPhylogenyGenerator(unittest.TestCase):
             )
             with self.assertRaises(MSAError):
                 phylogeny_generator.run()
+
+    def test_incorrect_expected_number_of_MSAs_raises_error(self):
+        """
+        If the a3m directory has a different number of files from the
+        expected number, an error should be raised.
+        """
+        with tempfile.TemporaryDirectory() as root_dir:
+            outdir = os.path.join(root_dir, 'trees')
+            phylogeny_generator = PhylogenyGenerator(
+                a3m_dir='test_input_data/a3m_small',
+                n_process=3,
+                expected_number_of_MSAs=4,
+                outdir=outdir,
+                max_seqs=8,
+                max_sites=16,
+                max_families=3,
+                rate_matrix='None',
+                use_cached=False,
+            )
+            with self.assertRaises(MSAError):
+                phylogeny_generator.run()

@@ -8,6 +8,7 @@ import random
 import tqdm
 
 from .FastTreePhylogeny import FastTreePhylogeny
+from .MSA import MSAError
 
 
 def _map_func(args) -> None:
@@ -104,7 +105,7 @@ class PhylogenyGenerator:
         filenames = sorted(list(os.listdir(a3m_dir)))
         random.Random(123).shuffle(filenames)
         if not len(filenames) == expected_number_of_MSAs:
-            raise ValueError(
+            raise MSAError(
                 f"Number of MSAs at {a3m_dir} is {len(filenames)}, does not match " f"expected {expected_number_of_MSAs}"
             )
         protein_family_names = [x.split(".")[0] for x in filenames][:max_families]

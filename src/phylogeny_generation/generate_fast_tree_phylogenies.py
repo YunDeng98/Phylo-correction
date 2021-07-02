@@ -11,7 +11,7 @@ from .FastTreePhylogeny import FastTreePhylogeny
 from .MSA import MSAError
 
 
-def _map_func(args) -> None:
+def map_func(args) -> None:
     a3m_dir = args[0]
     protein_family_name = args[1]
     outdir = args[2]
@@ -114,7 +114,10 @@ class PhylogenyGenerator:
             [a3m_dir, protein_family_name, outdir, max_seqs, max_sites, rate_matrix, use_cached]
             for protein_family_name in protein_family_names
         ]
-        with multiprocessing.Pool(n_process) as pool:
-            list(tqdm.tqdm(pool.imap(_map_func, map_args), total=len(map_args)))
+        if n_process > 1:
+            with multiprocessing.Pool(n_process) as pool:
+                list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
+        else:
+            list(tqdm.tqdm(map(map_func, map_args), total=len(map_args)))
 
         os.system(f"chmod -R 555 {outdir}")

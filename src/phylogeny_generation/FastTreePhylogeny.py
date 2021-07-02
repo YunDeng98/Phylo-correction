@@ -61,6 +61,7 @@ class FastTreePhylogeny:
         fast_tree_bin_path = os.path.join(dir_path, 'FastTree')
         fast_tree_path = os.path.join(dir_path, 'FastTree.c')
         if not os.path.exists(fast_tree_bin_path):
+            # TODO: Make this part of installation?
             logger.info("Getting FastTree.c file ...")
             os.system(
                 f"wget http://www.microbesonline.org/fasttree/FastTree.c -P {dir_path}"

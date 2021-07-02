@@ -2,12 +2,14 @@ import os
 import unittest
 import tempfile
 from filecmp import dircmp
+from parameterized import parameterized
 
 from src.phylogeny_generation import PhylogenyGenerator, PhylogenyGeneratorError, MSAError
 
 
 class TestPhylogenyGenerator(unittest.TestCase):
-    def test_basic_regression(self):
+    @parameterized.expand([("multiprocess", 3), ("single-process", 1)])
+    def test_basic_regression(self, name, n_process):
         """
         Test that PhylogenyGenerator runs and its output matches the expected output.
         The expected output is located at test_input_data/trees_small
@@ -20,7 +22,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
             for use_cached in [False, True]:
                 phylogeny_generator = PhylogenyGenerator(
                     a3m_dir='test_input_data/a3m_small',
-                    n_process=3,
+                    n_process=n_process,
                     expected_number_of_MSAs=3,
                     outdir=outdir,
                     max_seqs=8,
@@ -34,7 +36,8 @@ class TestPhylogenyGenerator(unittest.TestCase):
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)
 
-    def test_custom_rate_matrix_runs_regression(self):
+    @parameterized.expand([("multiprocess", 3), ("single-process", 1)])
+    def test_custom_rate_matrix_runs_regression(self, name, n_process):
         """
         Tests the use of a custom rate matrix in FastTree.
         """
@@ -42,7 +45,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
             outdir = os.path.join(root_dir, 'trees')
             phylogeny_generator = PhylogenyGenerator(
                 a3m_dir='test_input_data/a3m_small',
-                n_process=3,
+                n_process=n_process,
                 expected_number_of_MSAs=3,
                 outdir=outdir,
                 max_seqs=8,
@@ -56,7 +59,8 @@ class TestPhylogenyGenerator(unittest.TestCase):
             diff_files = dcmp.diff_files
             assert(len(diff_files) == 0)
 
-    def test_inexistent_rate_matrix_raises_error(self):
+    @parameterized.expand([("multiprocess", 3), ("single-process", 1)])
+    def test_inexistent_rate_matrix_raises_error(self, name, n_process):
         """
         If the rate matrix passed to FastTree does not exist, we should error out.
         """
@@ -64,7 +68,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
             outdir = os.path.join(root_dir, 'trees')
             phylogeny_generator = PhylogenyGenerator(
                 a3m_dir='test_input_data/a3m_small',
-                n_process=3,
+                n_process=n_process,
                 expected_number_of_MSAs=3,
                 outdir=outdir,
                 max_seqs=8,
@@ -76,7 +80,8 @@ class TestPhylogenyGenerator(unittest.TestCase):
             with self.assertRaises(PhylogenyGeneratorError):
                 phylogeny_generator.run()
 
-    def test_malformed_a3m_file_raises_error(self):
+    @parameterized.expand([("multiprocess", 3), ("single-process", 1)])
+    def test_malformed_a3m_file_raises_error(self, name, n_process):
         """
         If the a3m data is corrupted, an error should be raised.
         """
@@ -84,7 +89,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
             outdir = os.path.join(root_dir, 'trees')
             phylogeny_generator = PhylogenyGenerator(
                 a3m_dir='test_input_data/a3m_small_corrupted',
-                n_process=3,
+                n_process=n_process,
                 expected_number_of_MSAs=3,
                 outdir=outdir,
                 max_seqs=8,
@@ -96,7 +101,8 @@ class TestPhylogenyGenerator(unittest.TestCase):
             with self.assertRaises(MSAError):
                 phylogeny_generator.run()
 
-    def test_incorrect_expected_number_of_MSAs_raises_error(self):
+    @parameterized.expand([("multiprocess", 3), ("single-process", 1)])
+    def test_incorrect_expected_number_of_MSAs_raises_error(self, name, n_process):
         """
         If the a3m directory has a different number of files from the
         expected number, an error should be raised.
@@ -105,7 +111,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
             outdir = os.path.join(root_dir, 'trees')
             phylogeny_generator = PhylogenyGenerator(
                 a3m_dir='test_input_data/a3m_small',
-                n_process=3,
+                n_process=n_process,
                 expected_number_of_MSAs=4,
                 outdir=outdir,
                 max_seqs=8,

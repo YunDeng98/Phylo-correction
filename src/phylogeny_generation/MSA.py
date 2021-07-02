@@ -4,6 +4,10 @@ from typing import Dict, List, Tuple
 import numpy as np
 
 
+class MSAError(Exception):
+    pass
+
+
 class MSA:
     r"""
     An MSA contains a multiple sequence alignment of proteins.
@@ -40,10 +44,10 @@ class MSA:
     ) -> None:
         filename = f"{protein_family_name}.a3m"
         if not os.path.exists(a3m_dir):
-            raise ValueError(f"a3m_dir {a3m_dir} does not exist!")
+            raise MSAError(f"a3m_dir {a3m_dir} does not exist!")
         filepath = os.path.join(a3m_dir, filename)
         if not os.path.exists(filepath):
-            raise ValueError(f"MSA file {filepath} does not exist!")
+            raise MSAError(f"MSA file {filepath} does not exist!")
 
         # Read MSA
         msa = []  # type: List[Tuple[str, str]]
@@ -52,7 +56,7 @@ class MSA:
             n_lines = len(lines)
             for i in range(0, n_lines, 2):
                 if not lines[i][0] == '>':
-                    raise ValueError("Protein name line should start with '>'")
+                    raise MSAError("Protein name line should start with '>'")
                 protein_name = lines[i][1:].strip()
                 protein_seq = lines[i + 1].strip()
                 # Lowercase amino acids in the sequence are repetitive
@@ -64,7 +68,7 @@ class MSA:
             # Check that all sequences in the MSA have the same length.
             for i in range(len(msa) - 1):
                 if len(msa[i][1]) != len(msa[i + 1][1]):
-                    raise ValueError(
+                    raise MSAError(
                         f"Sequence\n{msa[i][1]}\nand\n{msa[i + 1][1]}\nin the "
                         f"MSA do not have the same length! ({len(msa[i][1])} vs"
                         f" {len(msa[i + 1][1])})"

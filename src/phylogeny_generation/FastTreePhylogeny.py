@@ -7,6 +7,10 @@ from .MSA import MSA
 import logging
 
 
+class PhylogenyGeneratorError(Exception):
+    pass
+
+
 class FastTreePhylogeny:
     r"""
     Run FastTree on a given MSA file.
@@ -93,7 +97,7 @@ class FastTreePhylogeny:
             else:
                 if not os.path.exists(rate_matrix):
                     logger.error(f"Could not find rate matrix {rate_matrix}")
-                    raise ValueError(f"Could not find rate matrix {rate_matrix}")
+                    raise PhylogenyGeneratorError(f"Could not find rate matrix {rate_matrix}")
                 logger.info(f"Running FastTree with rate matrix {rate_matrix} on MSA:\n{msa}")
                 os.system(f"{dir_path}/FastTree -quiet -trans {rate_matrix} < {processed_msa_filename} > {outfile}")
             time_end = time.time()

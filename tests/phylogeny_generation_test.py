@@ -1,7 +1,5 @@
 import os
 import unittest
-import pytest
-from parameterized import parameterized
 import tempfile
 from filecmp import dircmp
 

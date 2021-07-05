@@ -27,7 +27,7 @@ class TestPipeline(unittest.TestCase):
                     max_sites=16,
                     armstrong_cutoff=8.0,
                     rate_matrix="None",
-                    n_process=3,
+                    n_process=n_process,
                     expected_number_of_MSAs=3,
                     max_families=3,
                     a3m_dir="test_input_data/a3m_small",
@@ -35,9 +35,9 @@ class TestPipeline(unittest.TestCase):
                     use_cached=True,
                 )
                 pipeline.run()
-                dcmp = dircmp(os.path.join(outdir, "matrices_8_seqs_16_sites"), f'test_input_data/matrices_small')
+                dcmp = dircmp(os.path.join(outdir, "matrices_8_seqs_16_sites"), 'test_input_data/matrices_small')
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)
-                dcmp = dircmp(os.path.join(outdir, "co_matrices_8_seqs_16_sites_8.0"), f'test_input_data/co_matrices_small')
+                dcmp = dircmp(os.path.join(outdir, "co_matrices_8_seqs_16_sites_8.0"), 'test_input_data/co_matrices_small')
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)

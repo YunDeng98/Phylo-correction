@@ -9,6 +9,7 @@ from src.maximum_parsimony import MaximumParsimonyReconstructor
 from src.transition_extraction import TransitionExtractor
 from src.co_transition_extraction import CoTransitionExtractor
 from src.matrix_generation import MatrixGenerator
+from src.ratelearn import RateMatrixLearner
 
 
 class Pipeline:
@@ -150,6 +151,14 @@ class Pipeline:
             outdir,
             f"co_matrices_{max_seqs}_seqs_{max_sites}_sites_{armstrong_cutoff}",
         )
+        self.learnt_rate_matrix_dir = os.path.join(
+            outdir,
+            f"Q1_{max_seqs}_seqs_{max_sites}_sites"
+        )
+        self.learnt_co_rate_matrix_dir = os.path.join(
+            outdir,
+            f"Q2_{max_seqs}_seqs_{max_sites}_sites_{armstrong_cutoff}"
+        )
 
     def run(self):
         max_seqs = self.max_seqs
@@ -168,6 +177,8 @@ class Pipeline:
         matrices_dir = self.matrices_dir
         co_transitions_dir = self.co_transitions_dir
         co_matrices_dir = self.co_matrices_dir
+        learnt_rate_matrix_dir = self.learnt_rate_matrix_dir
+        learnt_co_rate_matrix_dir = self.learnt_co_rate_matrix_dir
         precomputed_contact_dir = self.precomputed_contact_dir
         precomputed_tree_dir = self.precomputed_tree_dir
         precomputed_maximum_parsimony_dir = self.precomputed_maximum_parsimony_dir
@@ -297,6 +308,41 @@ class Pipeline:
         )
         matrix_generator_pairwise.run()
         self.time_MatrixGenerator_2 = time.time() - t_start
+
+        # Estimate single-site rate matrix Q1
+        t_start = time.time()
+        single_site_rate_matrix_learner = RateMatrixLearner(
+            frequency_matrices=os.path.join(matrices_dir, "matrices_by_quantized_branch_length.txt"),
+            output_dir=learnt_rate_matrix_dir,
+            stationnary_distribution=None,
+            mask=None,
+            # frequency_matrices_sep=",",
+            rate_matrix_parameterization="pande_reversible",
+        )
+        single_site_rate_matrix_learner.train(
+            lr=1e-1,
+            num_epochs=2000,
+            do_adam=True,
+        )
+        self.time_RateMatrixLearner_1 = time.time() - t_start
+
+        # Estimate single-site rate matrix Q2
+        t_start = time.time()
+        pair_of_site_rate_matrix_learner = RateMatrixLearner(
+            frequency_matrices=os.path.join(co_matrices_dir, "matrices_by_quantized_branch_length.txt"),
+            output_dir=learnt_co_rate_matrix_dir,
+            stationnary_distribution=None,
+            mask=None,
+            # frequency_matrices_sep=",",
+            rate_matrix_parameterization="pande_reversible",
+        )
+        pair_of_site_rate_matrix_learner.train(
+            lr=1e-1,
+            num_epochs=2000,
+            do_adam=True,
+        )
+        self.time_RateMatrixLearner_2 = time.time() - t_start
+
         self.time_total = (
             self.time_PhylogenyGenerator
             + self.time_ContactGenerator
@@ -305,6 +351,8 @@ class Pipeline:
             + self.time_MatrixGenerator_1
             + self.time_CoTransitionExtractor
             + self.time_MatrixGenerator_2
+            + self.time_RateMatrixLearner_1
+            + self.time_RateMatrixLearner_2
         )
 
     def get_times(self) -> str:
@@ -321,5 +369,6 @@ class Pipeline:
             + f"time_MatrixGenerator_1 = {self.time_MatrixGenerator_1}\n"
             + f"time_CoTransitionExtractor = {self.time_CoTransitionExtractor}\n"
             + f"time_MatrixGenerator_2 = {self.time_MatrixGenerator_2}\n"
+            + f"time_RateMatrixLearner_1 = {self.time_RateMatrixLearner_1}\n"
         )
         return res

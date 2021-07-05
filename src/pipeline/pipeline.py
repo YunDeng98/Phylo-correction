@@ -69,6 +69,8 @@ class Pipeline:
             maximum parsimony reconstructions.
         use_cached: If True, will do nothing for the output files that
             already exists, effectively re-using them.
+        num_epochs: The number of epochs of first order optimization
+            used to solve for the MLE.
 
     Attributes:
         tree_dir: Where the estimated phylogenies lie
@@ -98,6 +100,7 @@ class Pipeline:
         precomputed_tree_dir: Optional[str] = None,
         precomputed_maximum_parsimony_dir: Optional[str] = None,
         use_cached: bool = False,
+        num_epochs: int = 2000,
     ):
         # Check input validity
         if precomputed_tree_dir is not None or precomputed_maximum_parsimony_dir is not None:
@@ -129,6 +132,7 @@ class Pipeline:
         self.precomputed_tree_dir = precomputed_tree_dir
         self.precomputed_maximum_parsimony_dir = precomputed_maximum_parsimony_dir
         self.use_cached = use_cached
+        self.num_epochs = num_epochs
 
         # Output data directories
         # Where the phylogenies will be stored
@@ -183,6 +187,7 @@ class Pipeline:
         precomputed_tree_dir = self.precomputed_tree_dir
         precomputed_maximum_parsimony_dir = self.precomputed_maximum_parsimony_dir
         use_cached = self.use_cached
+        num_epochs = self.num_epochs
 
         # First we need to generate the phylogenies
         t_start = time.time()
@@ -321,7 +326,7 @@ class Pipeline:
         )
         single_site_rate_matrix_learner.train(
             lr=1e-1,
-            num_epochs=2000,
+            num_epochs=num_epochs,
             do_adam=True,
         )
         self.time_RateMatrixLearner_1 = time.time() - t_start
@@ -338,7 +343,7 @@ class Pipeline:
         )
         pair_of_site_rate_matrix_learner.train(
             lr=1e-1,
-            num_epochs=2000,
+            num_epochs=num_epochs,
             do_adam=True,
         )
         self.time_RateMatrixLearner_2 = time.time() - t_start

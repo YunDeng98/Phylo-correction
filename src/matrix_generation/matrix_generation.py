@@ -208,4 +208,10 @@ class MatrixGenerator:
         out_filepath = os.path.join(outdir, "matrices.txt")
         res.to_csv(out_filepath, sep="\t")
 
+        # Write out the frequency matrices for quantized branch lengths.
+        out_filepath = os.path.join(outdir, "matrices_by_quantized_branch_length.txt")
+        with open(out_filepath, "w") as outfile:
+            outfile.write('1.0\n')
+            res.to_csv(out_filepath, mode='a', sep='\t', header=False, index=False)
+
         os.system(f"chmod -R 555 {outdir}")

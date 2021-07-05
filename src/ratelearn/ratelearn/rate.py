@@ -80,7 +80,7 @@ class RateMatrix(nn.Module):
             rmat_off[triu_indices[0], triu_indices[1]] = self.activation(self.upper_diag)
             rmat_off = rmat_off + rmat_off.T
             
-            pi = nn.Softmax()(self._pi)
+            pi = nn.Softmax(dim=-1)(self._pi)
             pi_mat = torch.diag(pi.sqrt())
             pi_inv_mat = torch.diag(pi.sqrt()**(-1))
             mat = (pi_inv_mat @ rmat_off) @ pi_mat

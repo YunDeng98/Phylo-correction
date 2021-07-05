@@ -212,6 +212,9 @@ class MatrixGenerator:
         out_filepath = os.path.join(outdir, "matrices_by_quantized_branch_length.txt")
         with open(out_filepath, "w") as outfile:
             outfile.write('1.0\n')
-            res.to_csv(out_filepath, mode='a', sep='\t', header=False, index=False)
+        res.to_csv(out_filepath, mode='a', sep=' ', header=False, index=False)
+        with open(out_filepath, "a") as outfile:
+            outfile.write('9999.0\n')
+        (0 * res).to_csv(out_filepath, mode='a', sep=' ', header=False, index=False)
 
         os.system(f"chmod -R 555 {outdir}")

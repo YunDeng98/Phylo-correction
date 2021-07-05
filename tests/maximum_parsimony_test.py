@@ -20,7 +20,7 @@ class TestMaximumParsimonyReconstructor(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root_dir:
             outdir = os.path.join(root_dir, 'maximum_parsimony')
             for use_cached in [False, True]:
-                contact_generator = MaximumParsimonyReconstructor(
+                mp_reconstructor = MaximumParsimonyReconstructor(
                     a3m_dir='test_input_data/a3m_small',
                     tree_dir='test_input_data/trees_small',
                     n_process=n_process,
@@ -29,7 +29,7 @@ class TestMaximumParsimonyReconstructor(unittest.TestCase):
                     max_families=3,
                     use_cached=use_cached,
                 )
-                contact_generator.run()
+                mp_reconstructor.run()
                 dcmp = dircmp(outdir, 'test_input_data/maximum_parsimony_small')
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)

@@ -20,7 +20,7 @@ class TestTransitionExtractor(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root_dir:
             outdir = os.path.join(root_dir, 'maximum_parsimony')
             for use_cached in [False, True]:
-                contact_generator = TransitionExtractor(
+                transition_extractor = TransitionExtractor(
                     a3m_dir='test_input_data/a3m_small',
                     parsimony_dir='test_input_data/maximum_parsimony_small',
                     n_process=n_process,
@@ -29,7 +29,7 @@ class TestTransitionExtractor(unittest.TestCase):
                     max_families=3,
                     use_cached=use_cached,
                 )
-                contact_generator.run()
+                transition_extractor.run()
                 dcmp = dircmp(outdir, 'test_input_data/transitions_small')
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)

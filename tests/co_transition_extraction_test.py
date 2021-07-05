@@ -3,6 +3,7 @@ import unittest
 import tempfile
 from filecmp import dircmp
 from parameterized import parameterized
+from src import co_transition_extraction
 
 from src.co_transition_extraction import CoTransitionExtractor
 
@@ -20,7 +21,7 @@ class TestCoTransitionExtractor(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root_dir:
             outdir = os.path.join(root_dir, 'maximum_parsimony')
             for use_cached in [False, True]:
-                contact_generator = CoTransitionExtractor(
+                co_transition_extractor = CoTransitionExtractor(
                     a3m_dir='test_input_data/a3m_small',
                     parsimony_dir='test_input_data/maximum_parsimony_small',
                     n_process=n_process,
@@ -30,7 +31,7 @@ class TestCoTransitionExtractor(unittest.TestCase):
                     contact_dir='test_input_data/contacts_small',
                     use_cached=use_cached,
                 )
-                contact_generator.run()
+                co_transition_extractor.run()
                 dcmp = dircmp(outdir, 'test_input_data/co_transitions_small')
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)

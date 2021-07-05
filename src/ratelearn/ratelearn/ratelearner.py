@@ -5,7 +5,7 @@ import torch
 import matplotlib.pyplot as plt
 from torch.utils.data import TensorDataset
 
-from ratelearn import RateMatrix, train_quantization
+from . import RateMatrix, train_quantization
 
 
 class RateMatrixLearner:
@@ -62,7 +62,7 @@ class RateMatrixLearner:
             mode=self.rate_matrix_parameterization,
             pi=self.pi,
             pi_requires_grad=pi_requires_grad,
-        ).cuda()
+        )#.cuda()
 
     def train(
         self,

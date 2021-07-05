@@ -39,7 +39,7 @@ def train_sgd(
             for _, datapoint in enumerate(tqdm(dlb)):
                 optimizer.zero_grad()
                 Q = rate_module()
-                datap = datapoint.cuda()
+                datap = datapoint#.cuda()
                 starting_state, ending_state, branch_length = (
                     datap[:, 0],
                     datap[:, 1],
@@ -131,8 +131,8 @@ def train_quantization(
             loss = 0.0
             for datapoint in dlb:
                 branch_length, cmat = datapoint
-                branch_length = branch_length.cuda()
-                cmat = cmat.cuda()
+                branch_length = branch_length#.cuda()
+                cmat = cmat#.cuda()
 
                 branch_length_ = branch_length
                 mats = torch.log(torch.matrix_exp(branch_length_[:, None, None] * Q))
@@ -205,8 +205,8 @@ def train_quantization_N(
             loss = 0.0
             for datapoint in dlb:
                 branch_length, cmat = datapoint
-                branch_length = branch_length.cuda()
-                cmat = cmat.cuda()
+                branch_length = branch_length#.cuda()
+                cmat = cmat#.cuda()
                 branch_length_ = branch_length
                 mats = torch.log(torch.matrix_exp(branch_length_[:, None, None] * Q))
                 mats = mats * cmat
@@ -218,8 +218,8 @@ def train_quantization_N(
         loss = 0.0
         for datapoint in dlb:
             branch_length, cmat = datapoint
-            branch_length = branch_length.cuda()
-            cmat = cmat.cuda()
+            branch_length = branch_length#.cuda()
+            cmat = cmat#.cuda()
 
             branch_length_ = branch_length
             mats = torch.log(torch.matrix_exp(branch_length_[:, None, None] * Q))
@@ -306,8 +306,8 @@ def train_diag_param(
             true_loss = 0.0
             for datapoint in dlb:
                 branch_length, cmat = datapoint
-                branch_length = branch_length.cuda()
-                cmat = cmat.cuda()
+                branch_length = branch_length#.cuda()
+                cmat = cmat#.cuda()
 
                 tau = branch_length[:, None]
 
@@ -376,8 +376,8 @@ def estimate_likelihood(
     loss = 0.0
     for datapoint in dlb:
         branch_length, cmat = datapoint
-        branch_length = branch_length.cuda()
-        cmat = cmat.cuda()
+        branch_length = branch_length#.cuda()
+        cmat = cmat#.cuda()
 
         branch_length_ = branch_length
         mats = torch.log(torch.matrix_exp(branch_length_[:, None, None] * Q))

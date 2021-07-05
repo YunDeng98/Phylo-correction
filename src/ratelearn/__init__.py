@@ -1,1 +1,1 @@
-from .ratelearn.ratelearn import RateMatrixLearner
+from .ratelearn import RateMatrixLearner

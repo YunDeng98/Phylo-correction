@@ -39,7 +39,8 @@ def train_sgd(
             for _, datapoint in enumerate(tqdm(dlb)):
                 optimizer.zero_grad()
                 Q = rate_module()
-                datap = datapoint#.cuda()
+                device = Q.device
+                datap = datapoint.to(device=device)
                 starting_state, ending_state, branch_length = (
                     datap[:, 0],
                     datap[:, 1],
@@ -127,12 +128,13 @@ def train_quantization(
         for epoch in rg:
             optimizer.zero_grad()
             Q = rate_module()
+            device = Q.device
             # Now compute the loss
             loss = 0.0
             for datapoint in dlb:
                 branch_length, cmat = datapoint
-                branch_length = branch_length#.cuda()
-                cmat = cmat#.cuda()
+                branch_length = branch_length.to(device=device)
+                cmat = cmat.to(device=device)
 
                 branch_length_ = branch_length
                 mats = torch.log(torch.matrix_exp(branch_length_[:, None, None] * Q))
@@ -199,14 +201,15 @@ def train_quantization_N(
     for epoch in rg:
         optimizer.zero_grad()
         Q = rate_module()
+        device = Q.device
 
         def closure():
             optimizer.zero_grad()
             loss = 0.0
             for datapoint in dlb:
                 branch_length, cmat = datapoint
-                branch_length = branch_length#.cuda()
-                cmat = cmat#.cuda()
+                branch_length = branch_length.to(device=device)
+                cmat = cmat.to(device=device)
                 branch_length_ = branch_length
                 mats = torch.log(torch.matrix_exp(branch_length_[:, None, None] * Q))
                 mats = mats * cmat
@@ -218,8 +221,8 @@ def train_quantization_N(
         loss = 0.0
         for datapoint in dlb:
             branch_length, cmat = datapoint
-            branch_length = branch_length#.cuda()
-            cmat = cmat#.cuda()
+            branch_length = branch_length.to(device=device)
+            cmat = cmat.to(device=device)
 
             branch_length_ = branch_length
             mats = torch.log(torch.matrix_exp(branch_length_[:, None, None] * Q))
@@ -297,6 +300,7 @@ def train_diag_param(
         for epoch in rg:
             optimizer.zero_grad()
             Q = rate_module()
+            device = Q.device
             with torch.no_grad():
                 v, lambd, uh = torch.linalg.svd(Q, full_matrices=True)
             u = uh.T
@@ -306,8 +310,8 @@ def train_diag_param(
             true_loss = 0.0
             for datapoint in dlb:
                 branch_length, cmat = datapoint
-                branch_length = branch_length#.cuda()
-                cmat = cmat#.cuda()
+                branch_length = branch_length.to(device=device)
+                cmat = cmat.to(device=device)
 
                 tau = branch_length[:, None]
 
@@ -373,11 +377,12 @@ def estimate_likelihood(
     """
     dlb = DataLoader(quantized_dataset, batch_size=1000, shuffle=False)
     Q = rate_module()
+    device = Q.device
     loss = 0.0
     for datapoint in dlb:
         branch_length, cmat = datapoint
-        branch_length = branch_length#.cuda()
-        cmat = cmat#.cuda()
+        branch_length = branch_length.to(device=device)
+        cmat = cmat.to(device=device)
 
         branch_length_ = branch_length
         mats = torch.log(torch.matrix_exp(branch_length_[:, None, None] * Q))

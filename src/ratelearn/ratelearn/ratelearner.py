@@ -17,6 +17,7 @@ class RateMatrixLearner:
         mask: str = None,
         frequency_matrices_sep="\s",
         rate_matrix_parameterization="pande_reversible",
+        device='cuda',
     ):
         self.frequency_matrices = frequency_matrices
         self.frequency_matrices_sep = frequency_matrices_sep
@@ -29,6 +30,7 @@ class RateMatrixLearner:
         self.df_res = None
         self.Qfinal = None
         self.trained_ = False
+        self.device = device
 
         # Create experiment directory
         if os.path.exists(self.output_dir):
@@ -62,7 +64,7 @@ class RateMatrixLearner:
             mode=self.rate_matrix_parameterization,
             pi=self.pi,
             pi_requires_grad=pi_requires_grad,
-        )#.cuda()
+        ).to(device=device)
 
     def train(
         self,

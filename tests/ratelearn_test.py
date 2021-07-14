@@ -23,6 +23,7 @@ class TestRateMatrixLearner(unittest.TestCase):
                     mask=None,
                     # frequency_matrices_sep=",",
                     rate_matrix_parameterization="pande_reversible",
+                    device='cpu',
                 )
                 rate_matrix_learner.train(
                     lr=1e-1,
@@ -45,6 +46,7 @@ class TestRateMatrixLearner(unittest.TestCase):
                     mask=None,
                     # frequency_matrices_sep=",",
                     rate_matrix_parameterization="pande_reversible",
+                    device='cpu',
                 )
                 rate_matrix_learner.train(
                     lr=1e-1,
@@ -67,6 +69,7 @@ class TestRateMatrixLearner(unittest.TestCase):
                     mask=None,
                     # frequency_matrices_sep=",",
                     rate_matrix_parameterization="pande_reversible",
+                    device='cpu',
                 )
                 rate_matrix_learner.train(
                     lr=1e-1,

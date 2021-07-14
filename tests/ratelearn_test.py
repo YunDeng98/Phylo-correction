@@ -1,6 +1,7 @@
 import os
 import unittest
 import tempfile
+import torch
 # from filecmp import dircmp
 # from parameterized import parameterized
 
@@ -23,7 +24,7 @@ class TestRateMatrixLearner(unittest.TestCase):
                     mask=None,
                     # frequency_matrices_sep=",",
                     rate_matrix_parameterization="pande_reversible",
-                    device='cpu',
+                    device='cuda' if torch.cuda.is_available() else 'cpu',
                 )
                 rate_matrix_learner.train(
                     lr=1e-1,
@@ -46,7 +47,7 @@ class TestRateMatrixLearner(unittest.TestCase):
                     mask=None,
                     # frequency_matrices_sep=",",
                     rate_matrix_parameterization="pande_reversible",
-                    device='cpu',
+                    device='cuda' if torch.cuda.is_available() else 'cpu',
                 )
                 rate_matrix_learner.train(
                     lr=1e-1,
@@ -69,7 +70,7 @@ class TestRateMatrixLearner(unittest.TestCase):
                     mask=None,
                     # frequency_matrices_sep=",",
                     rate_matrix_parameterization="pande_reversible",
-                    device='cpu',
+                    device='cuda' if torch.cuda.is_available() else 'cpu',
                 )
                 rate_matrix_learner.train(
                     lr=1e-1,

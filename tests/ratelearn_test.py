@@ -73,3 +73,4 @@ class TestRateMatrixLearner(unittest.TestCase):
                     num_epochs=1,  # TODO: Increase to 2000 when CUDA is available
                     do_adam=True,
                 )
+            os.system(f"chmod -R 777 {root_dir}")

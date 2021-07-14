@@ -3,8 +3,6 @@ import unittest
 import tempfile
 from filecmp import dircmp
 from parameterized import parameterized
-from src import co_transition_extraction
-
 from src.co_transition_extraction import CoTransitionExtractor
 
 
@@ -35,3 +33,4 @@ class TestCoTransitionExtractor(unittest.TestCase):
                 dcmp = dircmp(outdir, 'test_input_data/co_transitions_small')
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)
+            os.system(f"chmod -R 777 {root_dir}")

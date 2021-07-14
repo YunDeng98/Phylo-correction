@@ -42,3 +42,4 @@ class TestPipeline(unittest.TestCase):
                 dcmp = dircmp(os.path.join(outdir, "co_matrices_8_seqs_16_sites_8.0"), 'test_input_data/co_matrices_small')
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)
+            os.system(f"chmod -R 777 {root_dir}")

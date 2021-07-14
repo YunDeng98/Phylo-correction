@@ -34,3 +34,4 @@ class TestContactGenerator(unittest.TestCase):
                 dcmp = dircmp(outdir, 'test_input_data/contacts_small')
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)
+            os.system(f"chmod -R 777 {root_dir}")

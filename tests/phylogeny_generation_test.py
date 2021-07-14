@@ -35,6 +35,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
                 dcmp = dircmp(outdir, 'test_input_data/trees_small')
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)
+            os.system(f"chmod -R 777 {root_dir}")
 
     @parameterized.expand([("multiprocess", 3), ("single-process", 1)])
     def test_custom_rate_matrix_runs_regression(self, name, n_process):
@@ -58,6 +59,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
             dcmp = dircmp(outdir, 'test_input_data/trees_small_Q1_uniform')
             diff_files = dcmp.diff_files
             assert(len(diff_files) == 0)
+            os.system(f"chmod -R 777 {root_dir}")
 
     @parameterized.expand([("multiprocess", 3), ("single-process", 1)])
     def test_inexistent_rate_matrix_raises_error(self, name, n_process):
@@ -79,6 +81,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
             )
             with self.assertRaises(PhylogenyGeneratorError):
                 phylogeny_generator.run()
+            os.system(f"chmod -R 777 {root_dir}")
 
     @parameterized.expand([("multiprocess", 3), ("single-process", 1)])
     def test_malformed_a3m_file_raises_error(self, name, n_process):
@@ -100,6 +103,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
             )
             with self.assertRaises(MSAError):
                 phylogeny_generator.run()
+            os.system(f"chmod -R 777 {root_dir}")
 
     @parameterized.expand([("multiprocess", 3), ("single-process", 1)])
     def test_incorrect_expected_number_of_MSAs_raises_error(self, name, n_process):
@@ -122,3 +126,4 @@ class TestPhylogenyGenerator(unittest.TestCase):
             )
             with self.assertRaises(MSAError):
                 phylogeny_generator.run()
+            os.system(f"chmod -R 777 {root_dir}")

@@ -331,6 +331,7 @@ class Pipeline:
             # frequency_matrices_sep=",",
             rate_matrix_parameterization="pande_reversible",
             device=device,
+            use_cached=use_cached,
         )
         single_site_rate_matrix_learner.train(
             lr=1e-1,
@@ -349,6 +350,7 @@ class Pipeline:
             # frequency_matrices_sep=",",
             rate_matrix_parameterization="pande_reversible",
             device=device,
+            use_cached=use_cached,
         )
         pair_of_site_rate_matrix_learner.train(
             lr=1e-1,

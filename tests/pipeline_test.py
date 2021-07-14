@@ -20,7 +20,7 @@ class TestPipeline(unittest.TestCase):
         """
         with tempfile.TemporaryDirectory() as root_dir:
             outdir = os.path.join(root_dir, 'pipeline')
-            for use_cached in [False]:  # TODO: Need to implement caching in ratelearn to enable [False, True] cases...
+            for use_cached in [False, True]:
                 pipeline = Pipeline(
                     outdir=outdir,
                     max_seqs=8,

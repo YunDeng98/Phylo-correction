@@ -4,6 +4,7 @@ import pandas as pd
 import torch
 import matplotlib.pyplot as plt
 from torch.utils.data import TensorDataset
+import logging
 
 from . import RateMatrix, train_quantization
 
@@ -18,6 +19,7 @@ class RateMatrixLearner:
         mask: str = None,
         frequency_matrices_sep="\s",
         rate_matrix_parameterization="pande_reversible",
+        use_cached: bool = False,
     ):
         self.frequency_matrices = frequency_matrices
         self.frequency_matrices_sep = frequency_matrices_sep
@@ -31,11 +33,28 @@ class RateMatrixLearner:
         self.Qfinal = None
         self.trained_ = False
         self.device = device
+        self.use_cached = use_cached
+
+    def train(
+        self,
+        lr=1e-1,
+        num_epochs=2000,
+        do_adam: bool = True,
+    ):
+        device = self.device
+        output_dir = self.output_dir
+        use_cached = self.use_cached
+
+        logger = logging.getLogger("ratelearner")
 
         # Create experiment directory
-        if os.path.exists(self.output_dir):
-            raise ValueError("Please provide a nonexisting experiment path")
-        os.makedirs(self.output_dir)
+        if os.path.exists(output_dir) and not use_cached:
+            raise ValueError(f"outdir {output_dir} already exists. Aborting not to " f"overwrite!")
+        if os.path.exists(output_dir) and use_cached:
+            logger.info(f"Skipping. Cached ratelearner results at {output_dir}")
+            return
+        assert(not os.path.exists(output_dir))
+        os.makedirs(output_dir)
 
         # Open frequency matrices
         self.quantized_data, self.n_states = self.get_branch_to_mat()
@@ -66,12 +85,6 @@ class RateMatrixLearner:
             pi_requires_grad=pi_requires_grad,
         ).to(device=device)
 
-    def train(
-        self,
-        lr=1e-1,
-        num_epochs=2000,
-        do_adam: bool = True,
-    ):
         self.lr = lr
         self.do_adam = do_adam
 
@@ -134,3 +147,5 @@ class RateMatrixLearner:
         plt.xlabel("# of iterations", fontsize=FT_SIZE)
         plt.tight_layout()
         plt.savefig(os.path.join(self.output_dir, "training_plot.pdf"))
+
+        os.system(f"chmod -R 555 {self.output_dir}")

@@ -53,8 +53,8 @@ class RateMatrixLearner:
         if os.path.exists(output_dir) and use_cached:
             logger.info(f"Skipping. Cached ratelearner results at {output_dir}")
             return
-        assert(not os.path.exists(output_dir))
-        os.makedirs(output_dir)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
         # Open frequency matrices
         self.quantized_data, self.n_states = self.get_branch_to_mat()

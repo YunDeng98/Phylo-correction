@@ -1,0 +1,10 @@
+biotite
+ete3
+matplotlib
+numpy
+pandas
+parameterized
+scipy
+torch
+tqdm
+

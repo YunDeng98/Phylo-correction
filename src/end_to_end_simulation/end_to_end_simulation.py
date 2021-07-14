@@ -53,10 +53,10 @@ class EndToEndSimulator:
         Q1_ground_truth: str,
         Q2_ground_truth: str,
         fast_tree_rate_matrix: str,
-        simulate_end_to_end: Optional[bool] = False,
-        simulate_from_trees_wo_ancestral_states: Optional[bool] = False,
-        simulate_from_trees_w_ancestral_states: Optional[bool] = False,
-        use_cached: bool = False,
+        simulate_end_to_end: Optional[bool],
+        simulate_from_trees_wo_ancestral_states: Optional[bool],
+        simulate_from_trees_w_ancestral_states: Optional[bool],
+        use_cached: bool,
     ):
         self.outdir = outdir
         self.pipeline = pipeline

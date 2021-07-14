@@ -45,6 +45,12 @@ class Pipeline:
         armstrong_cutoff: Contact threshold
         rate_matrix: What rate matrix to use in FastTree for the phylogeny
             reconstruction step.
+        use_cached: If True, will do nothing for the output files that
+            already exists, effectively re-using them.
+        num_epochs: The number of epochs of first order optimization
+            used to solve for the MLE.
+        device: The device to use for pytorch optimization. Should be
+            'cuda' or 'cpu'.
         n_process: How many processes to use.
         expected_number_of_MSAs: This is just used to check that the
             directory with the MSAs has the expected number of files.
@@ -67,10 +73,6 @@ class Pipeline:
             parsimony reconstruction step will be skipped and
             'precomputed_maximum_parsimony_dir' will be used as the
             maximum parsimony reconstructions.
-        use_cached: If True, will do nothing for the output files that
-            already exists, effectively re-using them.
-        num_epochs: The number of epochs of first order optimization
-            used to solve for the MLE.
 
     Attributes:
         tree_dir: Where the estimated phylogenies lie
@@ -91,16 +93,17 @@ class Pipeline:
         max_sites: Optional[int],
         armstrong_cutoff: Optional[str],
         rate_matrix: Optional[str],
+        use_cached: bool,
+        num_epochs: int,
+        device: str,
         n_process: int,
         expected_number_of_MSAs: int,
         max_families: int,
         a3m_dir: str,
         pdb_dir: Optional[str],
-        precomputed_contact_dir: Optional[str] = None,
-        precomputed_tree_dir: Optional[str] = None,
-        precomputed_maximum_parsimony_dir: Optional[str] = None,
-        use_cached: bool = False,
-        num_epochs: int = 2000,
+        precomputed_contact_dir: Optional[str],
+        precomputed_tree_dir: Optional[str],
+        precomputed_maximum_parsimony_dir: Optional[str],
     ):
         # Check input validity
         if precomputed_tree_dir is not None or precomputed_maximum_parsimony_dir is not None:
@@ -118,6 +121,8 @@ class Pipeline:
                     "If precomputed_contact_dir is provided, then there is no point in providing"
                     " armstrong_cutoff or pdb_dir."
                 )
+        if device not in ['cuda', 'cpu']:
+            raise ValueError(f"device should be 'cuda' or 'cpu', {device} provided.")
         self.outdir = outdir
         self.max_seqs = max_seqs
         self.max_sites = max_sites
@@ -133,6 +138,7 @@ class Pipeline:
         self.precomputed_maximum_parsimony_dir = precomputed_maximum_parsimony_dir
         self.use_cached = use_cached
         self.num_epochs = num_epochs
+        self.device = device
 
         # Output data directories
         # Where the phylogenies will be stored
@@ -169,6 +175,9 @@ class Pipeline:
         max_sites = self.max_sites
         armstrong_cutoff = self.armstrong_cutoff
         rate_matrix = self.rate_matrix
+        use_cached = self.use_cached
+        num_epochs = self.num_epochs
+        device = self.device
         n_process = self.n_process
         expected_number_of_MSAs = self.expected_number_of_MSAs
         max_families = self.max_families
@@ -186,8 +195,6 @@ class Pipeline:
         precomputed_contact_dir = self.precomputed_contact_dir
         precomputed_tree_dir = self.precomputed_tree_dir
         precomputed_maximum_parsimony_dir = self.precomputed_maximum_parsimony_dir
-        use_cached = self.use_cached
-        num_epochs = self.num_epochs
 
         # First we need to generate the phylogenies
         t_start = time.time()
@@ -323,6 +330,7 @@ class Pipeline:
             mask=None,
             # frequency_matrices_sep=",",
             rate_matrix_parameterization="pande_reversible",
+            device=device,
         )
         single_site_rate_matrix_learner.train(
             lr=1e-1,
@@ -340,6 +348,7 @@ class Pipeline:
             mask=None,
             # frequency_matrices_sep=",",
             rate_matrix_parameterization="pande_reversible",
+            device=device,
         )
         pair_of_site_rate_matrix_learner.train(
             lr=1e-1,

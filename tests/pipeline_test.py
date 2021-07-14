@@ -34,6 +34,10 @@ class TestPipeline(unittest.TestCase):
                     pdb_dir="test_input_data/pdb_small",
                     use_cached=True,
                     num_epochs=1,
+                    device='cpu',
+                    precomputed_contact_dir=None,
+                    precomputed_tree_dir=None,
+                    precomputed_maximum_parsimony_dir=None,
                 )
                 pipeline.run()
                 dcmp = dircmp(os.path.join(outdir, "matrices_8_seqs_16_sites"), 'test_input_data/matrices_small')

@@ -134,6 +134,8 @@ class EndToEndSimulator:
                 precomputed_tree_dir=None,
                 precomputed_maximum_parsimony_dir=None,
                 use_cached=use_cached,
+                num_epochs=pipeline.num_epochs,
+                device=pipeline.device,
             )
             pipeline_on_simulated_data_end_to_end.run()
             logger.info(f"time_simulate_end_to_end:\n" f"{pipeline_on_simulated_data_end_to_end.get_times()}")
@@ -154,6 +156,8 @@ class EndToEndSimulator:
                 precomputed_tree_dir=pipeline.tree_dir,
                 precomputed_maximum_parsimony_dir=None,
                 use_cached=use_cached,
+                num_epochs=pipeline.num_epochs,
+                device=pipeline.device,
             )
             pipeline_on_simulated_data_from_trees_wo_ancestral_states.run()
             logger.info(
@@ -177,6 +181,8 @@ class EndToEndSimulator:
                 precomputed_tree_dir=None,
                 precomputed_maximum_parsimony_dir=ancestral_states_simulated_dir,
                 use_cached=use_cached,
+                num_epochs=pipeline.num_epochs,
+                device=pipeline.device,
             )
             pipeline_on_simulated_data_from_trees_w_ancestral_states.run()
             logger.info(

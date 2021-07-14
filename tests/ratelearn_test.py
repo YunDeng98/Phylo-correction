@@ -1,7 +1,6 @@
 import os
 import unittest
 import tempfile
-import torch
 # from filecmp import dircmp
 # from parameterized import parameterized
 
@@ -24,11 +23,11 @@ class TestRateMatrixLearner(unittest.TestCase):
                     mask=None,
                     # frequency_matrices_sep=",",
                     rate_matrix_parameterization="pande_reversible",
-                    device='cuda' if torch.cuda.is_available() else 'cpu',
+                    device='cpu',
                 )
                 rate_matrix_learner.train(
                     lr=1e-1,
-                    num_epochs=1,  # TODO: Increase to 2000 when CUDA is available
+                    num_epochs=3,
                     do_adam=True,
                 )
 
@@ -47,11 +46,11 @@ class TestRateMatrixLearner(unittest.TestCase):
                     mask=None,
                     # frequency_matrices_sep=",",
                     rate_matrix_parameterization="pande_reversible",
-                    device='cuda' if torch.cuda.is_available() else 'cpu',
+                    device='cpu',
                 )
                 rate_matrix_learner.train(
                     lr=1e-1,
-                    num_epochs=1,  # TODO: Increase to 2000 when CUDA is available
+                    num_epochs=3,
                     do_adam=True,
                 )
 
@@ -70,11 +69,11 @@ class TestRateMatrixLearner(unittest.TestCase):
                     mask=None,
                     # frequency_matrices_sep=",",
                     rate_matrix_parameterization="pande_reversible",
-                    device='cuda' if torch.cuda.is_available() else 'cpu',
+                    device='cpu',
                 )
                 rate_matrix_learner.train(
                     lr=1e-1,
-                    num_epochs=1,  # TODO: Increase to 2000 when CUDA is available
+                    num_epochs=1,
                     do_adam=True,
                 )
             os.system(f"chmod -R 777 {root_dir}")

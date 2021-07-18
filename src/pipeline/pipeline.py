@@ -58,6 +58,13 @@ class Pipeline:
         keep_outliers: What to do with points that are outside the grid. If
             False, they will be dropped. If True, they will be assigned
             to the corresponding closest endpoint of the grid.
+        max_height: Use only transitions whose starting node is at height
+            at most max_height from the leaves in its subtree. This is
+            used to filter out unreliable maximum parsimony transitions.
+        max_path_height: Use only transitions whose starting node is at height
+            at most max_path_height from the leaves in its subtree, in terms
+            of the NUMBER OF EDGES. This is used to filter out unreliable
+            maximum parsimony transitions.
         n_process: How many processes to use.
         expected_number_of_MSAs: This is just used to check that the
             directory with the MSAs has the expected number of files.
@@ -106,6 +113,8 @@ class Pipeline:
         center: float,
         step_size: float,
         n_steps: int,
+        max_height: float,
+        max_path_height: int,
         keep_outliers: bool,
         n_process: int,
         expected_number_of_MSAs: int,
@@ -154,6 +163,8 @@ class Pipeline:
         self.step_size = step_size
         self.n_steps = n_steps
         self.keep_outliers = keep_outliers
+        self.max_height = max_height
+        self.max_path_height = max_path_height
 
         # Output data directories
         # Where the phylogenies will be stored
@@ -165,7 +176,7 @@ class Pipeline:
         # Where the transitions obtained from the maximum parsimony phylogenies will be stored
         self.transitions_dir = os.path.join(outdir, f"transitions_{max_seqs}_seqs_{max_sites}_sites")
         # Where the transition matrices obtained by quantizing transition edges will be stored
-        self.matrices_dir = os.path.join(outdir, f"matrices_{max_seqs}_seqs_{max_sites}_sites__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers")
+        self.matrices_dir = os.path.join(outdir, f"matrices_{max_seqs}_seqs_{max_sites}_sites__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height")
         # Where the co-transitions obtained from the maximum parsimony phylogenies will be stored
         self.co_transitions_dir = os.path.join(
             outdir,
@@ -174,15 +185,15 @@ class Pipeline:
         # Where the co-transition matrices obtained by quantizing transition edges will be stored
         self.co_matrices_dir = os.path.join(
             outdir,
-            f"co_matrices_{max_seqs}_seqs_{max_sites}_sites_{armstrong_cutoff}__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers",
+            f"co_matrices_{max_seqs}_seqs_{max_sites}_sites_{armstrong_cutoff}__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height",
         )
         self.learnt_rate_matrix_dir = os.path.join(
             outdir,
-            f"Q1_{max_seqs}_seqs_{max_sites}_sites__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers__{num_epochs}_epochs"
+            f"Q1_{max_seqs}_seqs_{max_sites}_sites__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height__{num_epochs}_epochs"
         )
         self.learnt_co_rate_matrix_dir = os.path.join(
             outdir,
-            f"Q2_{max_seqs}_seqs_{max_sites}_sites_{armstrong_cutoff}__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers__{num_epochs}_epochs"
+            f"Q2_{max_seqs}_seqs_{max_sites}_sites_{armstrong_cutoff}__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height__{num_epochs}_epochs"
         )
 
     def run(self):
@@ -196,6 +207,8 @@ class Pipeline:
         center = self.center
         step_size = self.step_size
         n_steps = self.n_steps
+        max_height = self.max_height
+        max_path_height = self.max_path_height
         keep_outliers = self.keep_outliers
         n_process = self.n_process
         expected_number_of_MSAs = self.expected_number_of_MSAs
@@ -310,6 +323,8 @@ class Pipeline:
             step_size=step_size,
             n_steps=n_steps,
             keep_outliers=keep_outliers,
+            max_height=max_height,
+            max_path_height=max_path_height,
         )
         matrix_generator.run()
         self.time_MatrixGenerator_1 = time.time() - t_start
@@ -344,6 +359,8 @@ class Pipeline:
             step_size=step_size,
             n_steps=n_steps,
             keep_outliers=keep_outliers,
+            max_height=max_height,
+            max_path_height=max_path_height,
         )
         matrix_generator_pairwise.run()
         self.time_MatrixGenerator_2 = time.time() - t_start

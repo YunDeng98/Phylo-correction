@@ -30,6 +30,8 @@ def map_func(args: List) -> pd.DataFrame:
     step_size = args[6]
     n_steps = args[7]
     keep_outliers = args[8]
+    max_height = args[9]
+    max_path_height = args[10]
 
     logger = logging.getLogger("matrix_generation")
     seed = int(
@@ -60,7 +62,8 @@ def map_func(args: List) -> pd.DataFrame:
         transitions_df = pd.read_csv(os.path.join(transitions_dir, protein_family_name + ".transitions"), sep=",")
 
         # Filter transitions based on citeria
-        logger.info("TODO: Filter transitions based on criteria! (low, short branches)")
+        transitions_df = transitions_df[transitions_df.height <= max_height]
+        transitions_df = transitions_df[transitions_df.path_height <= max_path_height]
 
         # Assign edge lengths to closest quantized value (bucket). 'grid_point_id' is the index of the closest bucket,
         # which goes from 0 to len(grid) - 1 inclusive.
@@ -120,6 +123,13 @@ class MatrixGenerator:
         keep_outliers: What to do with points that are outside the grid. If
             False, they will be dropped. If True, they will be assigned
             to the corresponding closest endpoint of the grid.
+        max_height: Use only transitions whose starting node is at height
+            at most max_height from the leaves in its subtree. This is
+            used to filter out unreliable maximum parsimony transitions.
+        max_path_height: Use only transitions whose starting node is at height
+            at most max_path_height from the leaves in its subtree, in terms
+            of the NUMBER OF EDGES. This is used to filter out unreliable
+            maximum parsimony transitions.
         use_cached: If True and the output file already exists for a family,
             all computation will be skipped for that family.
     """
@@ -136,6 +146,8 @@ class MatrixGenerator:
         step_size: float,
         n_steps: int,
         keep_outliers: bool,
+        max_height: float,
+        max_path_height: int,
         use_cached: bool = False,
     ):
         self.a3m_dir = a3m_dir
@@ -150,6 +162,8 @@ class MatrixGenerator:
         self.step_size = step_size
         self.n_steps = n_steps
         self.keep_outliers = keep_outliers
+        self.max_height = max_height
+        self.max_path_height = max_path_height
 
     def run(self) -> None:
         a3m_dir = self.a3m_dir
@@ -164,6 +178,8 @@ class MatrixGenerator:
         step_size = self.step_size
         n_steps = self.n_steps
         keep_outliers = self.keep_outliers
+        max_height = self.max_height
+        max_path_height = self.max_path_height
 
         logger = logging.getLogger("matrix_generation")
 
@@ -243,6 +259,8 @@ class MatrixGenerator:
                 step_size,
                 n_steps,
                 keep_outliers,
+                max_height,
+                max_path_height,
             ]
             for shard_id in range(n_process)
         ]

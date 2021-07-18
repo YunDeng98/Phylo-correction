@@ -51,6 +51,13 @@ class Pipeline:
             used to solve for the MLE.
         device: The device to use for pytorch optimization. Should be
             'cuda' or 'cpu'.
+        center: Quantization grid center
+        step_size: Quantization grid step size (geometric)
+        n_steps: Number of grid points left and right of center (for a total
+            of 2 * n_steps + 1 grid points)
+        keep_outliers: What to do with points that are outside the grid. If
+            False, they will be dropped. If True, they will be assigned
+            to the corresponding closest endpoint of the grid.
         n_process: How many processes to use.
         expected_number_of_MSAs: This is just used to check that the
             directory with the MSAs has the expected number of files.
@@ -96,6 +103,10 @@ class Pipeline:
         use_cached: bool,
         num_epochs: int,
         device: str,
+        center: float,
+        step_size: float,
+        n_steps: int,
+        keep_outliers: bool,
         n_process: int,
         expected_number_of_MSAs: int,
         max_families: int,
@@ -139,6 +150,10 @@ class Pipeline:
         self.use_cached = use_cached
         self.num_epochs = num_epochs
         self.device = device
+        self.center = center
+        self.step_size = step_size
+        self.n_steps = n_steps
+        self.keep_outliers = keep_outliers
 
         # Output data directories
         # Where the phylogenies will be stored
@@ -150,7 +165,7 @@ class Pipeline:
         # Where the transitions obtained from the maximum parsimony phylogenies will be stored
         self.transitions_dir = os.path.join(outdir, f"transitions_{max_seqs}_seqs_{max_sites}_sites")
         # Where the transition matrices obtained by quantizing transition edges will be stored
-        self.matrices_dir = os.path.join(outdir, f"matrices_{max_seqs}_seqs_{max_sites}_sites")
+        self.matrices_dir = os.path.join(outdir, f"matrices_{max_seqs}_seqs_{max_sites}_sites__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers")
         # Where the co-transitions obtained from the maximum parsimony phylogenies will be stored
         self.co_transitions_dir = os.path.join(
             outdir,
@@ -159,15 +174,15 @@ class Pipeline:
         # Where the co-transition matrices obtained by quantizing transition edges will be stored
         self.co_matrices_dir = os.path.join(
             outdir,
-            f"co_matrices_{max_seqs}_seqs_{max_sites}_sites_{armstrong_cutoff}",
+            f"co_matrices_{max_seqs}_seqs_{max_sites}_sites_{armstrong_cutoff}__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers",
         )
         self.learnt_rate_matrix_dir = os.path.join(
             outdir,
-            f"Q1_{max_seqs}_seqs_{max_sites}_sites"
+            f"Q1_{max_seqs}_seqs_{max_sites}_sites__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers__{num_epochs}_epochs"
         )
         self.learnt_co_rate_matrix_dir = os.path.join(
             outdir,
-            f"Q2_{max_seqs}_seqs_{max_sites}_sites_{armstrong_cutoff}"
+            f"Q2_{max_seqs}_seqs_{max_sites}_sites_{armstrong_cutoff}__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers__{num_epochs}_epochs"
         )
 
     def run(self):
@@ -178,6 +193,10 @@ class Pipeline:
         use_cached = self.use_cached
         num_epochs = self.num_epochs
         device = self.device
+        center = self.center
+        step_size = self.step_size
+        n_steps = self.n_steps
+        keep_outliers = self.keep_outliers
         n_process = self.n_process
         expected_number_of_MSAs = self.expected_number_of_MSAs
         max_families = self.max_families
@@ -287,6 +306,10 @@ class Pipeline:
             max_families=max_families,
             num_sites=1,
             use_cached=use_cached,
+            center=center,
+            step_size=step_size,
+            n_steps=n_steps,
+            keep_outliers=keep_outliers,
         )
         matrix_generator.run()
         self.time_MatrixGenerator_1 = time.time() - t_start
@@ -317,6 +340,10 @@ class Pipeline:
             max_families=max_families,
             num_sites=2,
             use_cached=use_cached,
+            center=center,
+            step_size=step_size,
+            n_steps=n_steps,
+            keep_outliers=keep_outliers,
         )
         matrix_generator_pairwise.run()
         self.time_MatrixGenerator_2 = time.time() - t_start

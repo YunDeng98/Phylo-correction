@@ -34,16 +34,20 @@ class TestPipeline(unittest.TestCase):
                     pdb_dir="test_input_data/pdb_small",
                     use_cached=True,
                     num_epochs=1,
+                    center=1.0,
+                    step_size=0.1,
+                    n_steps=0,
+                    keep_outliers=True,
                     device='cpu',
                     precomputed_contact_dir=None,
                     precomputed_tree_dir=None,
                     precomputed_maximum_parsimony_dir=None,
                 )
                 pipeline.run()
-                dcmp = dircmp(os.path.join(outdir, "matrices_8_seqs_16_sites"), 'test_input_data/matrices_small')
+                dcmp = dircmp(os.path.join(outdir, "matrices_8_seqs_16_sites__1.0_center_0.1_step_size_0_n_steps_True_outliers"), 'test_input_data/matrices_small')
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)
-                dcmp = dircmp(os.path.join(outdir, "co_matrices_8_seqs_16_sites_8.0"), 'test_input_data/co_matrices_small')
+                dcmp = dircmp(os.path.join(outdir, "co_matrices_8_seqs_16_sites_8.0__1.0_center_0.1_step_size_0_n_steps_True_outliers"), 'test_input_data/co_matrices_small')
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)
             os.system(f"chmod -R 777 {root_dir}")

@@ -26,6 +26,10 @@ def map_func(args: List) -> pd.DataFrame:
     protein_family_names_for_shard = args[2]
     # outdir = args[3]
     alphabet = args[4]
+    center = args[5]
+    step_size = args[6]
+    n_steps = args[7]
+    keep_outliers = args[8]
 
     logger = logging.getLogger("matrix_generation")
     seed = int(
@@ -36,8 +40,20 @@ def map_func(args: List) -> pd.DataFrame:
     random.seed(seed)
     logger.info(f"Starting on {len(protein_family_names_for_shard)} families")
 
-    # Create results data frame.
-    res = pd.DataFrame(np.zeros(shape=(len(alphabet), len(alphabet)), dtype=int), index=alphabet, columns=alphabet)
+    # Compute grid of quantized branch lengths
+    grid = np.array([center * (1.0 + step_size) ** i for i in range(-n_steps, n_steps + 1, 1)])
+    # Create results data frame. There's one frequency matrix per quantized branch length.
+    res = dict(
+        [
+            (grid_point_id,
+             pd.DataFrame(
+                 np.zeros(shape=(len(alphabet), len(alphabet)), dtype=int),
+                 index=alphabet, columns=alphabet
+             )
+             )
+            for grid_point_id in range(len(grid))
+        ]
+    )
 
     for protein_family_name in protein_family_names_for_shard:
         print(f"Starting on {protein_family_name}")
@@ -46,17 +62,30 @@ def map_func(args: List) -> pd.DataFrame:
         # Filter transitions based on citeria
         logger.info("TODO: Filter transitions based on criteria! (low, short branches)")
 
-        # Now add quantization column and group by it too.
-        logger.info("TODO: Add quantization column and group by it too!")
+        # Assign edge lengths to closest quantized value (bucket). 'grid_point_id' is the index of the closest bucket,
+        # which goes from 0 to len(grid) - 1 inclusive.
+        tr_df_lengths = np.array(transitions_df.length)
+        tr_df_grid_point_id = np.abs(tr_df_lengths[:, np.newaxis] - grid[np.newaxis, :]).argmin(axis=1)
+        transitions_df['grid_point_id'] = tr_df_grid_point_id
+        # Filter edges that are too short or too long if requested
+        if not keep_outliers:
+            # Determine if edge length is inside grid (i.e. if it is an outlier or not)
+            tr_df_inside_grid = \
+                ((tr_df_lengths[:, np.newaxis] - grid[np.newaxis, :]) <= 0).any(axis=1) \
+                & ((tr_df_lengths[:, np.newaxis] - grid[np.newaxis, :]) >= 0).any(axis=1)
+            transitions_df['inside_grid'] = tr_df_inside_grid
+            # Filter!
+            transitions_df = transitions_df[transitions_df.inside_grid]
 
-        # Summarize remaining transitions into the matrices
-        summarized_transitions = transitions_df.groupby(["starting_state", "ending_state"]).size()
-        for starting_state in alphabet:
-            for ending_state in alphabet:
-                if (starting_state, ending_state) in summarized_transitions:
-                    res.loc[starting_state, ending_state] += summarized_transitions[(starting_state, ending_state)]
+        # Summarize remaining transitions into the frequency matrices
+        summarized_transitions = transitions_df.groupby(["starting_state", "ending_state", "grid_point_id"]).size()
+        for grid_point_id in range(len(grid)):
+            for starting_state in alphabet:
+                for ending_state in alphabet:
+                    if (starting_state, ending_state, grid_point_id) in summarized_transitions:
+                        res[grid_point_id].loc[starting_state, ending_state] += summarized_transitions[(starting_state, ending_state, grid_point_id)]
 
-    return res
+    return res, grid
 
 
 def get_protein_family_names_for_shard(shard_id: int, n_process: int, protein_family_names: List[str]) -> List[str]:
@@ -84,6 +113,13 @@ class MatrixGenerator:
             This is useful for testing and to see what happens if less data is used.
         num_sites: Whether the transitions are for single sites (num_sites=1) or for pairs
             of sites (num_sites=2).
+        center: Quantization grid center
+        step_size: Quantization grid step size (geometric)
+        n_steps: Number of grid points left and right of center (for a total
+            of 2 * n_steps + 1 grid points)
+        keep_outliers: What to do with points that are outside the grid. If
+            False, they will be dropped. If True, they will be assigned
+            to the corresponding closest endpoint of the grid.
         use_cached: If True and the output file already exists for a family,
             all computation will be skipped for that family.
     """
@@ -96,6 +132,10 @@ class MatrixGenerator:
         outdir: str,
         max_families: int,
         num_sites: int,
+        center: float,
+        step_size: float,
+        n_steps: int,
+        keep_outliers: bool,
         use_cached: bool = False,
     ):
         self.a3m_dir = a3m_dir
@@ -106,6 +146,10 @@ class MatrixGenerator:
         self.max_families = max_families
         self.num_sites = num_sites
         self.use_cached = use_cached
+        self.center = center
+        self.step_size = step_size
+        self.n_steps = n_steps
+        self.keep_outliers = keep_outliers
 
     def run(self) -> None:
         a3m_dir = self.a3m_dir
@@ -116,6 +160,10 @@ class MatrixGenerator:
         max_families = self.max_families
         num_sites = self.num_sites
         use_cached = self.use_cached
+        center = self.center
+        step_size = self.step_size
+        n_steps = self.n_steps
+        keep_outliers = self.keep_outliers
 
         logger = logging.getLogger("matrix_generation")
 
@@ -191,6 +239,10 @@ class MatrixGenerator:
                 get_protein_family_names_for_shard(shard_id, n_process, protein_family_names),
                 outdir,
                 alphabet,
+                center,
+                step_size,
+                n_steps,
+                keep_outliers,
             ]
             for shard_id in range(n_process)
         ]
@@ -201,20 +253,32 @@ class MatrixGenerator:
         else:
             shard_results = list(tqdm.tqdm(map(map_func, map_args), total=len(map_args)))
 
-        res = shard_results[0]
+        res, grid = shard_results[0]
         for i in range(1, len(shard_results)):
-            res += shard_results[i]
+            res_i, _ = shard_results[i]
+            for grid_point_id in range(len(grid)):
+                res[grid_point_id] += res_i[grid_point_id]
 
+        # Compute the total transitions, irrespective of branch length.
+        res_all = res[0].copy()
+        for grid_point_id in range(1, len(grid)):
+            res_all += res[grid_point_id]
         out_filepath = os.path.join(outdir, "matrices.txt")
-        res.to_csv(out_filepath, sep="\t")
+        res_all.to_csv(out_filepath, sep="\t")
 
         # Write out the frequency matrices for quantized branch lengths.
         out_filepath = os.path.join(outdir, "matrices_by_quantized_branch_length.txt")
-        with open(out_filepath, "w") as outfile:
-            outfile.write('1.0\n')
-        res.to_csv(out_filepath, mode='a', sep=' ', header=False, index=False)
+        for grid_point_id, grid_point in enumerate(grid):
+            if grid_point_id == 0:
+                with open(out_filepath, "w") as outfile:
+                    outfile.write(f'{grid_point}\n')
+            else:
+                with open(out_filepath, "a") as outfile:
+                    outfile.write(f'{grid_point}\n')
+            res[grid_point_id].to_csv(out_filepath, mode='a', sep=' ', header=False, index=False)
+        # Write out sentinel
         with open(out_filepath, "a") as outfile:
             outfile.write('9999.0\n')
-        (0 * res).to_csv(out_filepath, mode='a', sep=' ', header=False, index=False)
+        (0 * res[0]).to_csv(out_filepath, mode='a', sep=' ', header=False, index=False)
 
         os.system(f"chmod -R 555 {outdir}")

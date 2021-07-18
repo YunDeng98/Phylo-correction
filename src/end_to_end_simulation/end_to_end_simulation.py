@@ -136,6 +136,10 @@ class EndToEndSimulator:
                 use_cached=use_cached,
                 num_epochs=pipeline.num_epochs,
                 device=pipeline.device,
+                center=pipeline.center,
+                step_size=pipeline.step_size,
+                n_steps=pipeline.n_steps,
+                keep_outliers=pipeline.keep_outliers,
             )
             pipeline_on_simulated_data_end_to_end.run()
             logger.info(f"time_simulate_end_to_end:\n" f"{pipeline_on_simulated_data_end_to_end.get_times()}")
@@ -158,6 +162,10 @@ class EndToEndSimulator:
                 use_cached=use_cached,
                 num_epochs=pipeline.num_epochs,
                 device=pipeline.device,
+                center=pipeline.center,
+                step_size=pipeline.step_size,
+                n_steps=pipeline.n_steps,
+                keep_outliers=pipeline.keep_outliers,
             )
             pipeline_on_simulated_data_from_trees_wo_ancestral_states.run()
             logger.info(
@@ -183,6 +191,10 @@ class EndToEndSimulator:
                 use_cached=use_cached,
                 num_epochs=pipeline.num_epochs,
                 device=pipeline.device,
+                center=pipeline.center,
+                step_size=pipeline.step_size,
+                n_steps=pipeline.n_steps,
+                keep_outliers=pipeline.keep_outliers,
             )
             pipeline_on_simulated_data_from_trees_w_ancestral_states.run()
             logger.info(

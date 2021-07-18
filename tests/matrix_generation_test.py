@@ -29,6 +29,10 @@ class TestMatrixGenerator(unittest.TestCase):
                     max_families=3,
                     num_sites=1,
                     use_cached=use_cached,
+                    center=1.0,
+                    step_size=0.1,
+                    n_steps=0,
+                    keep_outliers=True,
                 )
                 matrix_generator.run()
                 dcmp = dircmp(outdir, 'test_input_data/matrices_small')
@@ -57,6 +61,10 @@ class TestMatrixGenerator(unittest.TestCase):
                     max_families=3,
                     num_sites=2,
                     use_cached=use_cached,
+                    center=1.0,
+                    step_size=0.1,
+                    n_steps=0,
+                    keep_outliers=True,
                 )
                 matrix_generator.run()
                 dcmp = dircmp(outdir, 'test_input_data/co_matrices_small')

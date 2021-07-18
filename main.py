@@ -32,7 +32,7 @@ def test_end_to_end_simulation_real_data():
         outdir="test_outputs/test_end_to_end_simulation_real_data_pipeline_output",
         max_seqs=4,
         max_sites=128,
-        armstrong_cutoff=8.0,
+        armstrong_cutoff=8.0,  # TODO: Rename argument.
         rate_matrix="None",
         n_process=3,
         expected_number_of_MSAs=15051,
@@ -40,6 +40,15 @@ def test_end_to_end_simulation_real_data():
         a3m_dir="input_data/a3m",
         pdb_dir="input_data/pdb",
         use_cached=True,
+        num_epochs=10,
+        device='cpu',
+        center=1.0,
+        step_size=0.1,
+        n_steps=0,
+        keep_outliers=True,
+        precomputed_contact_dir=None,
+        precomputed_tree_dir=None,
+        precomputed_maximum_parsimony_dir=None,
     )
     pipeline.run()
     logger.info(f"time_Pipeline:\n{pipeline.get_times()}")

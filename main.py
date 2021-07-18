@@ -46,6 +46,8 @@ def test_end_to_end_simulation_real_data():
         step_size=0.1,
         n_steps=0,
         keep_outliers=True,
+        max_height=1000.0,
+        max_path_height=1000,
         precomputed_contact_dir=None,
         precomputed_tree_dir=None,
         precomputed_maximum_parsimony_dir=None,

@@ -140,6 +140,8 @@ class EndToEndSimulator:
                 step_size=pipeline.step_size,
                 n_steps=pipeline.n_steps,
                 keep_outliers=pipeline.keep_outliers,
+                max_height=pipeline.max_height,
+                max_path_height=pipeline.max_path_height,
             )
             pipeline_on_simulated_data_end_to_end.run()
             logger.info(f"time_simulate_end_to_end:\n" f"{pipeline_on_simulated_data_end_to_end.get_times()}")
@@ -166,6 +168,8 @@ class EndToEndSimulator:
                 step_size=pipeline.step_size,
                 n_steps=pipeline.n_steps,
                 keep_outliers=pipeline.keep_outliers,
+                max_height=pipeline.max_height,
+                max_path_height=pipeline.max_path_height,
             )
             pipeline_on_simulated_data_from_trees_wo_ancestral_states.run()
             logger.info(
@@ -195,6 +199,8 @@ class EndToEndSimulator:
                 step_size=pipeline.step_size,
                 n_steps=pipeline.n_steps,
                 keep_outliers=pipeline.keep_outliers,
+                max_height=pipeline.max_height,
+                max_path_height=pipeline.max_path_height,
             )
             pipeline_on_simulated_data_from_trees_w_ancestral_states.run()
             logger.info(

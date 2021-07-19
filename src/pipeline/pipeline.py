@@ -109,6 +109,9 @@ class Pipeline:
             parsimony reconstruction step will be skipped and
             'precomputed_maximum_parsimony_dir' will be used as the
             maximum parsimony reconstructions.
+        learn_pairwise_model: If True, will learn a co-evolution model.
+            This step is very slow in generating the training data, so
+            it is a good idea to skip at first.
 
     Attributes:
         tree_dir: Where the estimated phylogenies lie
@@ -146,6 +149,7 @@ class Pipeline:
         precomputed_contact_dir: Optional[str],
         precomputed_tree_dir: Optional[str],
         precomputed_maximum_parsimony_dir: Optional[str],
+        learn_pairwise_model: float = False,
     ):
         # Check input validity
         if precomputed_tree_dir is not None or precomputed_maximum_parsimony_dir is not None:
@@ -202,6 +206,7 @@ class Pipeline:
         self.max_path_height = max_path_height
         rate_matrix_name = str(rate_matrix).split('/')[-1]
         self.rate_matrix_name = rate_matrix_name
+        self.learn_pairwise_model = learn_pairwise_model
 
         # Output data directories
         # Where the phylogenies will be stored
@@ -264,6 +269,7 @@ class Pipeline:
         precomputed_contact_dir = self.precomputed_contact_dir
         precomputed_tree_dir = self.precomputed_tree_dir
         precomputed_maximum_parsimony_dir = self.precomputed_maximum_parsimony_dir
+        learn_pairwise_model = self.learn_pairwise_model
 
         # First we need to generate the phylogenies
         t_start = time.time()
@@ -368,38 +374,40 @@ class Pipeline:
 
         # Generate co-transitions
         t_start = time.time()
-        co_transition_extractor = CoTransitionExtractor(
-            a3m_dir=a3m_dir,
-            parsimony_dir=maximum_parsimony_dir,
-            n_process=n_process,
-            expected_number_of_MSAs=expected_number_of_MSAs,
-            outdir=co_transitions_dir,
-            max_families=max_families,
-            contact_dir=contact_dir,
-            use_cached=use_cached,
-        )
-        co_transition_extractor.run()
+        if learn_pairwise_model:
+            co_transition_extractor = CoTransitionExtractor(
+                a3m_dir=a3m_dir,
+                parsimony_dir=maximum_parsimony_dir,
+                n_process=n_process,
+                expected_number_of_MSAs=expected_number_of_MSAs,
+                outdir=co_transitions_dir,
+                max_families=max_families,
+                contact_dir=contact_dir,
+                use_cached=use_cached,
+            )
+            co_transition_extractor.run()
         self.time_CoTransitionExtractor = time.time() - t_start
 
         # Generate co-transition matrices
         t_start = time.time()
-        matrix_generator_pairwise = MatrixGenerator(
-            a3m_dir=a3m_dir,
-            transitions_dir=co_transitions_dir,
-            n_process=n_process,
-            expected_number_of_MSAs=expected_number_of_MSAs,
-            outdir=co_matrices_dir,
-            max_families=max_families,
-            num_sites=2,
-            use_cached=use_cached,
-            center=center,
-            step_size=step_size,
-            n_steps=n_steps,
-            keep_outliers=keep_outliers,
-            max_height=max_height,
-            max_path_height=max_path_height,
-        )
-        matrix_generator_pairwise.run()
+        if learn_pairwise_model:
+            matrix_generator_pairwise = MatrixGenerator(
+                a3m_dir=a3m_dir,
+                transitions_dir=co_transitions_dir,
+                n_process=n_process,
+                expected_number_of_MSAs=expected_number_of_MSAs,
+                outdir=co_matrices_dir,
+                max_families=max_families,
+                num_sites=2,
+                use_cached=use_cached,
+                center=center,
+                step_size=step_size,
+                n_steps=n_steps,
+                keep_outliers=keep_outliers,
+                max_height=max_height,
+                max_path_height=max_path_height,
+            )
+            matrix_generator_pairwise.run()
         self.time_MatrixGenerator_2 = time.time() - t_start
 
         # Estimate single-site rate matrix Q1
@@ -423,21 +431,22 @@ class Pipeline:
 
         # Estimate single-site rate matrix Q2
         t_start = time.time()
-        pair_of_site_rate_matrix_learner = RateMatrixLearner(
-            frequency_matrices=os.path.join(co_matrices_dir, "matrices_by_quantized_branch_length.txt"),
-            output_dir=learnt_co_rate_matrix_dir,
-            stationnary_distribution=None,
-            mask=None,
-            # frequency_matrices_sep=",",
-            rate_matrix_parameterization="pande_reversible",
-            device=device,
-            use_cached=use_cached,
-        )
-        pair_of_site_rate_matrix_learner.train(
-            lr=1e-1,
-            num_epochs=num_epochs,
-            do_adam=True,
-        )
+        if learn_pairwise_model:
+            pair_of_site_rate_matrix_learner = RateMatrixLearner(
+                frequency_matrices=os.path.join(co_matrices_dir, "matrices_by_quantized_branch_length.txt"),
+                output_dir=learnt_co_rate_matrix_dir,
+                stationnary_distribution=None,
+                mask=None,
+                # frequency_matrices_sep=",",
+                rate_matrix_parameterization="pande_reversible",
+                device=device,
+                use_cached=use_cached,
+            )
+            pair_of_site_rate_matrix_learner.train(
+                lr=1e-1,
+                num_epochs=num_epochs,
+                do_adam=True,
+            )
         self.time_RateMatrixLearner_2 = time.time() - t_start
 
         self.time_total = (

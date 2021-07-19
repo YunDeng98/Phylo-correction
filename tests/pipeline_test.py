@@ -49,6 +49,7 @@ class TestPipeline(unittest.TestCase):
                     precomputed_contact_dir=None,
                     precomputed_tree_dir=None,
                     precomputed_maximum_parsimony_dir=None,
+                    learn_pairwise_model=True,
                 )
                 pipeline.run()
                 dcmp = dircmp(os.path.join(outdir, "matrices__3_families__8_seqs_16_sites_None_RM__1.0_center_0.1_step_size_0_n_steps_True_outliers_1000.0_max_height_1000_max_path_height"), 'test_input_data/matrices_small')
@@ -82,4 +83,5 @@ class TestPipeline(unittest.TestCase):
                     precomputed_contact_dir='it_doesnt_matter',
                     precomputed_tree_dir=None,
                     precomputed_maximum_parsimony_dir=None,
+                    learn_pairwise_model=True,
                 )

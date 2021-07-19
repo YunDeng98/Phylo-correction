@@ -118,11 +118,80 @@ def test_end_to_end_simulation_real_data_2():
     end_to_end_simulator.run()
 
 
-def _main():
-    init_logger()
+def test_end_to_end_simulation_real_data_3():
+    r"""
+    Takes ??? hour.
+    """
+    logger = logging.getLogger()
 
-    test_end_to_end_simulation_real_data()
-    # test_end_to_end_simulation_real_data_2()
+    pipeline = Pipeline(
+        outdir="test_outputs/test_end_to_end_simulation_real_data_3_pipeline_output",
+        max_seqs=1024,
+        max_sites=1024,
+        armstrong_cutoff=8.0,
+        rate_matrix="None",
+        n_process=32,
+        expected_number_of_MSAs=15051,
+        max_families=32,
+        a3m_dir="input_data/a3m",
+        pdb_dir="input_data/pdb",
+        use_cached=True,
+        num_epochs=2000,
+        device='cpu',
+        center=0.06,
+        step_size=0.1,
+        n_steps=50,
+        keep_outliers=False,
+        max_height=1000.0,
+        max_path_height=1000,
+        precomputed_contact_dir=None,
+        precomputed_tree_dir=None,
+        precomputed_maximum_parsimony_dir=None,
+    )
+    pipeline.run()
+    logger.info(f"time_Pipeline:\n{pipeline.get_times()}")
+
+    end_to_end_simulator = EndToEndSimulator(
+        outdir="test_outputs/test_end_to_end_simulation_real_data_3_simulation_output",
+        pipeline=pipeline,
+        simulation_pct_interacting_positions=0.0,
+        Q1_ground_truth="input_data/synthetic_rate_matrices/WAG_matrix.txt",
+        Q2_ground_truth="input_data/synthetic_rate_matrices/Q2_uniform_constrained.txt",
+        fast_tree_rate_matrix='None',
+        simulate_end_to_end=True,
+        simulate_from_trees_wo_ancestral_states=True,
+        simulate_from_trees_w_ancestral_states=True,
+        use_cached=True,
+    )
+    end_to_end_simulator.run()
+
+
+def run_main_pipeline():
+    pipeline = Pipeline(
+        outdir='output_data/pipeline_output',
+        max_seqs=1024,
+        max_sites=1024,
+        armstrong_cutoff=8.0,
+        rate_matrix='None',
+        n_process=3,
+        expected_number_of_MSAs=15051,
+        max_families=3,
+        a3m_dir='input_data/a3m',
+        pdb_dir='input_data/pdb',
+        use_cached=True,
+        num_epochs=10,
+        device='cpu',
+        center=0.06,
+        step_size=0.1,
+        n_steps=50,
+        keep_outliers=True,
+        max_height=1000.0,
+        max_path_height=1000,
+        precomputed_contact_dir=None,
+        precomputed_tree_dir=None,
+        precomputed_maximum_parsimony_dir=None,
+    )
+    pipeline.run()
 
     # # Takes a loooooong time (days)
     # pipeline = Pipeline(
@@ -136,6 +205,18 @@ def _main():
     #     max_families=15051,
     #     a3m_dir='input_data/a3m',
     #     pdb_dir='input_data/pdb',
+    #     use_cached=True,
+    #     num_epochs=10,
+    #     device='cpu',
+    #     center=0.06,
+    #     step_size=0.1,
+    #     n_steps=50,
+    #     keep_outliers=True,
+    #     max_height=1000.0,
+    #     max_path_height=1000,
+    #     precomputed_contact_dir=None,
+    #     precomputed_tree_dir=None,
+    #     precomputed_maximum_parsimony_dir=None,
     # )
     # pipeline.run()
 
@@ -182,6 +263,16 @@ def _main():
     # #     fast_tree_rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt',
     # # )
     # # end_to_end_simulator.run()
+
+
+def _main():
+    init_logger()
+
+    # test_end_to_end_simulation_real_data()
+    # test_end_to_end_simulation_real_data_2()
+    test_end_to_end_simulation_real_data_3()
+
+    # run_main_pipeline()  # The REAL deal
 
 
 if __name__ == "__main__":

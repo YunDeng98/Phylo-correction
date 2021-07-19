@@ -164,6 +164,7 @@ def map_func(args: List) -> None:
     # Write parsimony tree (is same as original tree but with internal nodes named)
     parsimony_tree_path = os.path.join(ancestral_states_simulated_dir, protein_family_name + ".newick")
     tree.write(format=3, outfile=os.path.join(parsimony_tree_path))
+    os.system(f"chmod 555 {parsimony_tree_path}")
 
     # Read single-site transition rate matrix
     Q1 = pd.read_csv(Q1_ground_truth, sep="\t", index_col=0, keep_default_na=False, na_values=[""])
@@ -202,6 +203,7 @@ def map_func(args: List) -> None:
     # Write out contact matrix
     contact_matrix_path = os.path.join(contact_simulated_dir, protein_family_name + ".cm")
     np.savetxt(contact_matrix_path, contact_matrix, fmt="%d")
+    os.system(f"chmod 555 {contact_matrix_path}")
 
     # Write out MSA
     msa = ""
@@ -216,6 +218,7 @@ def map_func(args: List) -> None:
     output_msa_path = os.path.join(a3m_simulated_dir, protein_family_name + ".a3m")
     with open(output_msa_path, "w") as file:
         file.write(msa)
+    os.system(f"chmod 555 {output_msa_path}")
 
     # Write out ancestral states
     num_nodes = 0
@@ -226,6 +229,7 @@ def map_func(args: List) -> None:
     ancestral_states_path = os.path.join(ancestral_states_simulated_dir, protein_family_name + ".parsimony")
     with open(ancestral_states_path, "w") as file:
         file.write(f"{num_nodes}\n" + maximum_parsimony)
+    os.system(f"chmod 555 {ancestral_states_path}")
 
 
 class Simulator:
@@ -339,6 +343,3 @@ class Simulator:
                 list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
         else:
             list(tqdm.tqdm(map(map_func, map_args), total=len(map_args)))
-
-        for dire in [a3m_simulated_dir, contact_simulated_dir, ancestral_states_simulated_dir]:
-            os.system(f"chmod -R 555 {dire}")

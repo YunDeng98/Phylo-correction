@@ -40,7 +40,6 @@ class TestMatrixGenerator(unittest.TestCase):
                 dcmp = dircmp(outdir, 'test_input_data/matrices_small')
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)
-            os.system(f"chmod -R 777 {root_dir}")
 
     @parameterized.expand([("multiprocess", 3), ("single-process", 1)])
     def test_basic_regression_pair_of_sites(self, name, n_process):
@@ -74,4 +73,3 @@ class TestMatrixGenerator(unittest.TestCase):
                 dcmp = dircmp(outdir, 'test_input_data/co_matrices_small')
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)
-            os.system(f"chmod -R 777 {root_dir}")

@@ -107,7 +107,7 @@ class FastTreePhylogeny:
             self._msa = msa
             self._protein_family_name = protein_family_name
 
-            os.system(f"chmod -R 555 {outfile}")
+            os.system(f"chmod 555 {outfile}")
 
     @property
     def total_time(self) -> float:

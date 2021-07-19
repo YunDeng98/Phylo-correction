@@ -30,7 +30,6 @@ class TestRateMatrixLearner(unittest.TestCase):
                     num_epochs=3,
                     do_adam=True,
                 )
-            os.system(f"chmod -R 777 {root_dir}")
 
     def test_existing_results_are_not_overwrriten(self):
         """
@@ -56,13 +55,12 @@ class TestRateMatrixLearner(unittest.TestCase):
                         do_adam=True,
                     )
                 else:
-                    with self.assertRaises(ValueError):
+                    with self.assertRaises(PermissionError):
                         rate_matrix_learner.train(
                             lr=1e-1,
                             num_epochs=3,
                             do_adam=True,
                         )
-            os.system(f"chmod -R 777 {root_dir}")
 
     def test_smoke_large_matrix(self):
         """
@@ -86,7 +84,6 @@ class TestRateMatrixLearner(unittest.TestCase):
                     num_epochs=3,
                     do_adam=True,
                 )
-            os.system(f"chmod -R 777 {root_dir}")
 
     def test_smoke_huge_matrix(self):
         """
@@ -110,4 +107,3 @@ class TestRateMatrixLearner(unittest.TestCase):
                     num_epochs=1,
                     do_adam=True,
                 )
-            os.system(f"chmod -R 777 {root_dir}")

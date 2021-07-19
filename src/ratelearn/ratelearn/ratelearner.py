@@ -48,8 +48,6 @@ class RateMatrixLearner:
         logger = logging.getLogger("ratelearner")
 
         # Create experiment directory
-        if os.path.exists(output_dir) and not use_cached:
-            raise ValueError(f"outdir {output_dir} already exists. Aborting not to " f"overwrite!")
         if os.path.exists(output_dir) and use_cached:
             logger.info(f"Skipping. Cached ratelearner results at {output_dir}")
             return
@@ -133,12 +131,17 @@ class RateMatrixLearner:
         return quantized_data, n_features
 
     def process_results(self):
+        learned_matrix_path = os.path.join(self.output_dir, "learned_matrix.txt")
         np.savetxt(
-            os.path.join(self.output_dir, "learned_matrix.txt"),
+            learned_matrix_path,
             self.Qfinal.detach().cpu().numpy(),
         )
+        os.system(f"chmod 555 {learned_matrix_path}")
 
-        self.df_res.to_pickle(os.path.join(self.output_dir, "training_df.pickle"))
+        df_res_filepath = os.path.join(self.output_dir, "training_df.pickle")
+        self.df_res.to_pickle(df_res_filepath)
+        os.system(f"chmod 555 {df_res_filepath}")
+
         FT_SIZE = 13
         fig, axes = plt.subplots(figsize=(5, 4))
         self.df_res.loss.plot()
@@ -146,6 +149,6 @@ class RateMatrixLearner:
         plt.ylabel("Negative likelihood", fontsize=FT_SIZE)
         plt.xlabel("# of iterations", fontsize=FT_SIZE)
         plt.tight_layout()
-        plt.savefig(os.path.join(self.output_dir, "training_plot.pdf"))
-
-        os.system(f"chmod -R 555 {self.output_dir}")
+        figpath = os.path.join(self.output_dir, "training_plot.pdf")
+        plt.savefig(figpath)
+        os.system(f"chmod 555 {figpath}")

@@ -94,8 +94,6 @@ class PhylogenyGenerator:
         rate_matrix = self.rate_matrix
         use_cached = self.use_cached
 
-        if os.path.exists(outdir) and not use_cached:
-            raise ValueError(f"outdir {outdir} already exists. Aborting not to " f"overwrite!")
         if not os.path.exists(outdir):
             os.makedirs(outdir)
 
@@ -119,5 +117,3 @@ class PhylogenyGenerator:
                 list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
         else:
             list(tqdm.tqdm(map(map_func, map_args), total=len(map_args)))
-
-        os.system(f"chmod -R 555 {outdir}")

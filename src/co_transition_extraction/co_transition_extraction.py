@@ -136,6 +136,7 @@ def map_func(args: List) -> None:
     transition_filename = os.path.join(outdir, protein_family_name + ".transitions")
     with open(transition_filename, "w") as transition_file:
         transition_file.write(res)
+    os.system(f"chmod 555 {transition_filename}")
 
 
 class CoTransitionExtractor:
@@ -193,9 +194,6 @@ class CoTransitionExtractor:
         logger = logging.getLogger("co_transition_extraction")
         logger.info("Starting ... ")
 
-        if os.path.exists(outdir) and not use_cached:
-            raise ValueError(f"outdir {outdir} already exists. Aborting not to " f"overwrite!")
-
         if not os.path.exists(outdir):
             os.makedirs(outdir)
 
@@ -221,5 +219,3 @@ class CoTransitionExtractor:
                 list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
         else:
             list(tqdm.tqdm(map(map_func, map_args), total=len(map_args)))
-
-        os.system(f"chmod -R 555 {outdir}")

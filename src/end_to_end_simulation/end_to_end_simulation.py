@@ -75,15 +75,20 @@ class EndToEndSimulator:
         pipeline = self.pipeline
         simulation_pct_interacting_positions = self.simulation_pct_interacting_positions
         Q1_ground_truth = self.Q1_ground_truth
+        Q1_ground_truth_name = str(Q1_ground_truth).split('/')[-1]
         Q2_ground_truth = self.Q2_ground_truth
+        Q2_ground_truth_name = str(Q2_ground_truth).split('/')[-1]
         fast_tree_rate_matrix = self.fast_tree_rate_matrix
-        a3m_simulated_dir = os.path.join(outdir, "a3m_simulated")
-        contact_simulated_dir = os.path.join(outdir, "contacts_simulated")
-        ancestral_states_simulated_dir = os.path.join(outdir, "ancestral_states_simulated")
+        a3m_simulated_dir = os.path.join(outdir, f"a3m_simulated_{pipeline.max_seqs}_seqs_{pipeline.max_sites}_sites_{pipeline.rate_matrix_name}_RM__{Q1_ground_truth_name}_Q1_{Q2_ground_truth_name}_Q2_{simulation_pct_interacting_positions}_pct")
+        contact_simulated_dir = os.path.join(outdir, f"contacts_simulated_{pipeline.max_seqs}_seqs_{pipeline.max_sites}_sites_{pipeline.rate_matrix_name}_RM_{simulation_pct_interacting_positions}_pct")
+        ancestral_states_simulated_dir = os.path.join(outdir, f"ancestral_states_simulated_{pipeline.max_seqs}_seqs_{pipeline.max_sites}_sites_{pipeline.rate_matrix_name}_RM__{Q1_ground_truth_name}_Q1_{Q2_ground_truth_name}_Q2_{simulation_pct_interacting_positions}_pct")
         simulate_end_to_end = self.simulate_end_to_end
         simulate_from_trees_wo_ancestral_states = self.simulate_from_trees_wo_ancestral_states
         simulate_from_trees_w_ancestral_states = self.simulate_from_trees_w_ancestral_states
         use_cached = self.use_cached
+
+        if os.path.exists(outdir):
+            raise ValueError(f"Output directory {outdir} already exists. Please choose a different one!")
 
         if not os.path.exists(pipeline.tree_dir):
             raise ValueError("pipeline's trees do not exist! Have you already run the pipeline?")

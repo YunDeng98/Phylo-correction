@@ -184,9 +184,10 @@ class MatrixGenerator:
         logger = logging.getLogger("matrix_generation")
 
         # Caching pattern: skip any computation as soon as possible
-        out_filepath = os.path.join(outdir, "matrices.txt")
-        if use_cached and os.path.exists(out_filepath):
-            logger.info(f"Skipping. Cached matrices for {transitions_dir} at {out_filepath}.")
+        out_filepath_total = os.path.join(outdir, "matrices.txt")
+        out_filepath_quantized = os.path.join(outdir, "matrices_by_quantized_branch_length.txt")
+        if use_cached and os.path.exists(out_filepath_total) and os.path.exists(out_filepath_quantized):
+            logger.info(f"Skipping. Cached matrices for {transitions_dir} at {out_filepath_total} and {out_filepath_quantized}")
             return
 
         assert num_sites in [1, 2]
@@ -281,22 +282,20 @@ class MatrixGenerator:
         res_all = res[0].copy()
         for grid_point_id in range(1, len(grid)):
             res_all += res[grid_point_id]
-        out_filepath = os.path.join(outdir, "matrices.txt")
-        res_all.to_csv(out_filepath, sep="\t")
+        res_all.to_csv(out_filepath_total, sep="\t")
+        os.system(f"chmod 555 {out_filepath_total}")
 
         # Write out the frequency matrices for quantized branch lengths.
-        out_filepath = os.path.join(outdir, "matrices_by_quantized_branch_length.txt")
         for grid_point_id, grid_point in enumerate(grid):
             if grid_point_id == 0:
-                with open(out_filepath, "w") as outfile:
+                with open(out_filepath_quantized, "w") as outfile:
                     outfile.write(f'{grid_point}\n')
             else:
-                with open(out_filepath, "a") as outfile:
+                with open(out_filepath_quantized, "a") as outfile:
                     outfile.write(f'{grid_point}\n')
-            res[grid_point_id].to_csv(out_filepath, mode='a', sep=' ', header=False, index=False)
+            res[grid_point_id].to_csv(out_filepath_quantized, mode='a', sep=' ', header=False, index=False)
         # Write out sentinel
-        with open(out_filepath, "a") as outfile:
+        with open(out_filepath_quantized, "a") as outfile:
             outfile.write('9999.0\n')
-        (0 * res[0]).to_csv(out_filepath, mode='a', sep=' ', header=False, index=False)
-
-        os.system(f"chmod -R 555 {outdir}")
+        (0 * res[0]).to_csv(out_filepath_quantized, mode='a', sep=' ', header=False, index=False)
+        os.system(f"chmod 555 {out_filepath_quantized}")

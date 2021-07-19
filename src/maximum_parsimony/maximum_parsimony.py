@@ -93,6 +93,7 @@ def write_out_tree(
     with open(tree_filepath, "w") as file:
         file.write(f"{len(res) + 1}\n")
         file.write("".join(res))
+    os.system(f"chmod 555 {tree_filepath}")
 
 
 def write_out_msa(
@@ -110,6 +111,7 @@ def write_out_msa(
     with open(msa_filepath, "w") as outfile:
         outfile.write(f"{nleaves}\n")
         outfile.write(res)
+    os.system(f"chmod 555 {msa_filepath}")
 
 
 def map_parsimony_indexing_back_to_str(
@@ -299,5 +301,3 @@ class MaximumParsimonyReconstructor:
                 list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
         else:
             list(tqdm.tqdm(map(map_func, map_args), total=len(map_args)))
-
-        os.system(f"chmod -R 555 {outdir}")

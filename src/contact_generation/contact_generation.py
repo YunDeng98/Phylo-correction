@@ -38,6 +38,7 @@ def map_func(args: List) -> None:
     )
     outfile = os.path.join(outdir, protein_family_name + ".cm")
     contact_matrix.write_to_file(outfile)
+    os.system(f"chmod 555 {outfile}")
 
 
 class ContactGenerator:
@@ -93,9 +94,6 @@ class ContactGenerator:
         max_families = self.max_families
         use_cached = self.use_cached
 
-        if os.path.exists(outdir) and not use_cached:
-            raise ValueError(f"outdir {outdir} already exists. Aborting not to " f"overwrite!")
-
         if not os.path.exists(outdir):
             os.makedirs(outdir)
 
@@ -122,5 +120,3 @@ class ContactGenerator:
                 list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
         else:
             list(tqdm.tqdm(map(map_func, map_args), total=len(map_args)))
-
-        os.system(f"chmod -R 555 {outdir}")

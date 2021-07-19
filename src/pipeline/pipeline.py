@@ -12,6 +12,10 @@ from src.matrix_generation import MatrixGenerator
 from src.ratelearn import RateMatrixLearner
 
 
+class PipelineContextError(Exception):
+    pass
+
+
 class Pipeline:
     r"""
     A Pipeline estimates rate matrices from MSAs and structures.
@@ -34,6 +38,24 @@ class Pipeline:
 
     The Pipeline is initialized with __init__() and only run when called with
     the run() method.
+
+    Because caching is important for performance, cached results found in outdir
+    will be reused if possible (assuming use_cached=True is probided to __init__)
+    Two pipelines can use the same outdir so long as their 'global context' is the
+    same. The 'global context' of a pipeline is determined by the values of all these:
+    - a3m_dir
+    - pdb_dir
+    - precomputed_contact_dir
+    - precomputed_tree_dir
+    - precomputed_maximum_parsimony_dir
+    If you try to use the same outdir for pipelines with different context, a PipelineContextError
+    will be raised. You must use a DIFFERENT outdir for the new pipeline. This is
+    necessary because if not, caching would lead to disastrous bugs!
+    One the other hand, please benefir from using the same outdir for pipelines with
+    the same context. You will save the time of rebuilding trees, etc. An example
+    of this is if you are trying to determine how the amount of data used (max_families)
+    affects estimation error. You can create the exact same pipeline only varying the
+    max_families parameter. Most of the computation will be re-used!
 
     Args:
         outdir: Directory where the estimated matrices will be found.
@@ -143,6 +165,19 @@ class Pipeline:
                 )
         if device not in ['cuda', 'cpu']:
             raise ValueError(f"device should be 'cuda' or 'cpu', {device} provided.")
+        # Check that the global context is correct.
+        global_context = str([a3m_dir, pdb_dir, precomputed_contact_dir, precomputed_tree_dir, precomputed_maximum_parsimony_dir])
+        global_context_filepath = os.path.join(outdir, 'global_context.txt')
+        if os.path.exists(global_context_filepath):
+            previous_global_context = open(global_context_filepath, "r").read()
+            if global_context != previous_global_context:
+                raise PipelineContextError(f"Trying to run pipeline with outdir from a previous pipeline with a different context. Please use a different outdir. Previous context: {previous_global_context}. New context: {global_context}.")
+        else:
+            os.makedirs(outdir)
+            with open(global_context_filepath, "w") as global_context_file:
+                global_context_file.write(global_context)
+            os.system(f"chmod 555 {global_context_filepath}")
+
         self.outdir = outdir
         self.max_seqs = max_seqs
         self.max_sites = max_sites
@@ -165,35 +200,37 @@ class Pipeline:
         self.keep_outliers = keep_outliers
         self.max_height = max_height
         self.max_path_height = max_path_height
+        rate_matrix_name = str(rate_matrix).split('/')[-1]
+        self.rate_matrix_name = rate_matrix_name
 
         # Output data directories
         # Where the phylogenies will be stored
-        self.tree_dir = os.path.join(outdir, f"trees_{max_seqs}_seqs_{max_sites}_sites")
+        self.tree_dir = os.path.join(outdir, f"trees_{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM")
         # Where the contacts will be stored
-        self.contact_dir = os.path.join(outdir, f"contacts_{armstrong_cutoff}")
+        self.contact_dir = os.path.join(outdir, f"contacts_{armstrong_cutoff}_angstrom")
         # Where the maximum parsimony reconstructions will be stored
-        self.maximum_parsimony_dir = os.path.join(outdir, f"maximum_parsimony_{max_seqs}_seqs_{max_sites}_sites")
+        self.maximum_parsimony_dir = os.path.join(outdir, f"maximum_parsimony_{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM")
         # Where the transitions obtained from the maximum parsimony phylogenies will be stored
-        self.transitions_dir = os.path.join(outdir, f"transitions_{max_seqs}_seqs_{max_sites}_sites")
+        self.transitions_dir = os.path.join(outdir, f"transitions_{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM")
         # Where the transition matrices obtained by quantizing transition edges will be stored
-        self.matrices_dir = os.path.join(outdir, f"matrices_{max_seqs}_seqs_{max_sites}_sites__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height")
+        self.matrices_dir = os.path.join(outdir, f"matrices__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height")
         # Where the co-transitions obtained from the maximum parsimony phylogenies will be stored
         self.co_transitions_dir = os.path.join(
             outdir,
-            f"co_transitions_{max_seqs}_seqs_{max_sites}_sites_{armstrong_cutoff}",
+            f"co_transitions_{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom",
         )
         # Where the co-transition matrices obtained by quantizing transition edges will be stored
         self.co_matrices_dir = os.path.join(
             outdir,
-            f"co_matrices_{max_seqs}_seqs_{max_sites}_sites_{armstrong_cutoff}__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height",
+            f"co_matrices__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height",
         )
         self.learnt_rate_matrix_dir = os.path.join(
             outdir,
-            f"Q1_{max_seqs}_seqs_{max_sites}_sites__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height__{num_epochs}_epochs"
+            f"Q1__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height__{num_epochs}_epochs"
         )
         self.learnt_co_rate_matrix_dir = os.path.join(
             outdir,
-            f"Q2_{max_seqs}_seqs_{max_sites}_sites_{armstrong_cutoff}__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height__{num_epochs}_epochs"
+            f"Q2__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height__{num_epochs}_epochs"
         )
 
     def run(self):

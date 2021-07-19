@@ -372,6 +372,25 @@ class Pipeline:
         matrix_generator.run()
         self.time_MatrixGenerator_1 = time.time() - t_start
 
+        # Estimate single-site rate matrix Q1
+        t_start = time.time()
+        single_site_rate_matrix_learner = RateMatrixLearner(
+            frequency_matrices=os.path.join(matrices_dir, "matrices_by_quantized_branch_length.txt"),
+            output_dir=learnt_rate_matrix_dir,
+            stationnary_distribution=None,
+            mask=None,
+            # frequency_matrices_sep=",",
+            rate_matrix_parameterization="pande_reversible",
+            device=device,
+            use_cached=use_cached,
+        )
+        single_site_rate_matrix_learner.train(
+            lr=1e-1,
+            num_epochs=num_epochs,
+            do_adam=True,
+        )
+        self.time_RateMatrixLearner_1 = time.time() - t_start
+
         # Generate co-transitions
         t_start = time.time()
         if learn_pairwise_model:
@@ -410,26 +429,7 @@ class Pipeline:
             matrix_generator_pairwise.run()
         self.time_MatrixGenerator_2 = time.time() - t_start
 
-        # Estimate single-site rate matrix Q1
-        t_start = time.time()
-        single_site_rate_matrix_learner = RateMatrixLearner(
-            frequency_matrices=os.path.join(matrices_dir, "matrices_by_quantized_branch_length.txt"),
-            output_dir=learnt_rate_matrix_dir,
-            stationnary_distribution=None,
-            mask=None,
-            # frequency_matrices_sep=",",
-            rate_matrix_parameterization="pande_reversible",
-            device=device,
-            use_cached=use_cached,
-        )
-        single_site_rate_matrix_learner.train(
-            lr=1e-1,
-            num_epochs=num_epochs,
-            do_adam=True,
-        )
-        self.time_RateMatrixLearner_1 = time.time() - t_start
-
-        # Estimate single-site rate matrix Q2
+        # Estimate pair-of-sites rate matrix Q2
         t_start = time.time()
         if learn_pairwise_model:
             pair_of_site_rate_matrix_learner = RateMatrixLearner(
@@ -455,9 +455,9 @@ class Pipeline:
             + self.time_MaximumParsimonyReconstructor
             + self.time_TransitionExtractor
             + self.time_MatrixGenerator_1
+            + self.time_RateMatrixLearner_1
             + self.time_CoTransitionExtractor
             + self.time_MatrixGenerator_2
-            + self.time_RateMatrixLearner_1
             + self.time_RateMatrixLearner_2
         )
 
@@ -473,9 +473,10 @@ class Pipeline:
             + f"time_MaximumParsimonyReconstructor = {self.time_MaximumParsimonyReconstructor}\n"
             + f"time_TransitionExtractor = {self.time_TransitionExtractor}\n"
             + f"time_MatrixGenerator_1 = {self.time_MatrixGenerator_1}\n"
+            + f"time_RateMatrixLearner_1 = {self.time_RateMatrixLearner_1}\n"
             + f"time_CoTransitionExtractor = {self.time_CoTransitionExtractor}\n"
             + f"time_MatrixGenerator_2 = {self.time_MatrixGenerator_2}\n"
-            + f"time_RateMatrixLearner_1 = {self.time_RateMatrixLearner_1}\n"
+            + f"time_RateMatrixLearner_2 = {self.time_RateMatrixLearner_2}\n"
         )
         return res
 

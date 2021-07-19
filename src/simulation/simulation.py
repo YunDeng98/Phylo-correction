@@ -234,7 +234,7 @@ def map_func(args: List) -> None:
 
 class Simulator:
     r"""
-    Simulate MSAs given a contact map and a tree.
+    Simulate MSAs and contact maps given a tree.
 
     Args:
         a3m_dir: Directory where the original MSA files (.a3m) are found.

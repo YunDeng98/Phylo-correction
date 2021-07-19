@@ -86,7 +86,7 @@ def map_func(args: List) -> pd.DataFrame:
             for starting_state in alphabet:
                 for ending_state in alphabet:
                     if (starting_state, ending_state, grid_point_id) in summarized_transitions:
-                        res[grid_point_id].loc[starting_state, ending_state] += summarized_transitions[(starting_state, ending_state, grid_point_id)]
+                        res[grid_point_id].at[starting_state, ending_state] += summarized_transitions[(starting_state, ending_state, grid_point_id)]
 
     return res, grid
 
@@ -214,10 +214,7 @@ class MatrixGenerator:
             "W",
             "Y",
             "V",
-        ] + ["-"]
-        for letter in string.ascii_uppercase:
-            if letter not in amino_acids:
-                amino_acids += [letter]
+        ]
 
         # Create alphabet of states.
         if num_sites == 2:
@@ -277,6 +274,17 @@ class MatrixGenerator:
             res_i, _ = shard_results[i]
             for grid_point_id in range(len(grid)):
                 res[grid_point_id] += res_i[grid_point_id]
+
+        # "Symmetrize" the transition matrix if its on pair of sites. E.g. the transitions NG->NT and GN->TN should be unified
+        if num_sites == 2:
+            for grid_point_id in range(len(grid)):
+                for aa1 in amino_acids:
+                    for aa2 in amino_acids:
+                        for aa3 in amino_acids:
+                            for aa4 in amino_acids:
+                                symmetrized_frequency = (res[grid_point_id].at[aa1 + aa2, aa3 + aa4] + res[grid_point_id].at[aa2 + aa1, aa4 + aa3]) / 2.0
+                                res[grid_point_id].at[aa1 + aa2, aa3 + aa4] = symmetrized_frequency
+                                res[grid_point_id].at[aa2 + aa1, aa4 + aa3] = symmetrized_frequency
 
         # Compute the total transitions, irrespective of branch length.
         res_all = res[0].copy()

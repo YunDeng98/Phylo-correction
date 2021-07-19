@@ -104,6 +104,11 @@ class EndToEndSimulator:
                 " certainly a user bug."
             )
 
+        os.makedirs(outdir)  # We know this doesn't exist yet bc we are pedantic.
+        pipeline_info_path = os.path.join(outdir, 'pipeline_info.txt')
+        with open(pipeline_info_path, "w") as pipeline_info_file:
+            pipeline_info_file.write(str(pipeline))
+
         t_start = time.time()
         simulator = Simulator(
             a3m_dir=pipeline.a3m_dir,

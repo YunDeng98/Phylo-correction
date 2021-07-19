@@ -478,3 +478,31 @@ class Pipeline:
             + f"time_RateMatrixLearner_1 = {self.time_RateMatrixLearner_1}\n"
         )
         return res
+
+    def __str__(self):
+        res = \
+            "PIPELINE with:\n" \
+            f"outdir = {self.outdir}\n" \
+            f"max_seqs = {self.max_seqs}\n" \
+            f"max_sites = {self.max_sites}\n" \
+            f"armstrong_cutoff = {self.armstrong_cutoff}\n" \
+            f"rate_matrix = {self.rate_matrix}\n" \
+            f"use_cached = {self.use_cached}\n" \
+            f"num_epochs = {self.num_epochs}\n" \
+            f"device = {self.device}\n" \
+            f"center = {self.center}\n" \
+            f"step_size = {self.step_size}\n" \
+            f"n_steps = {self.n_steps}\n" \
+            f"max_height = {self.max_height}\n" \
+            f"max_path_height = {self.max_path_height}\n" \
+            f"keep_outliers = {self.keep_outliers}\n" \
+            f"n_process = {self.n_process}\n" \
+            f"expected_number_of_MSAs = {self.expected_number_of_MSAs}\n" \
+            f"max_families = {self.max_families}\n" \
+            f"a3m_dir = {self.a3m_dir}\n" \
+            f"pdb_dir = {self.pdb_dir}\n" \
+            f"precomputed_contact_dir = {self.precomputed_contact_dir}\n" \
+            f"precomputed_tree_dir = {self.precomputed_tree_dir}\n" \
+            f"precomputed_maximum_parsimony_dir = {self.precomputed_maximum_parsimony_dir}\n" \
+            f"learn_pairwise_model = {self.learn_pairwise_model}\n"
+        return res

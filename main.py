@@ -7,7 +7,7 @@ import logging
 
 
 def init_logger():
-    logger = logging.getLogger()
+    logger = logging.getLogger('phylo_correction')
     logger.setLevel(logging.DEBUG)
     # fmt_str = "[%(asctime)s] %(levelname)s @ line %(lineno)d: %(message)s"
     fmt_str = "[%(asctime)s] - %(name)s - %(levelname)s - %(message)s"
@@ -26,7 +26,7 @@ def test_end_to_end_simulation_real_data():
     r"""
     Takes 2 min.
     """
-    logger = logging.getLogger()
+    logger = logging.getLogger('phylo_correction')
 
     pipeline = Pipeline(
         outdir="test_outputs/test_end_to_end_simulation_real_data_pipeline_output",
@@ -74,7 +74,7 @@ def test_end_to_end_simulation_real_data_2():
     r"""
     Takes 1 hour.
     """
-    logger = logging.getLogger()
+    logger = logging.getLogger('phylo_correction')
 
     pipeline = Pipeline(
         outdir="test_outputs/test_end_to_end_simulation_real_data_2_pipeline_output",
@@ -122,7 +122,7 @@ def test_end_to_end_simulation_real_data_3():
     r"""
     Takes ??? hour.
     """
-    logger = logging.getLogger()
+    logger = logging.getLogger('phylo_correction')
 
     pipeline = Pipeline(
         outdir="test_outputs/test_end_to_end_simulation_real_data_3_pipeline_output",

@@ -48,7 +48,7 @@ parser.add_argument(
 
 
 def init_logger(outdir: str):
-    logger = logging.getLogger("phylogeny_generation")
+    logger = logging.getLogger("phylo_correction.phylogeny_generation")
     logger.setLevel(logging.DEBUG)
     # fmt_str = "[%(asctime)s] %(levelname)s @ line %(lineno)d: %(message)s"
     fmt_str = "[%(asctime)s] - %(name)s - %(levelname)s - %(message)s"
@@ -77,7 +77,7 @@ if __name__ == "__main__":
         os.makedirs(outdir)
 
     init_logger(outdir=outdir)
-    logger = logging.getLogger("phylogeny_generation")
+    logger = logging.getLogger("phylo_correction.phylogeny_generation")
 
     if not os.path.exists(grid_path):
         raise ValueError(f"Could not find grid_path {grid_path}")

@@ -65,7 +65,7 @@ def map_func(args: List) -> None:
     outdir = args[3]
     use_cached = args[4]
 
-    logger = logging.getLogger("transition_extraction")
+    logger = logging.getLogger("phylo_correction.transition_extraction")
 
     # Caching pattern: skip any computation as soon as possible
     transition_filename = os.path.join(outdir, protein_family_name + ".transitions")
@@ -169,7 +169,7 @@ class TransitionExtractor:
         max_families = self.max_families
         use_cached = self.use_cached
 
-        logger = logging.getLogger("transition_extraction")
+        logger = logging.getLogger("phylo_correction.transition_extraction")
         logger.info("Starting ... ")
 
         if not os.path.exists(outdir):

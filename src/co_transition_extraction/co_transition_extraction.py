@@ -78,7 +78,7 @@ def map_func(args: List) -> None:
     contact_dir = args[4]
     use_cached = args[5]
 
-    logger = logging.getLogger("co_transition_extraction")
+    logger = logging.getLogger("phylo_correction.co_transition_extraction")
 
     # Caching pattern: skip any computation as soon as possible
     transition_filename = os.path.join(outdir, protein_family_name + ".transitions")
@@ -191,7 +191,7 @@ class CoTransitionExtractor:
         contact_dir = self.contact_dir
         use_cached = self.use_cached
 
-        logger = logging.getLogger("co_transition_extraction")
+        logger = logging.getLogger("phylo_correction.co_transition_extraction")
         logger.info("Starting ... ")
 
         if not os.path.exists(outdir):

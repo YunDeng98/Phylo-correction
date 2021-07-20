@@ -141,7 +141,7 @@ def map_func(args) -> None:
     max_sites = args[5]
     use_cached = args[6]
 
-    logger = logging.getLogger("maximum_parsimony")
+    logger = logging.getLogger("phylo_correction.maximum_parsimony")
 
     # Caching pattern: skip any computation as soon as possible
     output_tree_filepath = os.path.join(outdir, protein_family_name + ".newick")
@@ -238,7 +238,7 @@ class MaximumParsimonyReconstructor:
         max_families: int,
         use_cached: bool = False,
     ):
-        logger = logging.getLogger("maximum_parsimony")
+        logger = logging.getLogger("phylo_correction.maximum_parsimony")
         self.a3m_dir = a3m_dir
         self.tree_dir = tree_dir
         self.n_process = n_process
@@ -272,7 +272,7 @@ class MaximumParsimonyReconstructor:
         max_seqs = 0
         max_sites = 0
 
-        logger = logging.getLogger("maximum_parsimony")
+        logger = logging.getLogger("phylo_correction.maximum_parsimony")
         logger.info("Starting ... ")
 
         if os.path.exists(outdir) and not use_cached:

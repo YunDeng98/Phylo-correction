@@ -122,7 +122,7 @@ def run_chain(
 
 
 def map_func(args: List) -> None:
-    logger = logging.getLogger("simulation")
+    logger = logging.getLogger("phylo_correction.simulation")
     protein_family_name = args[0]
     a3m_dir = args[1]
     tree_dir = args[2]
@@ -302,7 +302,7 @@ class Simulator:
         Q2_ground_truth = self.Q2_ground_truth
         use_cached = self.use_cached
 
-        logger = logging.getLogger("simulation")
+        logger = logging.getLogger("phylo_correction.simulation")
         logger.info("Starting ... ")
 
         for dire in [a3m_dir, tree_dir]:

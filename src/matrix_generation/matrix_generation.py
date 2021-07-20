@@ -33,7 +33,7 @@ def map_func(args: List) -> pd.DataFrame:
     max_height = args[9]
     max_path_height = args[10]
 
-    logger = logging.getLogger("matrix_generation")
+    logger = logging.getLogger("phylo_correction.matrix_generation")
     seed = int(
         hashlib.md5(("".join(protein_family_names_for_shard) + "matrix_generation").encode()).hexdigest()[:8], 16
     )
@@ -181,7 +181,7 @@ class MatrixGenerator:
         max_height = self.max_height
         max_path_height = self.max_path_height
 
-        logger = logging.getLogger("matrix_generation")
+        logger = logging.getLogger("phylo_correction.matrix_generation")
 
         # Caching pattern: skip any computation as soon as possible
         out_filepath_total = os.path.join(outdir, "matrices.txt")

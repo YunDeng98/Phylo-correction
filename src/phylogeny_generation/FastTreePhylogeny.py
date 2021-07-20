@@ -49,7 +49,7 @@ class FastTreePhylogeny:
         rate_matrix: str,
         use_cached: bool = False,
     ) -> None:
-        logger = logging.getLogger("FastTreePhylogeny")
+        logger = logging.getLogger("phylo_correction.FastTreePhylogeny")
 
         # Caching pattern: skip any computation as soon as possible
         outfile = os.path.join(outdir, protein_family_name) + ".newick"

@@ -70,7 +70,7 @@ class EndToEndSimulator:
         self.use_cached = use_cached
 
     def run(self):
-        logger = logging.getLogger("end_to_end_simulation")
+        logger = logging.getLogger("phylo_correction.end_to_end_simulation")
         outdir = self.outdir
         pipeline = self.pipeline
         simulation_pct_interacting_positions = self.simulation_pct_interacting_positions

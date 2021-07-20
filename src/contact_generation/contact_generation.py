@@ -18,7 +18,7 @@ def map_func(args: List) -> None:
     armstrong_cutoff = args[3]
     use_cached = args[4]
 
-    logger = logging.getLogger("contact_generation")
+    logger = logging.getLogger("phylo_correction.contact_generation")
 
     # Caching pattern: skip any computation as soon as possible
     outfile = os.path.join(outdir, protein_family_name + ".cm")

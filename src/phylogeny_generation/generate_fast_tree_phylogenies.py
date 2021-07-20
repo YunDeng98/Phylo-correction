@@ -20,7 +20,7 @@ def map_func(args) -> None:
     rate_matrix = args[5]
     use_cached = args[6]
 
-    logger = logging.getLogger("phylogeny_generation")
+    logger = logging.getLogger("phylo_correction.phylogeny_generation")
     seed = int(hashlib.md5((protein_family_name + "phylogeny_generation").encode()).hexdigest()[:8], 16)
     logger.info(f"Setting random seed to: {seed}")
     np.random.seed(seed)

@@ -45,7 +45,7 @@ class RateMatrixLearner:
         output_dir = self.output_dir
         use_cached = self.use_cached
 
-        logger = logging.getLogger("ratelearner")
+        logger = logging.getLogger("phylo_correction.ratelearner")
 
         # Create experiment directory
         if os.path.exists(output_dir) and use_cached:

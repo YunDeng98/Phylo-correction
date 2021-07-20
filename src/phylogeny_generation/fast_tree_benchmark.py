@@ -49,7 +49,7 @@ parser.add_argument(
 
 
 def init_logger(outdir: str):
-    logger = logging.getLogger("phylogeny_generation")
+    logger = logging.getLogger("phylo_correction.phylogeny_generation")
     logger.setLevel(logging.DEBUG)
     # fmt_str = "[%(asctime)s] %(levelname)s @ line %(lineno)d: %(message)s"
     fmt_str = "[%(asctime)s] - %(name)s - %(levelname)s - %(message)s"
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     os.makedirs(outdir)
     init_logger(outdir)
 
-    logger = logging.getLogger("phylogeny_generation")
+    logger = logging.getLogger("phylo_correction.phylogeny_generation")
     np.random.seed(1)
     max_seqs_grid = [2 ** i for i in range(1, 30) if 2 ** i <= args.max_seqs]
     max_sites_grid = [2 ** i for i in range(1, 30) if 2 ** i <= args.max_sites]

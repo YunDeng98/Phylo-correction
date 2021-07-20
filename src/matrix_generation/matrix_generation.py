@@ -228,8 +228,6 @@ class MatrixGenerator:
 
         logger.info("Starting ... ")
 
-        logger.info("TODO: Accept branch length quantization as input!")
-
         if os.path.exists(outdir) and not use_cached:
             raise ValueError(f"outdir {outdir} already exists. Aborting not to " f"overwrite!")
         if not os.path.exists(outdir):

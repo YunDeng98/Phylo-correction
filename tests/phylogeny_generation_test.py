@@ -60,6 +60,29 @@ class TestPhylogenyGenerator(unittest.TestCase):
             assert(len(diff_files) == 0)
 
     @parameterized.expand([("multiprocess", 3), ("single-process", 1)])
+    def test_custom_rate_matrix_unnormalized_runs_regression(self, name, n_process):
+        """
+        Tests the use of an UNNORMALIZED custom rate matrix in FastTree.
+        """
+        with tempfile.TemporaryDirectory() as root_dir:
+            outdir = os.path.join(root_dir, 'trees')
+            phylogeny_generator = PhylogenyGenerator(
+                a3m_dir='test_input_data/a3m_small',
+                n_process=n_process,
+                expected_number_of_MSAs=3,
+                outdir=outdir,
+                max_seqs=8,
+                max_sites=16,
+                max_families=3,
+                rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_halved_FastTree.txt',
+                use_cached=False,
+            )
+            phylogeny_generator.run()
+            dcmp = dircmp(outdir, 'test_input_data/trees_small_Q1_uniform_halved')
+            diff_files = dcmp.diff_files
+            assert(len(diff_files) == 0)
+
+    @parameterized.expand([("multiprocess", 3), ("single-process", 1)])
     def test_inexistent_rate_matrix_raises_error(self, name, n_process):
         """
         If the rate matrix passed to FastTree does not exist, we should error out.

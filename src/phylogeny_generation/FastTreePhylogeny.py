@@ -1,14 +1,88 @@
+import sys
 import os
 import time
 import tempfile
+import numpy as np
+import pandas as pd
+from typing import Optional
 
 from .MSA import MSA
 
 import logging
 
+from ete3 import Tree
+
+sys.path.append("../")
+import Phylo_util
+
 
 class PhylogenyGeneratorError(Exception):
     pass
+
+
+def to_fast_tree_format(rate_matrix: np.array, output_path: str, pi: np.array):
+    r"""
+    The weird 20 x 21 format of FastTree, which is also column-stochastic.
+    """
+    amino_acids = ["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V"]
+    rate_matrix_df = pd.DataFrame(rate_matrix, index=amino_acids, columns=amino_acids)
+    rate_matrix_df = rate_matrix_df.transpose()
+    rate_matrix_df['*'] = pi
+    with open(output_path, "w") as outfile:
+        for aa in amino_acids:
+            outfile.write(aa + "\t")
+        outfile.write("*\n")
+    rate_matrix_df.to_csv(output_path, sep="\t", header=False, mode='a')
+
+
+def run_fast_tree_with_custom_rate_matrix(
+    dir_path: str,
+    rate_matrix: str,
+    processed_msa_filename: str,
+    outfile: str,
+) -> None:
+    r"""
+    This wrapper deals with the fact that FastTree only accepts normalized rate matrices
+    as input. Therefore, to run FastTree with an arbitrary rate matrix, we first have
+    to normalize it. After inference with FastTree, we have to 'de-normalize' the branch
+    lengths to put them in the same time units as the original rate matrix.
+    """
+    with tempfile.NamedTemporaryFile("w") as scaled_tree_file:
+        scaled_tree_filename = scaled_tree_file.name  # Where FastTree will write its output.
+        with tempfile.NamedTemporaryFile("w") as scaled_rate_matrix_file:
+            scaled_rate_matrix_filename = scaled_rate_matrix_file.name  # The rate matrix for FastTree
+            Q_df = pd.read_csv(rate_matrix, sep="\t")
+            if not (Q_df.shape == (20, 21)):
+                raise ValueError(f"The rate matrix {rate_matrix} does not have dimension 20 x 21.")
+            Q = np.array(Q_df.iloc[:20, :20].transpose())
+            pi = np.array(Q_df.iloc[:20, 20]).reshape(1, 20)
+            # Check that rows (originally columns) of Q add to 0
+            if not np.sum(np.abs(Q.sum(axis=1))) < 0.01:
+                raise ValueError(f"Custom rate matrix {rate_matrix} doesn't have columns that add up to 0.")
+            # Check that the stationary distro is correct
+            if not np.sum(np.abs(pi @ Q)) < 0.01:
+                raise ValueError(f"Custom rate matrix {rate_matrix} doesn't have the stationary distribution.")
+            # Compute the mutation rate.
+            mutation_rate = pi @ -np.diag(Q)
+            if abs(mutation_rate - 1.0) < 0.00001:
+                # Can just use the original rate matrix
+                os.system(f"{dir_path}/FastTree -quiet -trans {rate_matrix} < {processed_msa_filename} > {outfile}")
+                return
+            # Normalize Q
+            Q_normalized = Q / mutation_rate
+            # Write out Q_normalized in FastTree format, for use in FastTree
+            to_fast_tree_format(Q_normalized, output_path=scaled_rate_matrix_filename, pi=pi.reshape(20))
+            # Run FastTree!
+            os.system(f"{dir_path}/FastTree -quiet -trans {scaled_rate_matrix_filename} < {processed_msa_filename} > {scaled_tree_filename}")
+            # De-normalize the branch lengths of the tree
+            tree = Tree(scaled_tree_filename)
+
+            def dfs_scale_tree(v: tree) -> None:
+                for u in v.get_children():
+                    u.dist = u.dist * mutation_rate
+                    dfs_scale_tree(u)
+            dfs_scale_tree(tree)
+            tree.write(format=2, outfile=outfile)
 
 
 class FastTreePhylogeny:
@@ -100,7 +174,12 @@ class FastTreePhylogeny:
                     logger.error(f"Could not find rate matrix {rate_matrix}")
                     raise PhylogenyGeneratorError(f"Could not find rate matrix {rate_matrix}")
                 logger.info(f"Running FastTree with rate matrix {rate_matrix} on MSA:\n{msa}")
-                os.system(f"{dir_path}/FastTree -quiet -trans {rate_matrix} < {processed_msa_filename} > {outfile}")
+                run_fast_tree_with_custom_rate_matrix(
+                    dir_path,
+                    rate_matrix,
+                    processed_msa_filename,
+                    outfile,
+                )
             time_end = time.time()
             self._total_time = time_end - time_start
             logger.info(f"Time taken: {self.total_time}")

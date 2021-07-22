@@ -58,7 +58,7 @@ def map_func(args: List) -> pd.DataFrame:
     )
 
     for protein_family_name in protein_family_names_for_shard:
-        print(f"Starting on {protein_family_name}")
+        logger.info(f"Starting on family {protein_family_name}")
         transitions_df = pd.read_csv(os.path.join(transitions_dir, protein_family_name + ".transitions"), sep=",")
 
         # Filter transitions based on citeria

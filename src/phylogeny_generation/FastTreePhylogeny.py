@@ -79,7 +79,7 @@ def run_fast_tree_with_custom_rate_matrix(
 
             def dfs_scale_tree(v: tree) -> None:
                 for u in v.get_children():
-                    u.dist = u.dist * mutation_rate
+                    u.dist = u.dist / mutation_rate
                     dfs_scale_tree(u)
             dfs_scale_tree(tree)
             tree.write(format=2, outfile=outfile)

@@ -139,10 +139,4 @@ def solve_stationery_dist(rate_matrix):
     return stationery_dist
 
 
-def solve_stationery_dist_power_iteration(rate_matrix, iterations=100):
-    n = rate_matrix.shape[0]
-    pi = np.ones(shape=(1, n)) / n
-    for i in range(iterations):
-        pi = pi @ (np.eye(n) + rate_matrix)
-        pi = pi / pi.sum()
-    return pi.reshape(-1)
+

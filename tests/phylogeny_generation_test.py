@@ -98,7 +98,6 @@ class TestPhylogenyGenerator(unittest.TestCase):
                 tree_true_path = f"test_input_data/trees_small_Q1_uniform_halved/{protein_family_name}.newick"
                 tree_inferred_path = os.path.join(outdir, protein_family_name + '.newick')
                 l1_error = branch_length_l1_error(tree_true_path, tree_inferred_path)
-                self.assertAlmostEqual(l1_error, 0.0, places=2)
                 assert(l1_error < 0.01)  # Redundant, but just in case
 
     @parameterized.expand([("multiprocess", 3), ("single-process", 1)])

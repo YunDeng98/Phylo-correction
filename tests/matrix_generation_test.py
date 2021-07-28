@@ -18,7 +18,7 @@ class TestMatrixGenerator(unittest.TestCase):
         then with caching, to make sure that caching works.
         """
         with tempfile.TemporaryDirectory() as root_dir:
-            outdir = os.path.join(root_dir, 'maximum_parsimony')
+            outdir = os.path.join(root_dir, 'matrices_small')
             for use_cached in [False, True]:
                 matrix_generator = MatrixGenerator(
                     a3m_dir='test_input_data/a3m_small',
@@ -51,7 +51,7 @@ class TestMatrixGenerator(unittest.TestCase):
         then with caching, to make sure that caching works.
         """
         with tempfile.TemporaryDirectory() as root_dir:
-            outdir = os.path.join(root_dir, 'maximum_parsimony')
+            outdir = os.path.join(root_dir, 'co_matrices_small')
             for use_cached in [False, True]:
                 matrix_generator = MatrixGenerator(
                     a3m_dir='test_input_data/a3m_small',

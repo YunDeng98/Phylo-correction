@@ -49,7 +49,7 @@ def map_func(args: List) -> pd.DataFrame:
         [
             (grid_point_id,
              pd.DataFrame(
-                 np.zeros(shape=(len(alphabet), len(alphabet)), dtype=int),
+                 np.zeros(shape=(len(alphabet), len(alphabet)), dtype=float),
                  index=alphabet, columns=alphabet
              )
              )

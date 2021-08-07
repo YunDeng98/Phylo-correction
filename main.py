@@ -136,7 +136,7 @@ def test_end_to_end_simulation_real_data_3():
         a3m_dir="input_data/a3m",
         pdb_dir="input_data/pdb",
         use_cached=True,
-        num_epochs=2000,
+        num_epochs=3000,
         device='cpu',
         center=0.06,
         step_size=0.1,

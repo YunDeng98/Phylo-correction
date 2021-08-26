@@ -1,5 +1,6 @@
 import os
 import time
+import numpy as np
 
 from typing import Optional
 
@@ -383,6 +384,7 @@ class Pipeline:
             rate_matrix_parameterization="pande_reversible",
             device=device,
             use_cached=use_cached,
+            n_process=n_process,
         )
         single_site_rate_matrix_learner.train(
             lr=1e-1,
@@ -441,6 +443,7 @@ class Pipeline:
                 rate_matrix_parameterization="pande_reversible",
                 device=device,
                 use_cached=use_cached,
+                n_process=n_process,
             )
             pair_of_site_rate_matrix_learner.train(
                 lr=1e-1,
@@ -507,3 +510,19 @@ class Pipeline:
             f"precomputed_maximum_parsimony_dir = {self.precomputed_maximum_parsimony_dir}\n" \
             f"learn_pairwise_model = {self.learn_pairwise_model}\n"
         return res
+
+    def get_learned_Q1(self) -> np.array:
+        return np.loadtxt(
+            os.path.join(
+                self.learnt_rate_matrix_dir,
+                "learned_matrix.txt",
+            )
+        )
+
+    def get_learned_Q2(self) -> np.array:
+        return np.loadtxt(
+            os.path.join(
+                self.learnt_co_rate_matrix_dir,
+                "learned_matrix.txt",
+            )
+        )

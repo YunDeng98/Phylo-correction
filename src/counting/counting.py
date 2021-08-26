@@ -2,10 +2,16 @@ import os
 import numpy as np
 import pandas as pd
 import torch
-import matplotlib.pyplot as plt
-from torch.utils.data import TensorDataset
 import logging
-from typing import Optional
+import sys
+sys.path.append("../")
+import Phylo_util
+
+
+def normalized(Q):
+    pi = Phylo_util.solve_stationery_dist(Q)
+    mutation_rate = pi @ -np.diag(Q)
+    return Q / mutation_rate
 
 
 class JTT:
@@ -71,6 +77,11 @@ class JTT:
         learned_matrix_path = os.path.join(self.output_dir, "learned_matrix.txt")
         np.savetxt(learned_matrix_path, res)
         os.system(f"chmod 555 {learned_matrix_path}")
+
+        normalized_learned_matrix_path = os.path.join(self.output_dir, "learned_matrix_normalized.txt")
+        np.savetxt(normalized_learned_matrix_path, normalized(res))
+        os.system(f"chmod 555 {normalized_learned_matrix_path}")
+
 
     def get_branch_to_mat(self):
         sep = self.frequency_matrices_sep

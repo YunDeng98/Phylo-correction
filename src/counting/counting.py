@@ -82,7 +82,6 @@ class JTT:
         np.savetxt(normalized_learned_matrix_path, normalized(res))
         os.system(f"chmod 555 {normalized_learned_matrix_path}")
 
-
     def get_branch_to_mat(self):
         sep = self.frequency_matrices_sep
         matrices_file = pd.read_csv(

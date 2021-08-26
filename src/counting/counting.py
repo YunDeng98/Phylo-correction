@@ -61,11 +61,11 @@ class JTT:
         # Compute mutabilities
         M = F.sum(axis=1)
         # JTT estimator
-        res = F / M[:, None]
+        res = F / (M[:, None] + 1e-16)
         np.fill_diagonal(res, -((1.0 - np.eye(n_states)) * res).sum(axis=1))
         # Some guess of the scaling constant;
         # doesn't matter if we normalize later to mutation rate 1.
-        lam = 1.0 / np.median(qtimes)
+        lam = 1.0 / (np.median(qtimes) + 1e-16)
         res = res * lam
 
         learned_matrix_path = os.path.join(self.output_dir, "learned_matrix.txt")

@@ -117,6 +117,9 @@ class Pipeline:
         edge_or_cherry: If "edge", edge transitions will be used. If "cherry",
             cherry transitions will be used instead. Note that "cherry"
             transitions do not depend on the maximum parsimony reconstruction!
+        method: If MLE, then MLE with pytorch. If not, only counting baselines
+            will be run. (Counting baselines are always run because they
+            are so fast).
 
     Attributes:
         tree_dir: Where the estimated phylogenies lie
@@ -155,6 +158,7 @@ class Pipeline:
         precomputed_tree_dir: Optional[str],
         precomputed_maximum_parsimony_dir: Optional[str],
         edge_or_cherry: str = "edge",
+        method: str = "MLE",
         learn_pairwise_model: float = False,
     ):
         # Check input validity
@@ -214,6 +218,7 @@ class Pipeline:
         self.rate_matrix_name = rate_matrix_name
         self.learn_pairwise_model = learn_pairwise_model
         self.edge_or_cherry = edge_or_cherry
+        self.method = method
 
         # Output data directories
         # Where the phylogenies will be stored
@@ -289,6 +294,7 @@ class Pipeline:
         precomputed_maximum_parsimony_dir = self.precomputed_maximum_parsimony_dir
         learn_pairwise_model = self.learn_pairwise_model
         edge_or_cherry = self.edge_or_cherry
+        method = self.method
 
         # First we need to generate the phylogenies
         t_start = time.time()
@@ -394,22 +400,23 @@ class Pipeline:
 
         # Estimate single-site rate matrix Q1 with MLE (pytorch)
         t_start = time.time()
-        single_site_rate_matrix_learner = RateMatrixLearner(
-            frequency_matrices=os.path.join(matrices_dir, "matrices_by_quantized_branch_length.txt"),
-            output_dir=learnt_rate_matrix_dir,
-            stationnary_distribution=None,
-            mask=None,
-            # frequency_matrices_sep=",",
-            rate_matrix_parameterization="pande_reversible",
-            device=device,
-            use_cached=use_cached,
-            n_process=n_process,
-        )
-        single_site_rate_matrix_learner.train(
-            lr=1e-1,
-            num_epochs=num_epochs,
-            do_adam=True,
-        )
+        if method == "MLE":
+            single_site_rate_matrix_learner = RateMatrixLearner(
+                frequency_matrices=os.path.join(matrices_dir, "matrices_by_quantized_branch_length.txt"),
+                output_dir=learnt_rate_matrix_dir,
+                stationnary_distribution=None,
+                mask=None,
+                # frequency_matrices_sep=",",
+                rate_matrix_parameterization="pande_reversible",
+                device=device,
+                use_cached=use_cached,
+                n_process=n_process,
+            )
+            single_site_rate_matrix_learner.train(
+                lr=1e-1,
+                num_epochs=num_epochs,
+                do_adam=True,
+            )
         self.time_RateMatrixLearner_1 = time.time() - t_start
 
         # Estimate single-site rate matrix Q1 with JTT counting
@@ -465,22 +472,23 @@ class Pipeline:
         # Estimate pair-of-sites rate matrix Q2 with MLE (pytorch)
         t_start = time.time()
         if learn_pairwise_model:
-            pair_of_site_rate_matrix_learner = RateMatrixLearner(
-                frequency_matrices=os.path.join(co_matrices_dir, "matrices_by_quantized_branch_length.txt"),
-                output_dir=learnt_co_rate_matrix_dir,
-                stationnary_distribution=None,
-                mask=None,
-                # frequency_matrices_sep=",",
-                rate_matrix_parameterization="pande_reversible",
-                device=device,
-                use_cached=use_cached,
-                n_process=n_process,
-            )
-            pair_of_site_rate_matrix_learner.train(
-                lr=1e-1,
-                num_epochs=num_epochs,
-                do_adam=True,
-            )
+            if method == "MLE":
+                pair_of_site_rate_matrix_learner = RateMatrixLearner(
+                    frequency_matrices=os.path.join(co_matrices_dir, "matrices_by_quantized_branch_length.txt"),
+                    output_dir=learnt_co_rate_matrix_dir,
+                    stationnary_distribution=None,
+                    mask=None,
+                    # frequency_matrices_sep=",",
+                    rate_matrix_parameterization="pande_reversible",
+                    device=device,
+                    use_cached=use_cached,
+                    n_process=n_process,
+                )
+                pair_of_site_rate_matrix_learner.train(
+                    lr=1e-1,
+                    num_epochs=num_epochs,
+                    do_adam=True,
+                )
         self.time_RateMatrixLearner_2 = time.time() - t_start
 
         # Estimate pair-of-sites rate matrix Q2 with JTT counting

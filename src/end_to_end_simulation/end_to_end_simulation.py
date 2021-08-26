@@ -114,6 +114,7 @@ class EndToEndSimulator:
             keep_outliers=pipeline.keep_outliers,
             max_height=pipeline.max_height,
             max_path_height=pipeline.max_path_height,
+            edge_or_cherry=pipeline.edge_or_cherry,
         )
 
         self.pipeline_on_simulated_data_from_trees_wo_ancestral_states = Pipeline(
@@ -139,6 +140,7 @@ class EndToEndSimulator:
             keep_outliers=pipeline.keep_outliers,
             max_height=pipeline.max_height,
             max_path_height=pipeline.max_path_height,
+            edge_or_cherry=pipeline.edge_or_cherry,
         )
 
         self.pipeline_on_simulated_data_from_trees_w_ancestral_states = Pipeline(
@@ -164,6 +166,7 @@ class EndToEndSimulator:
             keep_outliers=pipeline.keep_outliers,
             max_height=pipeline.max_height,
             max_path_height=pipeline.max_path_height,
+            edge_or_cherry=pipeline.edge_or_cherry,
         )
 
     def run(self):

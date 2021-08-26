@@ -11,7 +11,6 @@ import numpy as np
 import tqdm
 
 import pandas as pd
-import string
 import random
 import hashlib
 
@@ -32,6 +31,7 @@ def map_func(args: List) -> pd.DataFrame:
     keep_outliers = args[8]
     max_height = args[9]
     max_path_height = args[10]
+    edge_or_cherry = args[11]
 
     logger = logging.getLogger("phylo_correction.matrix_generation")
     seed = int(
@@ -64,6 +64,7 @@ def map_func(args: List) -> pd.DataFrame:
         # Filter transitions based on citeria
         transitions_df = transitions_df[transitions_df.height <= max_height]
         transitions_df = transitions_df[transitions_df.path_height <= max_path_height]
+        transitions_df = transitions_df[transitions_df.edge_or_cherry == edge_or_cherry]
 
         # Assign edge lengths to closest quantized value (bucket). 'grid_point_id' is the index of the closest bucket,
         # which goes from 0 to len(grid) - 1 inclusive.
@@ -130,6 +131,9 @@ class MatrixGenerator:
             at most max_path_height from the leaves in its subtree, in terms
             of the NUMBER OF EDGES. This is used to filter out unreliable
             maximum parsimony transitions.
+        edge_or_cherry: If "edge", edge transitions will be used. If "cherry",
+            cherry transitions will be used instead. Note that "cherry"
+            transitions do not depend on the maximum parsimony reconstruction!
         use_cached: If True and the output file already exists for a family,
             all computation will be skipped for that family.
     """
@@ -148,6 +152,7 @@ class MatrixGenerator:
         keep_outliers: bool,
         max_height: float,
         max_path_height: int,
+        edge_or_cherry: str = "edge",
         use_cached: bool = False,
     ):
         self.a3m_dir = a3m_dir
@@ -164,6 +169,7 @@ class MatrixGenerator:
         self.keep_outliers = keep_outliers
         self.max_height = max_height
         self.max_path_height = max_path_height
+        self.edge_or_cherry = edge_or_cherry
 
     def run(self) -> None:
         a3m_dir = self.a3m_dir
@@ -180,6 +186,7 @@ class MatrixGenerator:
         keep_outliers = self.keep_outliers
         max_height = self.max_height
         max_path_height = self.max_path_height
+        edge_or_cherry = self.edge_or_cherry
 
         logger = logging.getLogger("phylo_correction.matrix_generation")
 
@@ -257,6 +264,7 @@ class MatrixGenerator:
                 keep_outliers,
                 max_height,
                 max_path_height,
+                edge_or_cherry,
             ]
             for shard_id in range(n_process)
         ]

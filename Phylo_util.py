@@ -10,10 +10,11 @@ class substitution_model:
         self.stationery_dist = stationery_dist
         self.S = self.symmetrize_rate_matrix(rate_matrix, stationery_dist)
         self.P1, self.P2 = self.diagonal_stationery_matrix(stationery_dist)
-        self.D, self.U = np.linalg.eigh(self.S)
+        self.D, self.U = np.linalg.eigh(self.S)  # This only really works for reversible models, right?
 
     @staticmethod
     def symmetrize_rate_matrix(rate_matrix, stationery_dist):
+        # This only really works for reversible models, right?
         n = rate_matrix.shape[0]
         S = np.zeros((n, n))
         for i in range(n):
@@ -32,7 +33,7 @@ class substitution_model:
     def expm(self, t):
         n = self.D.shape[0]
         exp_D = np.diag(np.exp(t * self.D))
-        exp_S = np.dot(np.dot(self.U, exp_D), self.U.transpose())
+        exp_S = np.dot(np.dot(self.U, exp_D), self.U.transpose())# This only really works for reversible models, right?
         exp_R = np.dot(np.dot(self.P2, exp_S), self.P1)
         return exp_R
 

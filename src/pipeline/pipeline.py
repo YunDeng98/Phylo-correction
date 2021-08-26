@@ -113,6 +113,9 @@ class Pipeline:
         learn_pairwise_model: If True, will learn a co-evolution model.
             This step is very slow in generating the training data, so
             it is a good idea to skip at first.
+        edge_or_cherry: If "edge", edge transitions will be used. If "cherry",
+            cherry transitions will be used instead. Note that "cherry"
+            transitions do not depend on the maximum parsimony reconstruction!
 
     Attributes:
         tree_dir: Where the estimated phylogenies lie
@@ -150,6 +153,7 @@ class Pipeline:
         precomputed_contact_dir: Optional[str],
         precomputed_tree_dir: Optional[str],
         precomputed_maximum_parsimony_dir: Optional[str],
+        edge_or_cherry: str = "edge",
         learn_pairwise_model: float = False,
     ):
         # Check input validity
@@ -208,6 +212,7 @@ class Pipeline:
         rate_matrix_name = str(rate_matrix).split('/')[-1]
         self.rate_matrix_name = rate_matrix_name
         self.learn_pairwise_model = learn_pairwise_model
+        self.edge_or_cherry = edge_or_cherry
 
         # Output data directories
         # Where the phylogenies will be stored
@@ -219,7 +224,8 @@ class Pipeline:
         # Where the transitions obtained from the maximum parsimony phylogenies will be stored
         self.transitions_dir = os.path.join(outdir, f"transitions_{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM")
         # Where the transition matrices obtained by quantizing transition edges will be stored
-        self.matrices_dir = os.path.join(outdir, f"matrices__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height")
+        cherry_str = "" if edge_or_cherry == "edge" else "_cherry"
+        self.matrices_dir = os.path.join(outdir, f"matrices__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}")
         # Where the co-transitions obtained from the maximum parsimony phylogenies will be stored
         self.co_transitions_dir = os.path.join(
             outdir,
@@ -228,15 +234,15 @@ class Pipeline:
         # Where the co-transition matrices obtained by quantizing transition edges will be stored
         self.co_matrices_dir = os.path.join(
             outdir,
-            f"co_matrices__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height",
+            f"co_matrices__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}",
         )
         self.learnt_rate_matrix_dir = os.path.join(
             outdir,
-            f"Q1__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height__{num_epochs}_epochs"
+            f"Q1__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}__{num_epochs}_epochs"
         )
         self.learnt_co_rate_matrix_dir = os.path.join(
             outdir,
-            f"Q2__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height__{num_epochs}_epochs"
+            f"Q2__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}__{num_epochs}_epochs"
         )
 
     def run(self):
@@ -271,6 +277,7 @@ class Pipeline:
         precomputed_tree_dir = self.precomputed_tree_dir
         precomputed_maximum_parsimony_dir = self.precomputed_maximum_parsimony_dir
         learn_pairwise_model = self.learn_pairwise_model
+        edge_or_cherry = self.edge_or_cherry
 
         # First we need to generate the phylogenies
         t_start = time.time()
@@ -369,6 +376,7 @@ class Pipeline:
             keep_outliers=keep_outliers,
             max_height=max_height,
             max_path_height=max_path_height,
+            edge_or_cherry=edge_or_cherry,
         )
         matrix_generator.run()
         self.time_MatrixGenerator_1 = time.time() - t_start
@@ -427,6 +435,7 @@ class Pipeline:
                 keep_outliers=keep_outliers,
                 max_height=max_height,
                 max_path_height=max_path_height,
+                edge_or_cherry=edge_or_cherry,
             )
             matrix_generator_pairwise.run()
         self.time_MatrixGenerator_2 = time.time() - t_start

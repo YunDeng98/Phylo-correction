@@ -11,6 +11,7 @@ from src.transition_extraction import TransitionExtractor
 from src.co_transition_extraction import CoTransitionExtractor
 from src.matrix_generation import MatrixGenerator
 from src.ratelearn import RateMatrixLearner
+from src.counting import JTT
 
 
 class PipelineContextError(Exception):
@@ -240,9 +241,17 @@ class Pipeline:
             outdir,
             f"Q1__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}__{num_epochs}_epochs"
         )
+        self.learnt_rate_matrix_dir_JTT = os.path.join(
+            outdir,
+            f"Q1_JTT__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}__{num_epochs}_epochs"
+        )
         self.learnt_co_rate_matrix_dir = os.path.join(
             outdir,
             f"Q2__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}__{num_epochs}_epochs"
+        )
+        self.learnt_co_rate_matrix_dir_JTT = os.path.join(
+            outdir,
+            f"Q2_JTT__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}__{num_epochs}_epochs"
         )
 
     def run(self):
@@ -272,7 +281,9 @@ class Pipeline:
         co_transitions_dir = self.co_transitions_dir
         co_matrices_dir = self.co_matrices_dir
         learnt_rate_matrix_dir = self.learnt_rate_matrix_dir
+        learnt_rate_matrix_dir_JTT = self.learnt_rate_matrix_dir_JTT
         learnt_co_rate_matrix_dir = self.learnt_co_rate_matrix_dir
+        learnt_co_rate_matrix_dir_JTT = self.learnt_co_rate_matrix_dir_JTT
         precomputed_contact_dir = self.precomputed_contact_dir
         precomputed_tree_dir = self.precomputed_tree_dir
         precomputed_maximum_parsimony_dir = self.precomputed_maximum_parsimony_dir
@@ -381,7 +392,7 @@ class Pipeline:
         matrix_generator.run()
         self.time_MatrixGenerator_1 = time.time() - t_start
 
-        # Estimate single-site rate matrix Q1
+        # Estimate single-site rate matrix Q1 with MLE (pytorch)
         t_start = time.time()
         single_site_rate_matrix_learner = RateMatrixLearner(
             frequency_matrices=os.path.join(matrices_dir, "matrices_by_quantized_branch_length.txt"),
@@ -400,6 +411,17 @@ class Pipeline:
             do_adam=True,
         )
         self.time_RateMatrixLearner_1 = time.time() - t_start
+
+        # Estimate single-site rate matrix Q1 with JTT counting
+        t_start = time.time()
+        single_site_rate_matrix_learner = JTT(
+            frequency_matrices=os.path.join(matrices_dir, "matrices_by_quantized_branch_length.txt"),
+            output_dir=learnt_rate_matrix_dir_JTT,
+            mask=None,
+            use_cached=use_cached,
+        )
+        single_site_rate_matrix_learner.train()
+        self.time_RateMatrixLearner_JTT_1 = time.time() - t_start
 
         # Generate co-transitions
         t_start = time.time()
@@ -440,7 +462,7 @@ class Pipeline:
             matrix_generator_pairwise.run()
         self.time_MatrixGenerator_2 = time.time() - t_start
 
-        # Estimate pair-of-sites rate matrix Q2
+        # Estimate pair-of-sites rate matrix Q2 with MLE (pytorch)
         t_start = time.time()
         if learn_pairwise_model:
             pair_of_site_rate_matrix_learner = RateMatrixLearner(
@@ -461,6 +483,18 @@ class Pipeline:
             )
         self.time_RateMatrixLearner_2 = time.time() - t_start
 
+        # Estimate pair-of-sites rate matrix Q2 with JTT counting
+        t_start = time.time()
+        if learn_pairwise_model:
+            pair_of_site_rate_matrix_learner = JTT(
+                frequency_matrices=os.path.join(co_matrices_dir, "matrices_by_quantized_branch_length.txt"),
+                output_dir=learnt_co_rate_matrix_dir_JTT,
+                mask=None,
+                use_cached=use_cached,
+            )
+            pair_of_site_rate_matrix_learner.train()
+        self.time_RateMatrixLearner_JTT_2 = time.time() - t_start
+
         self.time_total = (
             self.time_PhylogenyGenerator
             + self.time_ContactGenerator
@@ -468,9 +502,10 @@ class Pipeline:
             + self.time_TransitionExtractor
             + self.time_MatrixGenerator_1
             + self.time_RateMatrixLearner_1
+            + self.time_RateMatrixLearner_JTT_1
             + self.time_CoTransitionExtractor
             + self.time_MatrixGenerator_2
-            + self.time_RateMatrixLearner_2
+            + self.time_RateMatrixLearner_JTT_2
         )
 
     def get_times(self) -> str:
@@ -486,9 +521,11 @@ class Pipeline:
             + f"time_TransitionExtractor = {self.time_TransitionExtractor}\n"
             + f"time_MatrixGenerator_1 = {self.time_MatrixGenerator_1}\n"
             + f"time_RateMatrixLearner_1 = {self.time_RateMatrixLearner_1}\n"
+            + f"time_RateMatrixLearner_JTT_1 = {self.time_RateMatrixLearner_JTT_1}\n"
             + f"time_CoTransitionExtractor = {self.time_CoTransitionExtractor}\n"
             + f"time_MatrixGenerator_2 = {self.time_MatrixGenerator_2}\n"
             + f"time_RateMatrixLearner_2 = {self.time_RateMatrixLearner_2}\n"
+            + f"time_RateMatrixLearner_JTT_2 = {self.time_RateMatrixLearner_JTT_2}\n"
         )
         return res
 
@@ -532,6 +569,22 @@ class Pipeline:
         return np.loadtxt(
             os.path.join(
                 self.learnt_co_rate_matrix_dir,
+                "learned_matrix.txt",
+            )
+        )
+
+    def get_learned_Q1_JTT(self) -> np.array:
+        return np.loadtxt(
+            os.path.join(
+                self.learnt_rate_matrix_dir_JTT,
+                "learned_matrix.txt",
+            )
+        )
+
+    def get_learned_Q2_JTT(self) -> np.array:
+        return np.loadtxt(
+            os.path.join(
+                self.learnt_co_rate_matrix_dir_JTT,
                 "learned_matrix.txt",
             )
         )

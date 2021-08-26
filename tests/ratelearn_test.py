@@ -31,7 +31,7 @@ class TestRateMatrixLearner(unittest.TestCase):
                     do_adam=True,
                 )
 
-    def test_existing_results_are_not_overwrriten(self):
+    def test_existing_results_are_not_overwritten(self):
         """
         We want to make sure we don't corrupt previous runs accidentaly.
         """

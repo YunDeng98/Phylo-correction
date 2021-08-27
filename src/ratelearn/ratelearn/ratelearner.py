@@ -31,7 +31,6 @@ class RateMatrixLearner:
         frequency_matrices_sep="\s",
         rate_matrix_parameterization="pande_reversible",
         use_cached: bool = False,
-        n_process: Optional[int] = None,
     ):
         self.frequency_matrices = frequency_matrices
         self.frequency_matrices_sep = frequency_matrices_sep
@@ -46,7 +45,6 @@ class RateMatrixLearner:
         self.trained_ = False
         self.device = device
         self.use_cached = use_cached
-        self.n_process = n_process
 
     def train(
         self,
@@ -57,10 +55,6 @@ class RateMatrixLearner:
         device = self.device
         output_dir = self.output_dir
         use_cached = self.use_cached
-        n_process = self.n_process
-
-        if n_process is not None:
-            torch.set_num_threads(n_process)
 
         logger = logging.getLogger("phylo_correction.ratelearner")
 

@@ -416,7 +416,6 @@ class Pipeline:
                 rate_matrix_parameterization="pande_reversible",
                 device=device,
                 use_cached=use_cached,
-                n_process=n_process,
             )
             single_site_rate_matrix_learner.train(
                 lr=1e-1,
@@ -489,7 +488,6 @@ class Pipeline:
                     rate_matrix_parameterization="pande_reversible",
                     device=device,
                     use_cached=use_cached,
-                    n_process=n_process,
                 )
                 pair_of_site_rate_matrix_learner.train(
                     lr=1e-1,

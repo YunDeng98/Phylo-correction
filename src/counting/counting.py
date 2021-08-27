@@ -19,15 +19,17 @@ class JTT:
         self,
         frequency_matrices: str,
         output_dir: str,
-        mask: str = None,
+        mask: str = None,  # TODO: Currently unused, but easy to use.
         frequency_matrices_sep="\s",
-        use_cached: bool = False,
+        use_cached: bool = False,  # TODO: Currently not used, since the method is so fast.
+        ipw: bool = False,
     ):
         self.frequency_matrices = frequency_matrices
         self.output_dir = output_dir
         self.mask = mask
         self.frequency_matrices_sep = frequency_matrices_sep
         self.use_cached = use_cached
+        self.ipw = ipw
 
     def train(
         self,
@@ -36,6 +38,7 @@ class JTT:
         output_dir = self.output_dir
         mask = self.mask
         use_cached = self.use_cached
+        ipw = self.ipw
 
         logger = logging.getLogger("phylo_correction.counting")
 
@@ -60,19 +63,34 @@ class JTT:
 
         (qtimes, cmats), n_states = self.quantized_data, self.n_states
 
-        # Compute frequency matrix ignoring branch lengths
-        F = cmats.sum(axis=0)
         # Coalesce transitions a->b and b->a together
-        F = (F + np.transpose(F)) / 2.0
-        # Compute mutabilities
-        M = F.sum(axis=1)
-        # JTT estimator
-        res = F / (M[:, None] + 1e-16)
-        np.fill_diagonal(res, -((1.0 - np.eye(n_states)) * res).sum(axis=1))
-        # Some guess of the scaling constant;
-        # doesn't matter if we normalize later to mutation rate 1.
-        lam = 1.0 / (np.median(qtimes) + 1e-16)
-        res = res * lam
+        n_time_buckets = cmats.shape[0]
+        for i in range(n_time_buckets):
+            cmats[i] = (cmats[i] + np.transpose(cmats[i])) / 2.0
+
+        ##### Compute CTPs #####
+        # Compute total frequency matrix (ignoring branch lengths)
+        F = cmats.sum(axis=0)
+        # Zero the diagonal such that summing over rows will produce the number of transitions from each state.
+        F_off = F * (1.0 - np.eye(n_states))
+        # Compute CTPs
+        CTPs = F_off / (F_off.sum(axis=1)[:, None] + 1e-16)
+
+        ###### Compute mutabilities #####
+        if ipw:
+            M = np.zeros(shape=(n_states))
+            for i in range(n_time_buckets):
+                qtime = qtimes[i]
+                cmat = cmats[i]
+                cmat_off = cmat * (1.0 - np.eye(n_states))
+                M += 1.0 / qtime * cmat_off.sum(axis=1)
+            M /= (F.sum(axis=1) + 1e-16)
+        else:
+            M = 1.0 / np.median(qtimes) * F_off.sum(axis=1) / (F.sum(axis=1) + 1e-16)
+
+        ##### JTT estimator #####
+        res = np.diag(M) @ CTPs
+        np.fill_diagonal(res, -M)
 
         learned_matrix_path = os.path.join(self.output_dir, "learned_matrix.txt")
         np.savetxt(learned_matrix_path, res)

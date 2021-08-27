@@ -255,7 +255,7 @@ class Pipeline:
         )
         self.learnt_rate_matrix_dir_JTT = os.path.join(
             outdir,
-            f"Q1_JTT__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}__{num_epochs}_epochs"
+            f"Q1_JTT__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}"
         )
         self.learnt_co_rate_matrix_dir = os.path.join(
             outdir,
@@ -263,7 +263,7 @@ class Pipeline:
         )
         self.learnt_co_rate_matrix_dir_JTT = os.path.join(
             outdir,
-            f"Q2_JTT__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}__{num_epochs}_epochs"
+            f"Q2_JTT__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}"
         )
 
     def run(self):

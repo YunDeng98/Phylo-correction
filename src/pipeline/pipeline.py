@@ -417,26 +417,6 @@ class Pipeline:
         matrix_generator.run()
         self.time_MatrixGenerator_1 = time.time() - t_start
 
-        # Estimate single-site rate matrix Q1 with MLE (pytorch)
-        t_start = time.time()
-        if "MLE" in method:
-            single_site_rate_matrix_learner = RateMatrixLearner(
-                frequency_matrices=os.path.join(matrices_dir, "matrices_by_quantized_branch_length.txt"),
-                output_dir=learnt_rate_matrix_dir,
-                stationnary_distribution=None,
-                mask=None,
-                # frequency_matrices_sep=",",
-                rate_matrix_parameterization="pande_reversible",
-                device=device,
-                use_cached=use_cached,
-            )
-            single_site_rate_matrix_learner.train(
-                lr=1e-1,
-                num_epochs=num_epochs,
-                do_adam=True,
-            )
-        self.time_RateMatrixLearner_1 = time.time() - t_start
-
         # Estimate single-site rate matrix Q1 with JTT counting
         t_start = time.time()
         if "JTT" in method:
@@ -461,6 +441,26 @@ class Pipeline:
             )
             single_site_rate_matrix_learner.train()
         self.time_RateMatrixLearner_JTT_IPW_1 = time.time() - t_start
+
+        # Estimate single-site rate matrix Q1 with MLE (pytorch)
+        t_start = time.time()
+        if "MLE" in method:
+            single_site_rate_matrix_learner = RateMatrixLearner(
+                frequency_matrices=os.path.join(matrices_dir, "matrices_by_quantized_branch_length.txt"),
+                output_dir=learnt_rate_matrix_dir,
+                stationnary_distribution=None,
+                mask=None,
+                # frequency_matrices_sep=",",
+                rate_matrix_parameterization="pande_reversible",
+                device=device,
+                use_cached=use_cached,
+            )
+            single_site_rate_matrix_learner.train(
+                lr=1e-1,
+                num_epochs=num_epochs,
+                do_adam=True,
+            )
+        self.time_RateMatrixLearner_1 = time.time() - t_start
 
         # Generate co-transitions
         t_start = time.time()
@@ -501,27 +501,6 @@ class Pipeline:
             matrix_generator_pairwise.run()
         self.time_MatrixGenerator_2 = time.time() - t_start
 
-        # Estimate pair-of-sites rate matrix Q2 with MLE (pytorch)
-        t_start = time.time()
-        if learn_pairwise_model:
-            if "MLE" in method:
-                pair_of_site_rate_matrix_learner = RateMatrixLearner(
-                    frequency_matrices=os.path.join(co_matrices_dir, "matrices_by_quantized_branch_length.txt"),
-                    output_dir=learnt_co_rate_matrix_dir,
-                    stationnary_distribution=None,
-                    mask=None,  # TODO
-                    # frequency_matrices_sep=",",
-                    rate_matrix_parameterization="pande_reversible",
-                    device=device,
-                    use_cached=use_cached,
-                )
-                pair_of_site_rate_matrix_learner.train(
-                    lr=1e-1,
-                    num_epochs=num_epochs,
-                    do_adam=True,
-                )
-        self.time_RateMatrixLearner_2 = time.time() - t_start
-
         # Estimate pair-of-sites rate matrix Q2 with JTT counting
         t_start = time.time()
         if learn_pairwise_model:
@@ -548,6 +527,27 @@ class Pipeline:
                 )
                 pair_of_site_rate_matrix_learner.train()
         self.time_RateMatrixLearner_JTT_IPW_2 = time.time() - t_start
+
+        # Estimate pair-of-sites rate matrix Q2 with MLE (pytorch)
+        t_start = time.time()
+        if learn_pairwise_model:
+            if "MLE" in method:
+                pair_of_site_rate_matrix_learner = RateMatrixLearner(
+                    frequency_matrices=os.path.join(co_matrices_dir, "matrices_by_quantized_branch_length.txt"),
+                    output_dir=learnt_co_rate_matrix_dir,
+                    stationnary_distribution=None,
+                    mask=None,  # TODO
+                    # frequency_matrices_sep=",",
+                    rate_matrix_parameterization="pande_reversible",
+                    device=device,
+                    use_cached=use_cached,
+                )
+                pair_of_site_rate_matrix_learner.train(
+                    lr=1e-1,
+                    num_epochs=num_epochs,
+                    do_adam=True,
+                )
+        self.time_RateMatrixLearner_2 = time.time() - t_start
 
         self.time_total = (
             self.time_PhylogenyGenerator

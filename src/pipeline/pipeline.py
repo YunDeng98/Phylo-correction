@@ -520,6 +520,7 @@ class Pipeline:
             + self.time_RateMatrixLearner_JTT_1
             + self.time_CoTransitionExtractor
             + self.time_MatrixGenerator_2
+            + self.time_RateMatrixLearner_2
             + self.time_RateMatrixLearner_JTT_2
         )
 

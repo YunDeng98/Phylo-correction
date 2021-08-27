@@ -161,6 +161,7 @@ class Pipeline:
         method: Union[str, List[str]] = "MLE",
         learn_pairwise_model: float = False,
     ):
+        method = method[:]
         if type(method) is str:
             method = [method]
         # Baselines are cheap so run anyway

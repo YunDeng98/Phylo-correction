@@ -118,8 +118,8 @@ class Pipeline:
             cherry transitions will be used instead. Note that "cherry"
             transitions do not depend on the maximum parsimony reconstruction!
         method: rate matrix estimation method, or list of rate matrix estimation
-            methods. Possibilities: "MLE", "JTT". (Note: cheap baseline will
-            be run anyway.)
+            methods. Possibilities: "MLE", "JTT", "JTT-IPW".
+            (Note: cheap baseline will be run anyway.)
 
     Attributes:
         tree_dir: Where the estimated phylogenies lie
@@ -167,6 +167,8 @@ class Pipeline:
         # Baselines are cheap so run anyway
         if "JTT" not in method:
             method.append("JTT")
+        if "JTT-IPW" not in method:
+            method.append("JTT-IPW")
 
         # Check input validity
         if precomputed_tree_dir is not None or precomputed_maximum_parsimony_dir is not None:
@@ -257,6 +259,10 @@ class Pipeline:
             outdir,
             f"Q1_JTT__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}"
         )
+        self.learnt_rate_matrix_dir_JTT_IPW = os.path.join(
+            outdir,
+            f"Q1_JTT-IPW__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}"
+        )
         self.learnt_co_rate_matrix_dir = os.path.join(
             outdir,
             f"Q2__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}__{num_epochs}_epochs"
@@ -264,6 +270,10 @@ class Pipeline:
         self.learnt_co_rate_matrix_dir_JTT = os.path.join(
             outdir,
             f"Q2_JTT__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}"
+        )
+        self.learnt_co_rate_matrix_dir_JTT_IPW = os.path.join(
+            outdir,
+            f"Q2_JTT-IPW__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}"
         )
 
     def run(self):
@@ -294,8 +304,10 @@ class Pipeline:
         co_matrices_dir = self.co_matrices_dir
         learnt_rate_matrix_dir = self.learnt_rate_matrix_dir
         learnt_rate_matrix_dir_JTT = self.learnt_rate_matrix_dir_JTT
+        learnt_rate_matrix_dir_JTT_IPW = self.learnt_rate_matrix_dir_JTT_IPW
         learnt_co_rate_matrix_dir = self.learnt_co_rate_matrix_dir
         learnt_co_rate_matrix_dir_JTT = self.learnt_co_rate_matrix_dir_JTT
+        learnt_co_rate_matrix_dir_JTT_IPW = self.learnt_co_rate_matrix_dir_JTT_IPW
         precomputed_contact_dir = self.precomputed_contact_dir
         precomputed_tree_dir = self.precomputed_tree_dir
         precomputed_maximum_parsimony_dir = self.precomputed_maximum_parsimony_dir
@@ -437,6 +449,19 @@ class Pipeline:
             single_site_rate_matrix_learner.train()
         self.time_RateMatrixLearner_JTT_1 = time.time() - t_start
 
+        # Estimate single-site rate matrix Q1 with JTT-IPW counting
+        t_start = time.time()
+        if "JTT-IPW" in method:
+            single_site_rate_matrix_learner = JTT(
+                frequency_matrices=os.path.join(matrices_dir, "matrices_by_quantized_branch_length.txt"),
+                output_dir=learnt_rate_matrix_dir_JTT_IPW,
+                mask=None,
+                use_cached=use_cached,
+                ipw=True,
+            )
+            single_site_rate_matrix_learner.train()
+        self.time_RateMatrixLearner_JTT_IPW_1 = time.time() - t_start
+
         # Generate co-transitions
         t_start = time.time()
         if learn_pairwise_model:
@@ -484,7 +509,7 @@ class Pipeline:
                     frequency_matrices=os.path.join(co_matrices_dir, "matrices_by_quantized_branch_length.txt"),
                     output_dir=learnt_co_rate_matrix_dir,
                     stationnary_distribution=None,
-                    mask=None,
+                    mask=None,  # TODO
                     # frequency_matrices_sep=",",
                     rate_matrix_parameterization="pande_reversible",
                     device=device,
@@ -504,11 +529,25 @@ class Pipeline:
                 pair_of_site_rate_matrix_learner = JTT(
                     frequency_matrices=os.path.join(co_matrices_dir, "matrices_by_quantized_branch_length.txt"),
                     output_dir=learnt_co_rate_matrix_dir_JTT,
-                    mask=None,
+                    mask=None,  # TODO
                     use_cached=use_cached,
                 )
                 pair_of_site_rate_matrix_learner.train()
         self.time_RateMatrixLearner_JTT_2 = time.time() - t_start
+
+        # Estimate pair-of-sites rate matrix Q2 with JTT-IPW counting
+        t_start = time.time()
+        if learn_pairwise_model:
+            if "JTT-IPW" in method:
+                pair_of_site_rate_matrix_learner = JTT(
+                    frequency_matrices=os.path.join(co_matrices_dir, "matrices_by_quantized_branch_length.txt"),
+                    output_dir=learnt_co_rate_matrix_dir_JTT_IPW,
+                    mask=None,  # TODO
+                    use_cached=use_cached,
+                    ipw=True,
+                )
+                pair_of_site_rate_matrix_learner.train()
+        self.time_RateMatrixLearner_JTT_IPW_2 = time.time() - t_start
 
         self.time_total = (
             self.time_PhylogenyGenerator
@@ -518,10 +557,12 @@ class Pipeline:
             + self.time_MatrixGenerator_1
             + self.time_RateMatrixLearner_1
             + self.time_RateMatrixLearner_JTT_1
+            + self.time_RateMatrixLearner_JTT_IPW_1
             + self.time_CoTransitionExtractor
             + self.time_MatrixGenerator_2
             + self.time_RateMatrixLearner_2
             + self.time_RateMatrixLearner_JTT_2
+            + self.time_RateMatrixLearner_JTT_IPW_2
         )
 
     def get_times(self) -> str:
@@ -538,10 +579,12 @@ class Pipeline:
             + f"time_MatrixGenerator_1 = {self.time_MatrixGenerator_1}\n"
             + f"time_RateMatrixLearner_1 = {self.time_RateMatrixLearner_1}\n"
             + f"time_RateMatrixLearner_JTT_1 = {self.time_RateMatrixLearner_JTT_1}\n"
+            + f"time_RateMatrixLearner_JTT_IPW_1 = {self.time_RateMatrixLearner_JTT_IPW_1}\n"
             + f"time_CoTransitionExtractor = {self.time_CoTransitionExtractor}\n"
             + f"time_MatrixGenerator_2 = {self.time_MatrixGenerator_2}\n"
             + f"time_RateMatrixLearner_2 = {self.time_RateMatrixLearner_2}\n"
             + f"time_RateMatrixLearner_JTT_2 = {self.time_RateMatrixLearner_JTT_2}\n"
+            + f"time_RateMatrixLearner_JTT_IPW_2 = {self.time_RateMatrixLearner_JTT_IPW_2}\n"
         )
         return res
 
@@ -561,6 +604,8 @@ class Pipeline:
             f"n_steps = {self.n_steps}\n" \
             f"max_height = {self.max_height}\n" \
             f"max_path_height = {self.max_path_height}\n" \
+            f"edge_or_cherry = {self.edge_or_cherry}\n" \
+            f"method = {self.method}\n" \
             f"keep_outliers = {self.keep_outliers}\n" \
             f"n_process = {self.n_process}\n" \
             f"expected_number_of_MSAs = {self.expected_number_of_MSAs}\n" \
@@ -601,6 +646,22 @@ class Pipeline:
         return np.loadtxt(
             os.path.join(
                 self.learnt_co_rate_matrix_dir_JTT,
+                "learned_matrix.txt",
+            )
+        )
+
+    def get_learned_Q1_JTT_IPW(self) -> np.array:
+        return np.loadtxt(
+            os.path.join(
+                self.learnt_rate_matrix_dir_JTT_IPW,
+                "learned_matrix.txt",
+            )
+        )
+
+    def get_learned_Q2_JTT_IPW(self) -> np.array:
+        return np.loadtxt(
+            os.path.join(
+                self.learnt_co_rate_matrix_dir_JTT_IPW,
                 "learned_matrix.txt",
             )
         )

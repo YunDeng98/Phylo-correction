@@ -9,6 +9,16 @@ from typing import Optional
 
 from . import RateMatrix, train_quantization
 
+import sys
+sys.path.append("../")
+import Phylo_util
+
+
+def normalized(Q):
+    pi = Phylo_util.solve_stationery_dist(Q)
+    mutation_rate = pi @ -np.diag(Q)
+    return Q / mutation_rate
+
 
 class RateMatrixLearner:
     def __init__(
@@ -21,7 +31,7 @@ class RateMatrixLearner:
         frequency_matrices_sep="\s",
         rate_matrix_parameterization="pande_reversible",
         use_cached: bool = False,
-        n_process: Optional[int] = None,
+        initialization: Optional[np.array] = None,
     ):
         self.frequency_matrices = frequency_matrices
         self.frequency_matrices_sep = frequency_matrices_sep
@@ -36,7 +46,7 @@ class RateMatrixLearner:
         self.trained_ = False
         self.device = device
         self.use_cached = use_cached
-        self.n_process = n_process
+        self.initialization = initialization
 
     def train(
         self,
@@ -47,10 +57,7 @@ class RateMatrixLearner:
         device = self.device
         output_dir = self.output_dir
         use_cached = self.use_cached
-        n_process = self.n_process
-
-        if n_process is not None:
-            torch.set_num_threads(n_process)
+        initialization = self.initialization
 
         logger = logging.getLogger("phylo_correction.ratelearner")
 
@@ -88,6 +95,7 @@ class RateMatrixLearner:
             mode=self.rate_matrix_parameterization,
             pi=self.pi,
             pi_requires_grad=pi_requires_grad,
+            initialization=initialization,
         ).to(device=device)
 
         self.lr = lr
@@ -139,11 +147,13 @@ class RateMatrixLearner:
 
     def process_results(self):
         learned_matrix_path = os.path.join(self.output_dir, "learned_matrix.txt")
-        np.savetxt(
-            learned_matrix_path,
-            self.Qfinal.detach().cpu().numpy(),
-        )
+        Q = self.Qfinal.detach().cpu().numpy()
+        np.savetxt(learned_matrix_path, Q)
         os.system(f"chmod 555 {learned_matrix_path}")
+
+        normalized_learned_matrix_path = os.path.join(self.output_dir, "learned_matrix_normalized.txt")
+        np.savetxt(normalized_learned_matrix_path, normalized(Q))
+        os.system(f"chmod 555 {normalized_learned_matrix_path}")
 
         df_res_filepath = os.path.join(self.output_dir, "training_df.pickle")
         self.df_res.to_pickle(df_res_filepath)

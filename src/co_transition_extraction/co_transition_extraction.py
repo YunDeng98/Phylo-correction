@@ -21,12 +21,12 @@ sys.path.append("../")
 
 def get_transitions(
     tree: Tree, sequences: Dict[str, str], contact_matrix: np.array
-) -> List[Tuple[str, str, float, float, int, str, str, int, int]]:
+) -> List[Tuple[str, str, float, float, int, str, str, int, int, str]]:
     # The root's name was not written out by ete3 in the maximum_parsimony script,
     # so we name it ourselves.
     assert tree.name == ""
     tree.name = "internal-1"
-    res = []  # type: List[Tuple[str, str, float, float, int, str, str, int, int]]
+    res = []  # type: List[Tuple[str, str, float, float, int, str, str, int, int, str]]
     height = {}  # type: Dict[str, float]
     path_height = {}  # type: Dict[str, int]
 
@@ -49,6 +49,41 @@ def get_transitions(
                     u.name,
                     site1_id,
                     site2_id,
+                    "edge",
+                )
+            )
+        # Add cherry at node v
+        if path_height[v.name] == 1:
+            children = v.get_children()
+            assert(len(children) == 2)
+            u1, u2 = children[0], children[1]
+            assert(path_height[u1.name] == 0 and path_height[u2.name] == 0)
+            res.append(
+                (
+                    sequences[u1.name][site1_id] + sequences[u1.name][site2_id],
+                    sequences[u2.name][site1_id] + sequences[u2.name][site2_id],
+                    u1.dist + u2.dist,
+                    height[v.name],
+                    path_height[v.name],
+                    u1.name,
+                    u2.name,
+                    site1_id,
+                    site2_id,
+                    "cherry",
+                )
+            )
+            res.append(
+                (
+                    sequences[u2.name][site1_id] + sequences[u2.name][site2_id],
+                    sequences[u1.name][site1_id] + sequences[u1.name][site2_id],
+                    u2.dist + u1.dist,
+                    height[v.name],
+                    path_height[v.name],
+                    u2.name,
+                    u1.name,
+                    site1_id,
+                    site2_id,
+                    "cherry",
                 )
             )
 
@@ -110,7 +145,7 @@ def map_func(args: List) -> None:
     contact_matrix = np.loadtxt(os.path.join(contact_dir, protein_family_name + ".cm"))
 
     transitions = get_transitions(tree, sequences, contact_matrix)
-    res = "starting_state,ending_state,length,height,path_height,starting_node,ending_node,site1_id,site2_id\n"
+    res = "starting_state,ending_state,length,height,path_height,starting_node,ending_node,site1_id,site2_id,edge_or_cherry\n"
     for transition in transitions:
         res += (
             transition[0]
@@ -130,6 +165,8 @@ def map_func(args: List) -> None:
             + str(transition[7])
             + ","
             + str(transition[8])
+            + ","
+            + str(transition[9])
             + "\n"
         )
 

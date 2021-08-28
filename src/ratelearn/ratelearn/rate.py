@@ -1,9 +1,15 @@
 import torch
 import torch.nn as nn
+from typing import Optional
+import sys
+import numpy as np
+
+sys.path.append("../")
+import Phylo_util
 
 
 class RateMatrix(nn.Module):
-    def __init__(self, num_states, mode, pi=None, pi_requires_grad=False):
+    def __init__(self, num_states, mode, pi=None, pi_requires_grad=False, initialization: Optional[np.array]=None):
         super().__init__()
         if pi is not None:
             assert pi.ndim == 1
@@ -20,6 +26,31 @@ class RateMatrix(nn.Module):
                 0.01 * torch.randn(nparams_half, requires_grad=True)
             )
         self.activation = nn.Softplus()
+
+        if initialization is not None and mode == 'pande_reversible':
+            # Initialize upper_diag and pi.
+            # Need to decompose the initialization into pande_reversible
+            # components: 1/sqrt(pi) * S * sqrt(pi)
+            # Need to be careful about inverting the activation functions.
+            pi = Phylo_util.solve_stationery_dist(initialization)
+            if np.any(np.abs(pi) < 1e-8):
+                raise ValueError("Stationary distribution of initialization is degenerate.")
+            # TODO: Check the masking structure precondition on initialization too, and raise.
+            pi_inv_mat = np.diag(1.0 / np.sqrt(pi))
+            pi_mat = np.diag(np.sqrt(pi))
+            assert(pi_inv_mat.shape == (num_states, num_states))
+            assert(pi_mat.shape == (num_states, num_states))
+            S = pi_mat @ initialization @ pi_inv_mat
+            np.testing.assert_almost_equal(S, np.transpose(S))
+            # TODO: Check the masking too
+            vals = [np.log(np.exp(S[i, j]) - 1) for i in range(num_states) for j in range(i + 1, num_states)]
+            self._pi.data.copy_(torch.tensor(np.log(pi)))
+            self.upper_diag.data.copy_(torch.tensor(vals))
+            print(self._pi)
+            print(self.upper_diag)
+            np.testing.assert_almost_equal(self().detach().numpy(), initialization, decimal=3)
+        elif initialization:
+            raise ValueError(f"Parameter initialization not implemented for mode {mode}")
 
     # @property
     # def pi(self):
@@ -79,7 +110,7 @@ class RateMatrix(nn.Module):
             )
             rmat_off[triu_indices[0], triu_indices[1]] = self.activation(self.upper_diag)
             rmat_off = rmat_off + rmat_off.T
-            
+
             pi = nn.Softmax(dim=-1)(self._pi)
             pi_mat = torch.diag(pi.sqrt())
             pi_inv_mat = torch.diag(pi.sqrt()**(-1))
@@ -98,7 +129,7 @@ class RateMatrix(nn.Module):
             rmat_off[tril_indices[0], tril_indices[1]] = self.activation(
                 self.lower_diag
             )
-        
+
             pi = nn.Softmax(-1)(self._pi)
             pi_mat = torch.diag(pi.sqrt())
             pi_inv_mat = torch.diag(pi.sqrt()**(-1))

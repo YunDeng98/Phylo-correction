@@ -22,12 +22,12 @@ sys.path.append("../")
 def get_transitions(
     tree: Tree,
     sequences: Dict[str, str],
-) -> List[Tuple[str, str, float, float, int, str, str, int]]:
+) -> List[Tuple[str, str, float, float, int, str, str, int, str]]:
     # The root's name was not written out by ete3 in the maximum_parsimony script,
     # so we name it ourselves.
     assert tree.name == ""
     tree.name = "internal-1"
-    res = []  # type: List[Tuple[str, str, float, float, int, str, str, int]]
+    res = []  # type: List[Tuple[str, str, float, float, int, str, str, int, str]]
     height = {}  # type: Dict[str, float]
     path_height = {}  # type: Dict[str, int]
 
@@ -49,8 +49,42 @@ def get_transitions(
                     v.name,
                     u.name,
                     site_id,
+                    "edge",
                 )
             )
+        # Add cherry at node v
+        if path_height[v.name] == 1:
+            children = v.get_children()
+            assert(len(children) == 2)
+            u1, u2 = children[0], children[1]
+            assert(path_height[u1.name] == 0 and path_height[u2.name] == 0)
+            res.append(
+                (
+                    sequences[u1.name][site_id],
+                    sequences[u2.name][site_id],
+                    u1.dist + u2.dist,
+                    height[v.name],
+                    path_height[v.name],
+                    u1.name,
+                    u2.name,
+                    site_id,
+                    "cherry",
+                )
+            )
+            res.append(
+                (
+                    sequences[u2.name][site_id],
+                    sequences[u1.name][site_id],
+                    u2.dist + u1.dist,
+                    height[v.name],
+                    path_height[v.name],
+                    u2.name,
+                    u1.name,
+                    site_id,
+                    "cherry",
+                )
+            )
+
 
     L = len(sequences["internal-1"])
     for site_id in range(L):
@@ -94,7 +128,7 @@ def map_func(args: List) -> None:
                 sequences[line_contents[0]] = line_contents[1].rstrip("\n")
 
     transitions = get_transitions(tree, sequences)
-    res = "starting_state,ending_state,length,height,path_height,starting_node,ending_node,site_id\n"
+    res = "starting_state,ending_state,length,height,path_height,starting_node,ending_node,site_id,edge_or_cherry\n"
     for transition in transitions:
         res += (
             transition[0]
@@ -112,6 +146,8 @@ def map_func(args: List) -> None:
             + str(transition[6])
             + ","
             + str(transition[7])
+            + ","
+            + str(transition[8])
             + "\n"
         )
 

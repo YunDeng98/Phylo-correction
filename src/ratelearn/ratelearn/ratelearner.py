@@ -87,7 +87,8 @@ class RateMatrixLearner:
             ).values
         else:
             mask_mat = np.ones((self.n_states, self.n_states))
-        self.mask_mat = torch.tensor(mask_mat)
+        mask_mat = torch.tensor(mask_mat, dtype=torch.float)
+        self.mask_mat = mask_mat
 
         pi_requires_grad = pi_path is None
         self.mat_module = RateMatrix(
@@ -96,6 +97,7 @@ class RateMatrixLearner:
             pi=self.pi,
             pi_requires_grad=pi_requires_grad,
             initialization=initialization,
+            mask=mask_mat,
         ).to(device=device)
 
         self.lr = lr

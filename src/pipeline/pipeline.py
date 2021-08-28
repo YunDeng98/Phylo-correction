@@ -120,6 +120,8 @@ class Pipeline:
         method: rate matrix estimation method, or list of rate matrix estimation
             methods. Possibilities: "MLE", "JTT", "JTT-IPW".
             (Note: cheap baseline will be run anyway.)
+        init_jtt_ipw: if to initialize the MLE optimizer with the JTT-IPW
+            estimate.
 
     Attributes:
         tree_dir: Where the estimated phylogenies lie
@@ -160,6 +162,7 @@ class Pipeline:
         edge_or_cherry: str = "edge",
         method: Union[str, List[str]] = "MLE",
         learn_pairwise_model: float = False,
+        init_jtt_ipw: bool = False,
     ):
         method = method[:]
         if type(method) is str:
@@ -228,6 +231,7 @@ class Pipeline:
         self.learn_pairwise_model = learn_pairwise_model
         self.edge_or_cherry = edge_or_cherry
         self.method = method
+        self.init_jtt_ipw = init_jtt_ipw
 
         # Output data directories
         # Where the phylogenies will be stored
@@ -251,9 +255,10 @@ class Pipeline:
             outdir,
             f"co_matrices__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}",
         )
+        str_init_jtt_ipw = "_init-JTT-IPW" if init_jtt_ipw else ""
         self.learnt_rate_matrix_dir = os.path.join(
             outdir,
-            f"Q1__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}__{num_epochs}_epochs"
+            f"Q1__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}__{num_epochs}_epochs{str_init_jtt_ipw}"
         )
         self.learnt_rate_matrix_dir_JTT = os.path.join(
             outdir,
@@ -265,7 +270,7 @@ class Pipeline:
         )
         self.learnt_co_rate_matrix_dir = os.path.join(
             outdir,
-            f"Q2__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}__{num_epochs}_epochs"
+            f"Q2__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}__{num_epochs}_epochs{str_init_jtt_ipw}"
         )
         self.learnt_co_rate_matrix_dir_JTT = os.path.join(
             outdir,
@@ -314,6 +319,7 @@ class Pipeline:
         learn_pairwise_model = self.learn_pairwise_model
         edge_or_cherry = self.edge_or_cherry
         method = self.method
+        init_jtt_ipw = self.init_jtt_ipw
 
         # First we need to generate the phylogenies
         t_start = time.time()
@@ -454,6 +460,7 @@ class Pipeline:
                 rate_matrix_parameterization="pande_reversible",
                 device=device,
                 use_cached=use_cached,
+                initialization=self.get_learned_Q1_JTT_IPW() if init_jtt_ipw else None,
             )
             single_site_rate_matrix_learner.train(
                 lr=1e-1,
@@ -541,6 +548,7 @@ class Pipeline:
                     rate_matrix_parameterization="pande_reversible",
                     device=device,
                     use_cached=use_cached,
+                    initialization=self.get_learned_Q2_JTT_IPW() if init_jtt_ipw else None,
                 )
                 pair_of_site_rate_matrix_learner.train(
                     lr=1e-1,

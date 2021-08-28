@@ -31,6 +31,7 @@ class RateMatrixLearner:
         frequency_matrices_sep="\s",
         rate_matrix_parameterization="pande_reversible",
         use_cached: bool = False,
+        initialization: Optional[np.array] = None,
     ):
         self.frequency_matrices = frequency_matrices
         self.frequency_matrices_sep = frequency_matrices_sep
@@ -45,6 +46,7 @@ class RateMatrixLearner:
         self.trained_ = False
         self.device = device
         self.use_cached = use_cached
+        self.initialization = initialization
 
     def train(
         self,
@@ -55,6 +57,7 @@ class RateMatrixLearner:
         device = self.device
         output_dir = self.output_dir
         use_cached = self.use_cached
+        initialization = self.initialization
 
         logger = logging.getLogger("phylo_correction.ratelearner")
 
@@ -92,6 +95,7 @@ class RateMatrixLearner:
             mode=self.rate_matrix_parameterization,
             pi=self.pi,
             pi_requires_grad=pi_requires_grad,
+            initialization=initialization,
         ).to(device=device)
 
         self.lr = lr

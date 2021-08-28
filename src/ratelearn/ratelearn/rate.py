@@ -47,8 +47,6 @@ class RateMatrix(nn.Module):
             vals = [np.log(np.exp(S[i, j]) - 1) for i in range(num_states) for j in range(i + 1, num_states)]
             self._pi.data.copy_(torch.tensor(np.log(pi)))
             self.upper_diag.data.copy_(torch.tensor(vals))
-            print(self._pi)
-            print(self.upper_diag)
             np.testing.assert_almost_equal(self().detach().numpy(), initialization, decimal=3)
         elif initialization:
             raise ValueError(f"Parameter initialization not implemented for mode {mode}")

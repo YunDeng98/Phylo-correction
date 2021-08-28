@@ -1,6 +1,7 @@
 import os
 import unittest
 import tempfile
+import numpy as np
 # from filecmp import dircmp
 # from parameterized import parameterized
 
@@ -24,6 +25,7 @@ class TestRateMatrixLearner(unittest.TestCase):
                     rate_matrix_parameterization="pande_reversible",
                     device='cpu',
                     use_cached=use_cached,
+                    initialization=np.loadtxt("test_input_data/3x3_pande_reversible_initialization.txt"),
                 )
                 rate_matrix_learner.train(
                     lr=1e-1,

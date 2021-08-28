@@ -116,6 +116,7 @@ class EndToEndSimulator:
             max_path_height=pipeline.max_path_height,
             edge_or_cherry=pipeline.edge_or_cherry,
             method=pipeline.method,
+            init_jtt_ipw=pipeline.init_jtt_ipw,
         )
 
         self.pipeline_on_simulated_data_from_trees_wo_ancestral_states = Pipeline(
@@ -143,6 +144,7 @@ class EndToEndSimulator:
             max_path_height=pipeline.max_path_height,
             edge_or_cherry=pipeline.edge_or_cherry,
             method=pipeline.method,
+            init_jtt_ipw=pipeline.init_jtt_ipw,
         )
 
         self.pipeline_on_simulated_data_from_trees_w_ancestral_states = Pipeline(
@@ -170,6 +172,7 @@ class EndToEndSimulator:
             max_path_height=pipeline.max_path_height,
             edge_or_cherry=pipeline.edge_or_cherry,
             method=pipeline.method,
+            init_jtt_ipw=pipeline.init_jtt_ipw,
         )
 
     def run(self):

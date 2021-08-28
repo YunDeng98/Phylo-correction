@@ -320,6 +320,10 @@ class Pipeline:
         edge_or_cherry = self.edge_or_cherry
         method = self.method
         init_jtt_ipw = self.init_jtt_ipw
+        path_mask_Q2 = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            "../../input_data/synthetic_rate_matrices/mask_Q2.txt"
+        )
 
         # First we need to generate the phylogenies
         t_start = time.time()
@@ -515,7 +519,7 @@ class Pipeline:
                 pair_of_site_rate_matrix_learner = JTT(
                     frequency_matrices=os.path.join(co_matrices_dir, "matrices_by_quantized_branch_length.txt"),
                     output_dir=learnt_co_rate_matrix_dir_JTT,
-                    mask=None,  # TODO
+                    mask=path_mask_Q2,
                     use_cached=use_cached,
                 )
                 pair_of_site_rate_matrix_learner.train()
@@ -528,7 +532,7 @@ class Pipeline:
                 pair_of_site_rate_matrix_learner = JTT(
                     frequency_matrices=os.path.join(co_matrices_dir, "matrices_by_quantized_branch_length.txt"),
                     output_dir=learnt_co_rate_matrix_dir_JTT_IPW,
-                    mask=None,  # TODO
+                    mask=path_mask_Q2,
                     use_cached=use_cached,
                     ipw=True,
                 )
@@ -543,7 +547,7 @@ class Pipeline:
                     frequency_matrices=os.path.join(co_matrices_dir, "matrices_by_quantized_branch_length.txt"),
                     output_dir=learnt_co_rate_matrix_dir,
                     stationnary_distribution=None,
-                    mask=None,  # TODO
+                    mask=path_mask_Q2,
                     # frequency_matrices_sep=",",
                     rate_matrix_parameterization="pande_reversible",
                     device=device,

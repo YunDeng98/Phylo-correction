@@ -19,7 +19,7 @@ class JTT:
         self,
         frequency_matrices: str,
         output_dir: str,
-        mask: str = None,  # TODO: Currently unused, but easy to use.
+        mask: str = None,
         frequency_matrices_sep="\s",
         use_cached: bool = False,  # TODO: Currently not used, since the method is so fast.
         ipw: bool = False,
@@ -67,6 +67,9 @@ class JTT:
         n_time_buckets = cmats.shape[0]
         for i in range(n_time_buckets):
             cmats[i] = (cmats[i] + np.transpose(cmats[i])) / 2.0
+        # Apply masking
+        for i in range(n_time_buckets):
+            cmats[i] = cmats[i] * mask_mat
 
         ##### Compute CTPs #####
         # Compute total frequency matrix (ignoring branch lengths)

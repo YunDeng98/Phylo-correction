@@ -25,4 +25,4 @@ def subsample_protein_families(
 
 
 def hash_str(a_string: str):
-    hashlib.sha512(a_string.encode()).hexdigest()[:8]
+    return hashlib.sha512(a_string.encode()).hexdigest()[:8]

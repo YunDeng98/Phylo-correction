@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 import os
 from src.pipeline import Pipeline
+import time
 
 
 class TestEndToEndSimulation(unittest.TestCase):
@@ -134,6 +135,7 @@ class TestEndToEndSimulation(unittest.TestCase):
         max_seqs_list = [8, 9]
         max_families_list = [32, 1]
         experiment_list = ['experiment_1', 'experiment_2', 'experiment_3']
+        times = []  # Just to see how long each experiment takes.
 
         def learned_rate_matrices_aux(increment: int):
             """
@@ -154,14 +156,17 @@ class TestEndToEndSimulation(unittest.TestCase):
                     for max_families in randomized_max_families_list:
                         curr_learned_rate_matrices = {}
                         # First experiment: Using all transitions and no filtering
+                        st = time.time()
                         curr_learned_rate_matrices[experiment_list[0]] = run_experiment_and_return_learned_rate_matrices(
                             pipeline_outdir=os.path.join(root_dir, f"pipeline_{key}"),
                             end_to_end_simulator_outdir=os.path.join(root_dir, f"end_to_end_simulator_{key}"),
                             max_seqs=max_seqs,
                             max_families=max_families,
                         )
+                        times.append(time.time() - st)
                         key += increment
                         # Second experiment: Using transition filtering.
+                        st = time.time()
                         curr_learned_rate_matrices[experiment_list[1]] = run_experiment_and_return_learned_rate_matrices(
                             pipeline_outdir=os.path.join(root_dir, f"pipeline_{key}"),
                             end_to_end_simulator_outdir=os.path.join(root_dir, f"end_to_end_simulator_{key}"),
@@ -170,8 +175,10 @@ class TestEndToEndSimulation(unittest.TestCase):
                             max_path_height=1,
                             max_height=3.0,
                         )
+                        times.append(time.time() - st)
                         key += increment
                         # Third experiment: Using cherries
+                        st = time.time()
                         curr_learned_rate_matrices[experiment_list[2]] = run_experiment_and_return_learned_rate_matrices(
                             pipeline_outdir=os.path.join(root_dir, f"pipeline_{key}"),
                             end_to_end_simulator_outdir=os.path.join(root_dir, f"end_to_end_simulator_{key}"),
@@ -180,6 +187,7 @@ class TestEndToEndSimulation(unittest.TestCase):
                             edge_or_cherry="cherry",
                             init_jtt_ipw=True,
                         )
+                        times.append(time.time() - st)
                         key += increment
                         learned_rate_matrices_for_families[max_families] = curr_learned_rate_matrices
                     learned_rate_matrices_for_max_seqs[max_seqs] = learned_rate_matrices_for_families
@@ -191,10 +199,19 @@ class TestEndToEndSimulation(unittest.TestCase):
         # Universe #1: Disjoint Cached
         learned_rate_matrices_disjoint_caches = learned_rate_matrices_aux(1)
 
+        learned_rate_matrices_shared_caches_list = []
+        learned_rate_matrices_disjoint_caches_list = []
+
         for max_seqs in max_seqs_list:
             for max_families in max_families_list:
                 for experiment in experiment_list:
                     for what in ['real_data', 'w_ancestral_states', 'wo_ancestral_states', 'end_to_end']:
+                        learned_rate_matrices_shared_caches_list.append(
+                            learned_rate_matrices_shared_caches[max_seqs][max_families][experiment][what]
+                        )
+                        learned_rate_matrices_disjoint_caches_list.append(
+                            learned_rate_matrices_disjoint_caches[max_seqs][max_families][experiment][what]
+                        )
                         try:
                             np.testing.assert_almost_equal(
                                 learned_rate_matrices_shared_caches[max_seqs][max_families][experiment][what],
@@ -207,3 +224,31 @@ class TestEndToEndSimulation(unittest.TestCase):
                                 f"experiment = {experiment}\n"
                                 f"what = {what}"
                             )
+
+        # This is a duplicate of the above, but just in case
+        for i in range(len(learned_rate_matrices_shared_caches_list)):
+            error = np.sum(np.abs(learned_rate_matrices_shared_caches_list[i] - learned_rate_matrices_disjoint_caches_list[i]))
+            assert(error < 1e-8)
+
+        # Check that all rate matrices are different (because the previous check passes if
+        # there is a bug where all the rate matrices are the same, i.e. when the parameters
+        # don't modulate anything!)
+        errors = []
+        for what in [
+            learned_rate_matrices_shared_caches_list,
+            learned_rate_matrices_disjoint_caches_list
+        ]:
+            for i in range(len(what)):
+                for j in range(i + 1, len(what), 1):
+                    error = np.sum(np.abs(what[i] - what[j]))
+                    errors.append(error)
+        # Only 9 errors can should be exactly zero: those for the
+        # cherry experiment w and wo ancestral states.
+        errors = sorted(errors)
+        print(f"errors = {errors}")
+        for error in errors[8:]:
+            assert(error > 0.1)
+
+        # For identifying and debugging slow experiments.
+        # print(f"times = {times}")
+        # assert(False)

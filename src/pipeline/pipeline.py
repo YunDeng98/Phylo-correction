@@ -3,8 +3,9 @@ import os
 import time
 import numpy as np
 
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Tuple
 from src import maximum_parsimony
+import pandas as pd
 
 from src.phylogeny_generation import PhylogenyGenerator
 from src.contact_generation import ContactGenerator
@@ -737,3 +738,41 @@ class Pipeline:
                 "learned_matrix.txt",
             )
         )
+
+    def _get_number_of_transitions(self, mat) -> Tuple[int, int, int]:
+        tot = mat.sum().sum()
+        same = (mat * (1.0 - np.eye(mat.shape[0]))).sum().sum()
+        diff = (mat * np.eye(mat.shape[0])).sum().sum()
+        return (tot, same, diff)
+
+    def get_number_of_single_site_transitions(self) -> Tuple[int, int, int]:
+        """
+        The number of single site transitions in the dataset,
+        and of these, how many are identity transitions and
+        how many are state changes.
+        """
+        mat = pd.read_csv(
+            os.path.join(
+                self.matrices_dir,
+                "matrices.txt",
+            ),
+            sep="\t",
+            index_col=0
+        ).to_numpy()
+        return self._get_number_of_transitions(mat)
+
+    def get_number_of_pair_of_site_transitions(self) -> Tuple[int, int, int]:
+        """
+        The number of pair of site transitions in the dataset,
+        and of these, how many are identity transitions and
+        how many are state changes.
+        """
+        mat = pd.read_csv(
+            os.path.join(
+                self.co_matrices_dir,
+                "matrices.txt",
+            ),
+            sep="\t",
+            index_col=0
+        ).to_numpy()
+        return self._get_number_of_transitions(mat)

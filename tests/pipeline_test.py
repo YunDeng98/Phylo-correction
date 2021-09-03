@@ -59,6 +59,12 @@ class TestPipeline(unittest.TestCase):
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)
 
+                (tot, same, diff) = pipeline.get_number_of_single_site_transitions()
+                assert(tot == same + diff)
+
+                (tot, same, diff) = pipeline.get_number_of_pair_of_site_transitions()
+                assert(tot == same + diff)
+
             with self.assertRaises(PipelineContextError):
                 pipeline_with_same_outdir_but_different_global_context = Pipeline(
                     outdir=outdir,

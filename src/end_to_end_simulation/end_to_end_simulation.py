@@ -148,6 +148,7 @@ class EndToEndSimulator:
             edge_or_cherry=pipeline.edge_or_cherry,
             method=pipeline.method,
             init_jtt_ipw=pipeline.init_jtt_ipw,
+            rate_matrix_parameterization=pipeline.rate_matrix_parameterization,
         )
 
         self.pipeline_on_simulated_data_from_trees_wo_ancestral_states = Pipeline(
@@ -177,6 +178,7 @@ class EndToEndSimulator:
             edge_or_cherry=pipeline.edge_or_cherry,
             method=pipeline.method,
             init_jtt_ipw=pipeline.init_jtt_ipw,
+            rate_matrix_parameterization=pipeline.rate_matrix_parameterization,
         )
 
         self.pipeline_on_simulated_data_from_trees_w_ancestral_states = Pipeline(
@@ -206,6 +208,7 @@ class EndToEndSimulator:
             edge_or_cherry=pipeline.edge_or_cherry,
             method=pipeline.method,
             init_jtt_ipw=pipeline.init_jtt_ipw,
+            rate_matrix_parameterization=pipeline.rate_matrix_parameterization,
         )
 
     def run(self):

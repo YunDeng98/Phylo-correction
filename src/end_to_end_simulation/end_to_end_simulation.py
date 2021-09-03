@@ -114,8 +114,12 @@ class EndToEndSimulator:
             use_cached=use_cached,
         )
 
+        pipeline_outdir = pipeline.outdir
+        if pipeline_outdir[0] == '/':
+            pipeline_outdir = pipeline_outdir[1:]
+
         self.pipeline_on_simulated_data_end_to_end = Pipeline(
-            outdir=os.path.join(outdir, f"end_to_end_{simulation_params}", pipeline.outdir),
+            outdir=os.path.join(outdir, f"end_to_end_{simulation_params}", pipeline_outdir),
             max_seqs=pipeline.max_seqs,
             max_sites=pipeline.max_sites,
             armstrong_cutoff=None,
@@ -144,7 +148,7 @@ class EndToEndSimulator:
         )
 
         self.pipeline_on_simulated_data_from_trees_wo_ancestral_states = Pipeline(
-            outdir=os.path.join(outdir, f"from_trees_wo_ancestral_states_{simulation_params}", pipeline.outdir),
+            outdir=os.path.join(outdir, f"from_trees_wo_ancestral_states_{simulation_params}", pipeline_outdir),
             max_seqs=None,
             max_sites=None,
             armstrong_cutoff=None,
@@ -173,7 +177,7 @@ class EndToEndSimulator:
         )
 
         self.pipeline_on_simulated_data_from_trees_w_ancestral_states = Pipeline(
-            outdir=os.path.join(outdir, f"from_trees_w_ancestral_states_{simulation_params}", pipeline.outdir),
+            outdir=os.path.join(outdir, f"from_trees_w_ancestral_states_{simulation_params}", pipeline_outdir),
             max_seqs=None,
             max_sites=None,
             armstrong_cutoff=None,

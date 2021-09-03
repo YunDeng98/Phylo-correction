@@ -1,17 +1,15 @@
-import os
 import unittest
 import tempfile
-from filecmp import dircmp
-from parameterized import parameterized
-from src import end_to_end_simulation
 from src.end_to_end_simulation import EndToEndSimulator
 from collections import defaultdict
 import numpy as np
-
-from src.pipeline import Pipeline, PipelineContextError
+import pytest
+import os
+from src.pipeline import Pipeline
 
 
 class TestEndToEndSimulation(unittest.TestCase):
+    @pytest.mark.slow
     def test_shared_cache(self):
         """
         We want to be able to use the same output directory for all pipelines
@@ -50,24 +48,25 @@ class TestEndToEndSimulation(unittest.TestCase):
             num_epochs=10,  # 200,
             device='cpu',
             center=1.0,  # 0.06,
-            step_size=0.1,
+            step_size=0.5,  # 0.1
             n_steps=1,  # 50,
             max_height=1000.0,
             max_path_height=1000,
-            keep_outliers=False,
+            keep_outliers=True,  # False
             n_process=32,
             expected_number_of_MSAs=32,
             max_families=32,  # 15051
-            a3m_dir_full='test_input_data/a3m_32_families',
+            a3m_dir_full='test_input_data/a3m_32_families',  # 'input_data/a3m',
             a3m_dir='test_input_data/a3m_32_families',  # 'input_data/a3m',
             pdb_dir='test_input_data/pdb_32_families',  # 'input_data/pdb',
             precomputed_contact_dir=None,
             precomputed_tree_dir=None,
             precomputed_maximum_parsimony_dir=None,
-            edge_or_cherry="cherry",
+            edge_or_cherry="edge",
             method="MLE",
             learn_pairwise_model=False,
-            init_jtt_ipw=True,
+            init_jtt_ipw=False,
+            rate_matrix_parameterization="pande_reversible",
             ### End-to-end simulator parameters
             end_to_end_simulator_outdir=None,
             # pipeline=pipeline,
@@ -109,6 +108,7 @@ class TestEndToEndSimulation(unittest.TestCase):
                 method=method,
                 learn_pairwise_model=learn_pairwise_model,
                 init_jtt_ipw=init_jtt_ipw,
+                rate_matrix_parameterization=rate_matrix_parameterization,
             )
             pipeline.run()
             learned_rate_matrices['real_data'] = pipeline.get_learned_Q1()
@@ -131,8 +131,9 @@ class TestEndToEndSimulation(unittest.TestCase):
             learned_rate_matrices['end_to_end'] = end_to_end_simulator.pipeline_on_simulated_data_end_to_end.get_learned_Q1()
             return learned_rate_matrices
 
-        max_families_list = [8, 1, 2, 32, 4, 16]
-        experiment_list = ['experiment_1', 'experiment_2']
+        max_seqs_list = [8, 9]
+        max_families_list = [32, 1]
+        experiment_list = ['experiment_1', 'experiment_2', 'experiment_3']
 
         def learned_rate_matrices_aux(increment: int):
             """
@@ -147,26 +148,42 @@ class TestEndToEndSimulation(unittest.TestCase):
             key = increment
             randomized_max_families_list = max_families_list[:] if increment == 0 else max_families_list[::-1]
             with tempfile.TemporaryDirectory() as root_dir:
-                learned_rate_matrices_for_families = {}
-                for max_families in randomized_max_families_list:
-                    curr_learned_rate_matrices = {}
-                    curr_learned_rate_matrices[experiment_list[0]] = run_experiment_and_return_learned_rate_matrices(
-                        pipeline_outdir=f"asdf/pipeline_{key}", # os.path.join(root_dir, f"pipeline_{key}"),
-                        end_to_end_simulator_outdir=f"asdf/end_to_end_simulator_{key}", # os.path.join(root_dir, f"end_to_end_simulator_{key}"),
-                        max_families=max_families,
-                        init_jtt_ipw=False,
-                    )
-                    key += increment
-                    curr_learned_rate_matrices[experiment_list[1]] = run_experiment_and_return_learned_rate_matrices(
-                        pipeline_outdir=f"asdf/pipeline_{key}", # os.path.join(root_dir, f"pipeline_{key}"),
-                        end_to_end_simulator_outdir=f"asdf/end_to_end_simulator_{key}", # os.path.join(root_dir, f"end_to_end_simulator_{key}"),
-                        edge_or_cherry="edge",
-                        max_families=max_families,
-                        init_jtt_ipw=False,
-                    )
-                    key += increment
-                    learned_rate_matrices_for_families[max_families] = curr_learned_rate_matrices
-            return learned_rate_matrices_for_families
+                learned_rate_matrices_for_max_seqs = {}
+                for max_seqs in max_seqs_list:
+                    learned_rate_matrices_for_families = {}
+                    for max_families in randomized_max_families_list:
+                        curr_learned_rate_matrices = {}
+                        # First experiment: Using all transitions and no filtering
+                        curr_learned_rate_matrices[experiment_list[0]] = run_experiment_and_return_learned_rate_matrices(
+                            pipeline_outdir=os.path.join(root_dir, f"pipeline_{key}"),
+                            end_to_end_simulator_outdir=os.path.join(root_dir, f"end_to_end_simulator_{key}"),
+                            max_seqs=max_seqs,
+                            max_families=max_families,
+                        )
+                        key += increment
+                        # Second experiment: Using transition filtering.
+                        curr_learned_rate_matrices[experiment_list[1]] = run_experiment_and_return_learned_rate_matrices(
+                            pipeline_outdir=os.path.join(root_dir, f"pipeline_{key}"),
+                            end_to_end_simulator_outdir=os.path.join(root_dir, f"end_to_end_simulator_{key}"),
+                            max_seqs=max_seqs,
+                            max_families=max_families,
+                            max_path_height=1,
+                            max_height=3.0,
+                        )
+                        key += increment
+                        # Third experiment: Using cherries
+                        curr_learned_rate_matrices[experiment_list[2]] = run_experiment_and_return_learned_rate_matrices(
+                            pipeline_outdir=os.path.join(root_dir, f"pipeline_{key}"),
+                            end_to_end_simulator_outdir=os.path.join(root_dir, f"end_to_end_simulator_{key}"),
+                            max_seqs=max_seqs,
+                            max_families=max_families,
+                            edge_or_cherry="cherry",
+                            init_jtt_ipw=True,
+                        )
+                        key += increment
+                        learned_rate_matrices_for_families[max_families] = curr_learned_rate_matrices
+                    learned_rate_matrices_for_max_seqs[max_seqs] = learned_rate_matrices_for_families
+            return learned_rate_matrices_for_max_seqs
 
         # Universe #1: Shared Caches
         learned_rate_matrices_shared_caches = learned_rate_matrices_aux(0)
@@ -174,18 +191,19 @@ class TestEndToEndSimulation(unittest.TestCase):
         # Universe #1: Disjoint Cached
         learned_rate_matrices_disjoint_caches = learned_rate_matrices_aux(1)
 
-        for max_families in max_families_list:
-            for experiment in experiment_list:
-                for what in ['real_data', 'w_ancestral_states', 'wo_ancestral_states', 'end_to_end']:
-                    try:
-                        np.testing.assert_almost_equal(
-                            learned_rate_matrices_shared_caches[max_families][experiment][what],
-                            learned_rate_matrices_disjoint_caches[max_families][experiment][what],
-                        )
-                    except:
-                        raise ValueError(
-                            f"Failed for \n"
-                            f"max_families = {max_families}\n"
-                            f"experiment = {experiment}\n"
-                            f"what = {what}"
-                        )
+        for max_seqs in max_seqs_list:
+            for max_families in max_families_list:
+                for experiment in experiment_list:
+                    for what in ['real_data', 'w_ancestral_states', 'wo_ancestral_states', 'end_to_end']:
+                        try:
+                            np.testing.assert_almost_equal(
+                                learned_rate_matrices_shared_caches[max_seqs][max_families][experiment][what],
+                                learned_rate_matrices_disjoint_caches[max_seqs][max_families][experiment][what],
+                            )
+                        except:
+                            raise ValueError(
+                                f"Failed for \n"
+                                f"max_families = {max_families}\n"
+                                f"experiment = {experiment}\n"
+                                f"what = {what}"
+                            )

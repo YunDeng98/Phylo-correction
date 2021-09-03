@@ -139,6 +139,7 @@ class Pipeline:
             (Note: cheap baseline will be run anyway.)
         init_jtt_ipw: if to initialize the MLE optimizer with the JTT-IPW
             estimate.
+        rate_matrix_parameterization: e.g. "pande_reversible".
 
     Attributes:
         tree_dir: Where the estimated phylogenies lie
@@ -181,7 +182,14 @@ class Pipeline:
         method: Union[str, List[str]] = "MLE",
         learn_pairwise_model: float = False,
         init_jtt_ipw: bool = False,
+        rate_matrix_parameterization: str = "pande_reversible",
     ):
+        if not rate_matrix_parameterization in ["pande_reversible"]:
+            raise ValueError("Unknown rate_matrix_parameterization = {rate_matrix_parameterization}")
+
+        if edge_or_cherry not in ["edge", "cherry"]:
+            raise ValueError(f"edge_or_cherry not in ['edge', 'cherry']")
+
         method = method[:]
         if type(method) is str:
             method = [method]
@@ -210,7 +218,7 @@ class Pipeline:
         if device not in ['cuda', 'cpu']:
             raise ValueError(f"device should be 'cuda' or 'cpu', {device} provided.")
         # Check that the global context is correct.
-        global_context = str([a3m_dir_full, a3m_dir, pdb_dir, precomputed_contact_dir, precomputed_tree_dir, precomputed_maximum_parsimony_dir])
+        global_context = str([a3m_dir_full, expected_number_of_MSAs, a3m_dir, pdb_dir, precomputed_contact_dir, precomputed_tree_dir, precomputed_maximum_parsimony_dir])
         global_context_filepath = os.path.join(outdir, 'global_context.txt')
         if os.path.exists(global_context_filepath):
             previous_global_context = open(global_context_filepath, "r").read()
@@ -256,10 +264,12 @@ class Pipeline:
         self.edge_or_cherry = edge_or_cherry
         self.method = method
         self.init_jtt_ipw = init_jtt_ipw
+        self.rate_matrix_parameterization = rate_matrix_parameterization
 
         # Output data directories
         # Where the phylogenies will be stored
         tree_params = f"{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM"
+        self.tree_params = tree_params
         self.tree_dir = os.path.join(outdir, f"trees_{tree_params}")
         # Where the contacts will be stored
         contact_params = f"{armstrong_cutoff}_angstrom"
@@ -271,24 +281,16 @@ class Pipeline:
         transitions_params = maximum_parsimony_params
         self.transitions_dir = os.path.join(outdir, f"transitions_{transitions_params}")
         # Where the transition matrices obtained by quantizing transition edges will be stored
-        cherry_str = "" if edge_or_cherry == "edge" else "_cherry"
-        filter_params = f"{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}"
+        filter_params = f"{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height_{edge_or_cherry}_eoc"
         matrices_params = f"{max_families}_families__{transitions_params}__{filter_params}"
         self.matrices_dir = os.path.join(outdir, f"matrices__{matrices_params}")
         # Where the co-transitions obtained from the maximum parsimony phylogenies will be stored
         co_transitions_params = f"{maximum_parsimony_params}_{contact_params}"
-        self.co_transitions_dir = os.path.join(
-            outdir,
-            f"co_transitions_{co_transitions_params}",
-        )
+        self.co_transitions_dir = os.path.join(outdir, f"co_transitions_{co_transitions_params}")
         # Where the co-transition matrices obtained by quantizing transition edges will be stored
         co_matrices_params = f"{max_families}_families__{co_transitions_params}__{filter_params}"
-        self.co_matrices_dir = os.path.join(
-            outdir,
-            f"co_matrices__{co_matrices_params}",
-        )
-        str_init_jtt_ipw = "_init-JTT-IPW" if init_jtt_ipw else ""
-        optimizer_params = f"{num_epochs}_epochs{str_init_jtt_ipw}"
+        self.co_matrices_dir = os.path.join(outdir, f"co_matrices__{co_matrices_params}")
+        optimizer_params = f"{num_epochs}_epochs_{init_jtt_ipw}_init-JTT-IPW_{rate_matrix_parameterization}_param"
         learnt_rate_matrix_params = f"{matrices_params}__{optimizer_params}"
         self.learnt_rate_matrix_dir = os.path.join(
             outdir,
@@ -360,6 +362,7 @@ class Pipeline:
         edge_or_cherry = self.edge_or_cherry
         method = self.method
         init_jtt_ipw = self.init_jtt_ipw
+        rate_matrix_parameterization = self.rate_matrix_parameterization
         path_mask_Q2 = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "../../input_data/synthetic_rate_matrices/mask_Q2.txt"
@@ -506,7 +509,7 @@ class Pipeline:
                 stationnary_distribution=None,
                 mask=None,
                 # frequency_matrices_sep=",",
-                rate_matrix_parameterization="pande_reversible",
+                rate_matrix_parameterization=rate_matrix_parameterization,
                 device=device,
                 use_cached=use_cached,
                 initialization=self.get_learned_Q1_JTT_IPW() if init_jtt_ipw else None,
@@ -596,7 +599,7 @@ class Pipeline:
                     stationnary_distribution=None,
                     mask=path_mask_Q2,
                     # frequency_matrices_sep=",",
-                    rate_matrix_parameterization="pande_reversible",
+                    rate_matrix_parameterization=rate_matrix_parameterization,
                     device=device,
                     use_cached=use_cached,
                     initialization=self.get_learned_Q2_JTT_IPW() if init_jtt_ipw else None,

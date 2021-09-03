@@ -6,6 +6,7 @@ from src.pipeline import Pipeline
 from src.simulation import Simulator
 
 from typing import Optional
+from src.utils import hash_str
 
 
 class EndToEndSimulator:
@@ -90,7 +91,9 @@ class EndToEndSimulator:
             os.system(f"chmod 555 {global_context_filepath}")
 
         fast_tree_rate_matrix = self.fast_tree_rate_matrix
-        simulation_params = f"{pipeline.tree_params}__{Q1_ground_truth_name}_Q1_{Q2_ground_truth_name}_Q2_{simulation_pct_interacting_positions}_pct"
+        Q1_gt_hash = hash_str(Q1_ground_truth)
+        Q2_gt_hash = hash_str(Q2_ground_truth)
+        simulation_params = f"{pipeline.tree_params}__{Q1_ground_truth_name}-{Q1_gt_hash}_Q1_{Q2_ground_truth_name}-{Q2_gt_hash}_Q2_{simulation_pct_interacting_positions}_pct"
         a3m_simulated_params = simulation_params
         a3m_simulated_dir = os.path.join(outdir, f"a3m_simulated_{a3m_simulated_params}")
         contact_simulated_params = simulation_params

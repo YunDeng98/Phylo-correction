@@ -1,5 +1,6 @@
 import os
 import random
+import hashlib
 
 from typing import List
 
@@ -21,3 +22,7 @@ def subsample_protein_families(
         )
     protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
     return protein_family_names
+
+
+def hash_str(a_string: str):
+    hashlib.sha512(a_string.encode()).hexdigest()[:8]

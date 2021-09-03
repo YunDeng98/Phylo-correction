@@ -14,6 +14,7 @@ from src.co_transition_extraction import CoTransitionExtractor
 from src.matrix_generation import MatrixGenerator
 from src.ratelearn import RateMatrixLearner
 from src.counting import JTT
+from src.utils import hash_str
 
 
 class PipelineContextError(Exception):
@@ -273,7 +274,8 @@ class Pipeline:
 
         # Output data directories
         # Where the phylogenies will be stored
-        tree_params = f"{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM"
+        rm_hash = hash_str(rate_matrix_name)
+        tree_params = f"{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}-{rm_hash}_RM"
         self.tree_params = tree_params
         self.tree_dir = os.path.join(outdir, f"trees_{tree_params}")
         # Where the contacts will be stored

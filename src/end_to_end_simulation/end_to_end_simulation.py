@@ -6,6 +6,7 @@ from src.pipeline import Pipeline
 from src.simulation import Simulator
 
 from typing import Optional
+from src.utils import hash_str
 
 
 class EndToEndSimulator:
@@ -71,12 +72,37 @@ class EndToEndSimulator:
         self.simulate_from_trees_w_ancestral_states = simulate_from_trees_w_ancestral_states
         self.use_cached = use_cached
 
+        # Check that the global context is correct.
+        global_context = str([pipeline.a3m_dir_full, pipeline.expected_number_of_MSAs, pipeline.a3m_dir, pipeline.pdb_dir, pipeline.precomputed_contact_dir, pipeline.precomputed_tree_dir, pipeline.precomputed_maximum_parsimony_dir])
+        global_context_filepath = os.path.join(outdir, 'global_context.txt')
+        if os.path.exists(global_context_filepath):
+            previous_global_context = open(global_context_filepath, "r").read()
+            if global_context != previous_global_context:
+                raise ValueError(
+                    f"Trying to run end-to-end simulation with outdir from a previous "
+                    f"end-to-end simulator with a different context. Please use a different "
+                    f"outdir. Previous context: {previous_global_context}. "
+                    f"New context: {global_context}."
+                    f"outdir = {outdir}")
+        else:
+            os.makedirs(outdir)
+            with open(global_context_filepath, "w") as global_context_file:
+                global_context_file.write(global_context)
+            os.system(f"chmod 555 {global_context_filepath}")
+
         fast_tree_rate_matrix = self.fast_tree_rate_matrix
-        a3m_simulated_dir = os.path.join(outdir, f"a3m_simulated_{pipeline.max_seqs}_seqs_{pipeline.max_sites}_sites_{pipeline.rate_matrix_name}_RM__{Q1_ground_truth_name}_Q1_{Q2_ground_truth_name}_Q2_{simulation_pct_interacting_positions}_pct")
-        contact_simulated_dir = os.path.join(outdir, f"contacts_simulated_{pipeline.max_seqs}_seqs_{pipeline.max_sites}_sites_{pipeline.rate_matrix_name}_RM_{simulation_pct_interacting_positions}_pct")
-        ancestral_states_simulated_dir = os.path.join(outdir, f"ancestral_states_simulated_{pipeline.max_seqs}_seqs_{pipeline.max_sites}_sites_{pipeline.rate_matrix_name}_RM__{Q1_ground_truth_name}_Q1_{Q2_ground_truth_name}_Q2_{simulation_pct_interacting_positions}_pct")
+        Q1_gt_hash = hash_str(Q1_ground_truth)
+        Q2_gt_hash = hash_str(Q2_ground_truth)
+        simulation_params = f"{pipeline.tree_params}__{Q1_ground_truth_name}-{Q1_gt_hash}_Q1_{Q2_ground_truth_name}-{Q2_gt_hash}_Q2_{simulation_pct_interacting_positions}_pct"
+        a3m_simulated_params = simulation_params
+        a3m_simulated_dir = os.path.join(outdir, f"a3m_simulated_{a3m_simulated_params}")
+        contact_simulated_params = simulation_params
+        contact_simulated_dir = os.path.join(outdir, f"contacts_simulated_{contact_simulated_params}")
+        ancestral_states_simulated_params = simulation_params
+        ancestral_states_simulated_dir = os.path.join(outdir, f"ancestral_states_simulated_{ancestral_states_simulated_params}")
 
         self.simulator = Simulator(
+            a3m_dir_full=pipeline.a3m_dir_full,
             a3m_dir=pipeline.a3m_dir,
             tree_dir=pipeline.tree_dir,
             a3m_simulated_dir=a3m_simulated_dir,
@@ -91,14 +117,19 @@ class EndToEndSimulator:
             use_cached=use_cached,
         )
 
+        pipeline_outdir = pipeline.outdir
+        if pipeline_outdir[0] == '/':
+            pipeline_outdir = pipeline_outdir[1:]
+
         self.pipeline_on_simulated_data_end_to_end = Pipeline(
-            outdir=os.path.join(outdir, "end_to_end", pipeline.outdir),
+            outdir=os.path.join(outdir, f"end_to_end_{simulation_params}", pipeline_outdir),
             max_seqs=pipeline.max_seqs,
             max_sites=pipeline.max_sites,
             armstrong_cutoff=None,
             rate_matrix=fast_tree_rate_matrix,
             n_process=pipeline.n_process,
-            expected_number_of_MSAs=pipeline.max_families,  # BC we only generated max_families MSAs!
+            a3m_dir_full=pipeline.a3m_dir_full,
+            expected_number_of_MSAs=pipeline.expected_number_of_MSAs,
             max_families=pipeline.max_families,
             a3m_dir=a3m_simulated_dir,
             pdb_dir=None,
@@ -120,13 +151,14 @@ class EndToEndSimulator:
         )
 
         self.pipeline_on_simulated_data_from_trees_wo_ancestral_states = Pipeline(
-            outdir=os.path.join(outdir, "from_trees_wo_ancestral_states", pipeline.outdir),
+            outdir=os.path.join(outdir, f"from_trees_wo_ancestral_states_{simulation_params}", pipeline_outdir),
             max_seqs=None,
             max_sites=None,
             armstrong_cutoff=None,
             rate_matrix=None,
             n_process=pipeline.n_process,
-            expected_number_of_MSAs=pipeline.max_families,  # BC we only generated max_families MSAs!
+            a3m_dir_full=pipeline.a3m_dir_full,
+            expected_number_of_MSAs=pipeline.expected_number_of_MSAs,
             max_families=pipeline.max_families,
             a3m_dir=a3m_simulated_dir,
             pdb_dir=None,
@@ -148,13 +180,14 @@ class EndToEndSimulator:
         )
 
         self.pipeline_on_simulated_data_from_trees_w_ancestral_states = Pipeline(
-            outdir=os.path.join(outdir, "from_trees_w_ancestral_states", pipeline.outdir),
+            outdir=os.path.join(outdir, f"from_trees_w_ancestral_states_{simulation_params}", pipeline_outdir),
             max_seqs=None,
             max_sites=None,
             armstrong_cutoff=None,
             rate_matrix=None,
             n_process=pipeline.n_process,
-            expected_number_of_MSAs=pipeline.max_families,  # BC we only generated max_families MSAs!
+            a3m_dir_full=pipeline.a3m_dir_full,
+            expected_number_of_MSAs=pipeline.expected_number_of_MSAs,
             max_families=pipeline.max_families,
             a3m_dir=a3m_simulated_dir,
             pdb_dir=None,
@@ -203,9 +236,6 @@ class EndToEndSimulator:
 
         if not os.path.exists(outdir):
             os.makedirs(outdir)
-        pipeline_info_path = os.path.join(outdir, 'pipeline_info.txt')
-        with open(pipeline_info_path, "w") as pipeline_info_file:
-            pipeline_info_file.write(str(pipeline))
 
         t_start = time.time()
         self.simulator.run()

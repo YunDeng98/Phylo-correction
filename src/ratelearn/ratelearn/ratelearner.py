@@ -54,6 +54,7 @@ class RateMatrixLearner:
         num_epochs=2000,
         do_adam: bool = True,
     ):
+        torch.manual_seed(0)
         device = self.device
         output_dir = self.output_dir
         use_cached = self.use_cached

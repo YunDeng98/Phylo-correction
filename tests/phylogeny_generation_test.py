@@ -37,6 +37,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
             outdir = os.path.join(root_dir, 'trees')
             for use_cached in [False, True]:
                 phylogeny_generator = PhylogenyGenerator(
+                    a3m_dir_full='test_input_data/a3m_small',
                     a3m_dir='test_input_data/a3m_small',
                     n_process=n_process,
                     expected_number_of_MSAs=3,
@@ -60,6 +61,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root_dir:
             outdir = os.path.join(root_dir, 'trees')
             phylogeny_generator = PhylogenyGenerator(
+                a3m_dir_full='test_input_data/a3m_small',
                 a3m_dir='test_input_data/a3m_small',
                 n_process=n_process,
                 expected_number_of_MSAs=3,
@@ -83,6 +85,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root_dir:
             outdir = os.path.join(root_dir, 'trees')
             phylogeny_generator = PhylogenyGenerator(
+                a3m_dir_full='test_input_data/a3m_small',
                 a3m_dir='test_input_data/a3m_small',
                 n_process=n_process,
                 expected_number_of_MSAs=3,
@@ -108,6 +111,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root_dir:
             outdir = os.path.join(root_dir, 'trees')
             phylogeny_generator = PhylogenyGenerator(
+                a3m_dir_full='test_input_data/a3m_small',
                 a3m_dir='test_input_data/a3m_small',
                 n_process=n_process,
                 expected_number_of_MSAs=3,
@@ -129,6 +133,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root_dir:
             outdir = os.path.join(root_dir, 'trees')
             phylogeny_generator = PhylogenyGenerator(
+                a3m_dir_full='test_input_data/a3m_small',
                 a3m_dir='test_input_data/a3m_small_corrupted',
                 n_process=n_process,
                 expected_number_of_MSAs=3,
@@ -151,6 +156,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root_dir:
             outdir = os.path.join(root_dir, 'trees')
             phylogeny_generator = PhylogenyGenerator(
+                a3m_dir_full='test_input_data/a3m_small',
                 a3m_dir='test_input_data/a3m_small',
                 n_process=n_process,
                 expected_number_of_MSAs=4,
@@ -161,5 +167,5 @@ class TestPhylogenyGenerator(unittest.TestCase):
                 rate_matrix='None',
                 use_cached=False,
             )
-            with self.assertRaises(MSAError):
+            with self.assertRaises(ValueError):
                 phylogeny_generator.run()

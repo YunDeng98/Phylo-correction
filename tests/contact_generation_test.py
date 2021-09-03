@@ -21,6 +21,7 @@ class TestContactGenerator(unittest.TestCase):
             outdir = os.path.join(root_dir, 'contacts')
             for use_cached in [False, True]:
                 contact_generator = ContactGenerator(
+                    a3m_dir_full='test_input_data/a3m_small',
                     a3m_dir='test_input_data/a3m_small',
                     pdb_dir='test_input_data/pdb_small',
                     armstrong_cutoff=8.0,

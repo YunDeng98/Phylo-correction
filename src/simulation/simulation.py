@@ -18,6 +18,8 @@ from ete3 import Tree
 
 from src.maximum_parsimony import name_internal_nodes
 
+from src.utils import subsample_protein_families
+
 sys.path.append("../")
 import Phylo_util
 
@@ -237,6 +239,8 @@ class Simulator:
     Simulate MSAs and contact maps given a tree.
 
     Args:
+        a3m_dir_full: Directory with MSAs for ALL protein families. Used
+            to determine which max_families will get subsampled.
         a3m_dir: Directory where the original MSA files (.a3m) are found.
             They are only used to determine the length (number of amino acids)
             of each protein family.
@@ -262,6 +266,7 @@ class Simulator:
     """
     def __init__(
         self,
+        a3m_dir_full: str,
         a3m_dir: str,
         tree_dir: str,
         a3m_simulated_dir: str,
@@ -275,6 +280,7 @@ class Simulator:
         Q2_ground_truth: str,
         use_cached: bool = False,
     ):
+        self.a3m_dir_full = a3m_dir_full
         self.a3m_dir = a3m_dir
         self.tree_dir = tree_dir
         self.a3m_simulated_dir = a3m_simulated_dir
@@ -289,6 +295,7 @@ class Simulator:
         self.use_cached = use_cached
 
     def run(self) -> None:
+        a3m_dir_full = self.a3m_dir_full
         a3m_dir = self.a3m_dir
         tree_dir = self.tree_dir
         a3m_simulated_dir = self.a3m_simulated_dir
@@ -305,7 +312,7 @@ class Simulator:
         logger = logging.getLogger("phylo_correction.simulation")
         logger.info("Starting ... ")
 
-        for dire in [a3m_dir, tree_dir]:
+        for dire in [a3m_dir_full, a3m_dir, tree_dir]:
             if not os.path.exists(dire):
                 raise ValueError(f"Could not find directory {dire}")
 
@@ -315,13 +322,11 @@ class Simulator:
             if not os.path.exists(dire):
                 os.makedirs(dire)
 
-        filenames = sorted(list(os.listdir(a3m_dir)))
-        random.Random(123).shuffle(filenames)
-        if not len(filenames) == expected_number_of_MSAs:
-            raise ValueError(
-                f"Number of MSAs is {len(filenames)}, does not match " f"expected {expected_number_of_MSAs}"
-            )
-        protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
+        protein_family_names = subsample_protein_families(
+            a3m_dir_full,
+            expected_number_of_MSAs,
+            max_families
+        )
 
         map_args = [
             [

@@ -227,7 +227,7 @@ class Pipeline:
                     f"Trying to run pipeline with outdir from a previous "
                     f"pipeline with a different context. Please use a different "
                     f"outdir. Previous context: {previous_global_context}. "
-                    f"New context: {global_context}."
+                    f"New context: {global_context}. "
                     f"outdir = {outdir}")
         else:
             os.makedirs(outdir)

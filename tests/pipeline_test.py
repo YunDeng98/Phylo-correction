@@ -53,10 +53,10 @@ class TestPipeline(unittest.TestCase):
                     learn_pairwise_model=True,
                 )
                 pipeline.run()
-                dcmp = dircmp(os.path.join(outdir, "matrices__3_families__8_seqs_16_sites_None_RM__1.0_center_0.1_step_size_0_n_steps_True_outliers_1000.0_max_height_1000_max_path_height"), 'test_input_data/matrices_small')
+                dcmp = dircmp(os.path.join(outdir, pipeline.matrices_dir), 'test_input_data/matrices_small')
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)
-                dcmp = dircmp(os.path.join(outdir, "co_matrices__3_families__8_seqs_16_sites_None_RM_8.0_angstrom__1.0_center_0.1_step_size_0_n_steps_True_outliers_1000.0_max_height_1000_max_path_height"), 'test_input_data/co_matrices_small')
+                dcmp = dircmp(os.path.join(outdir, pipeline.co_matrices_dir), 'test_input_data/co_matrices_small')
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)
 

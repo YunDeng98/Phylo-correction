@@ -57,7 +57,7 @@ class TestEndToEndSimulation(unittest.TestCase):
             n_process=32,
             expected_number_of_MSAs=32,
             max_families=32,  # 15051
-            a3m_dir_full='test_input_data/a3m_32_families',  # 'input_data/a3m',
+            a3m_dir_full=None,
             a3m_dir='test_input_data/a3m_32_families',  # 'input_data/a3m',
             pdb_dir='test_input_data/pdb_32_families',  # 'input_data/pdb',
             precomputed_contact_dir=None,
@@ -196,7 +196,7 @@ class TestEndToEndSimulation(unittest.TestCase):
         # Universe #1: Shared Caches
         learned_rate_matrices_shared_caches = learned_rate_matrices_aux(0)
 
-        # Universe #1: Disjoint Cached
+        # Universe #2: Disjoint Caches
         learned_rate_matrices_disjoint_caches = learned_rate_matrices_aux(1)
 
         learned_rate_matrices_shared_caches_list = []

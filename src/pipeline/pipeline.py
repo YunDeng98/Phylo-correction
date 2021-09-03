@@ -105,6 +105,8 @@ class Pipeline:
             is not guaranteed to produce the same families as
             subsampling from a3m_dir_full uniformly at random
             (given the same seed), then a3m_dir_full is needed.
+            For backwards compatibility reasons, it this is not
+            provided (None), it will be set to the value of a3m_dir.
         expected_number_of_MSAs: This is just used to check that the
             directory with the MSAs a3m_dir_full has the expected number
             of files. This is needed to make sure that when using
@@ -170,7 +172,6 @@ class Pipeline:
         max_path_height: int,
         keep_outliers: bool,
         n_process: int,
-        a3m_dir_full: str,
         expected_number_of_MSAs: int,
         max_families: int,
         a3m_dir: str,
@@ -183,7 +184,11 @@ class Pipeline:
         learn_pairwise_model: float = False,
         init_jtt_ipw: bool = False,
         rate_matrix_parameterization: str = "pande_reversible",
+        a3m_dir_full: Optional[str] = None,
     ):
+        if a3m_dir_full is None:
+            a3m_dir_full = a3m_dir
+
         if not rate_matrix_parameterization in ["pande_reversible"]:
             raise ValueError("Unknown rate_matrix_parameterization = {rate_matrix_parameterization}")
 

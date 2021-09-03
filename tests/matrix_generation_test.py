@@ -21,6 +21,7 @@ class TestMatrixGenerator(unittest.TestCase):
             outdir = os.path.join(root_dir, 'matrices_small')
             for use_cached in [False, True]:
                 matrix_generator = MatrixGenerator(
+                    a3m_dir_full='test_input_data/a3m_small',
                     a3m_dir='test_input_data/a3m_small',
                     transitions_dir='test_input_data/transitions_small',
                     n_process=n_process,
@@ -54,6 +55,7 @@ class TestMatrixGenerator(unittest.TestCase):
             outdir = os.path.join(root_dir, 'co_matrices_small')
             for use_cached in [False, True]:
                 matrix_generator = MatrixGenerator(
+                    a3m_dir_full='test_input_data/a3m_small',
                     a3m_dir='test_input_data/a3m_small',
                     transitions_dir='test_input_data/co_transitions_small',
                     n_process=n_process,

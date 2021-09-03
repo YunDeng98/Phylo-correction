@@ -20,6 +20,7 @@ class TestCoTransitionExtractor(unittest.TestCase):
             outdir = os.path.join(root_dir, 'maximum_parsimony')
             for use_cached in [False, True]:
                 co_transition_extractor = CoTransitionExtractor(
+                    a3m_dir_full='test_input_data/a3m_small',
                     a3m_dir='test_input_data/a3m_small',
                     parsimony_dir='test_input_data/maximum_parsimony_small',
                     n_process=n_process,

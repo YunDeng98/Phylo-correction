@@ -21,6 +21,7 @@ class TestMaximumParsimonyReconstructor(unittest.TestCase):
             outdir = os.path.join(root_dir, 'maximum_parsimony')
             for use_cached in [False, True]:
                 mp_reconstructor = MaximumParsimonyReconstructor(
+                    a3m_dir_full='test_input_data/a3m_small',
                     a3m_dir='test_input_data/a3m_small',
                     tree_dir='test_input_data/trees_small',
                     n_process=n_process,

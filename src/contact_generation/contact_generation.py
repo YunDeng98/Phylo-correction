@@ -9,6 +9,7 @@ import random
 from typing import List
 
 from src.contact_generation.ContactMatrix import ContactMatrix
+from src.utils import subsample_protein_families
 
 
 def map_func(args: List) -> None:
@@ -49,6 +50,8 @@ class ContactGenerator:
     matrices are only generated when the 'run' method is called.
 
     Args:
+        a3m_dir_full: Directory with MSAs for ALL protein families. Used
+            to determine which max_families will get subsampled.
         a3m_dir: Directory where the MSA files (.a3m) are found. Although they
             are never read, this must be provided to be able to subsample families via the 'max_families' argument.
         pdb_dir: Directory where the PDB structure files (.pdb) are found.
@@ -66,6 +69,7 @@ class ContactGenerator:
     """
     def __init__(
         self,
+        a3m_dir_full: str,
         a3m_dir: str,
         pdb_dir: str,
         armstrong_cutoff: float,
@@ -75,6 +79,7 @@ class ContactGenerator:
         max_families: int,
         use_cached: bool = False,
     ):
+        self.a3m_dir_full = a3m_dir_full
         self.a3m_dir = a3m_dir
         self.pdb_dir = pdb_dir
         self.armstrong_cutoff = armstrong_cutoff
@@ -85,6 +90,7 @@ class ContactGenerator:
         self.use_cached = use_cached
 
     def run(self) -> None:
+        a3m_dir_full = self.a3m_dir_full
         a3m_dir = self.a3m_dir
         pdb_dir = self.pdb_dir
         armstrong_cutoff = self.armstrong_cutoff
@@ -103,13 +109,11 @@ class ContactGenerator:
         if not os.path.exists(a3m_dir):
             raise ValueError(f"Could not find pdb_dir {a3m_dir}")
 
-        filenames = sorted(list(os.listdir(a3m_dir)))
-        random.Random(123).shuffle(filenames)
-        if not len(filenames) == expected_number_of_families:
-            raise ValueError(
-                f"Number of families is {len(filenames)}, does not match " f"expected {expected_number_of_families}"
-            )
-        protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
+        protein_family_names = subsample_protein_families(
+            a3m_dir_full,
+            expected_number_of_families,
+            max_families
+        )
 
         map_args = [
             [pdb_dir, protein_family_name, outdir, armstrong_cutoff, use_cached]

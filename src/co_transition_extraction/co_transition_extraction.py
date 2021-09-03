@@ -12,7 +12,8 @@ import tqdm
 import random
 import hashlib
 
-from typing import Dict, List, Tuple
+from typing import Dict, Optional, List, Tuple
+from src.utils import subsample_protein_families
 
 from ete3 import Tree
 
@@ -184,13 +185,15 @@ class CoTransitionExtractor:
     computed upon call to the 'run' method.
 
     Args:
+        a3m_dir_full: Directory with MSAs for ALL protein families. Used
+            to determine which max_families will get subsampled.
         a3m_dir: Directory where the MSA files (.a3m) are found. Although they
             are never read, this must be provided to be able to subsample families via the 'max_families' argument.
         parsimony_dir: Directory where the maximum parsimony reconstructions are found.
         n_process: Number of processes used to parallelize computation.
         expected_number_of_MSAs: The number of files in a3m_dir. This argument
             is only used to sanity check that the correct a3m_dir is being used.
-            It has no functional implications.
+            It has no functional implications. DEPRECATED
         outdir: Directory where the generated transitions will be found (.transitions files)
         max_families: Only run on 'max_families' randomly chosen files in a3m_dir.
             This is useful for testing and to see what happens if less data is used.
@@ -200,6 +203,7 @@ class CoTransitionExtractor:
     """
     def __init__(
         self,
+        a3m_dir_full: str,
         a3m_dir: str,
         parsimony_dir: str,
         n_process: int,
@@ -209,6 +213,7 @@ class CoTransitionExtractor:
         contact_dir: str,
         use_cached: bool = False,
     ):
+        self.a3m_dir_full = a3m_dir_full
         self.a3m_dir = a3m_dir
         self.parsimony_dir = parsimony_dir
         self.n_process = n_process
@@ -219,6 +224,7 @@ class CoTransitionExtractor:
         self.use_cached = use_cached
 
     def run(self) -> None:
+        a3m_dir_full = self.a3m_dir_full
         a3m_dir = self.a3m_dir
         parsimony_dir = self.parsimony_dir
         n_process = self.n_process
@@ -237,13 +243,11 @@ class CoTransitionExtractor:
         if not os.path.exists(a3m_dir):
             raise ValueError(f"Could not find a3m_dir {a3m_dir}")
 
-        filenames = sorted(list(os.listdir(a3m_dir)))
-        random.Random(123).shuffle(filenames)
-        if not len(filenames) == expected_number_of_MSAs:
-            raise ValueError(
-                f"Number of MSAs is {len(filenames)}, does not match " f"expected {expected_number_of_MSAs}"
-            )
-        protein_family_names = [x.split(".")[0] for x in filenames][:max_families]
+        protein_family_names = subsample_protein_families(
+            a3m_dir_full,
+            expected_number_of_MSAs,
+            max_families
+        )
 
         # print(f"protein_family_names = {protein_family_names}")
 

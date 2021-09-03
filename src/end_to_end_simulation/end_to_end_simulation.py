@@ -77,6 +77,7 @@ class EndToEndSimulator:
         ancestral_states_simulated_dir = os.path.join(outdir, f"ancestral_states_simulated_{pipeline.max_seqs}_seqs_{pipeline.max_sites}_sites_{pipeline.rate_matrix_name}_RM__{Q1_ground_truth_name}_Q1_{Q2_ground_truth_name}_Q2_{simulation_pct_interacting_positions}_pct")
 
         self.simulator = Simulator(
+            a3m_dir_full=pipeline.a3m_dir_full,
             a3m_dir=pipeline.a3m_dir,
             tree_dir=pipeline.tree_dir,
             a3m_simulated_dir=a3m_simulated_dir,
@@ -98,7 +99,8 @@ class EndToEndSimulator:
             armstrong_cutoff=None,
             rate_matrix=fast_tree_rate_matrix,
             n_process=pipeline.n_process,
-            expected_number_of_MSAs=pipeline.max_families,  # BC we only generated max_families MSAs!
+            a3m_dir_full=pipeline.a3m_dir_full,
+            expected_number_of_MSAs=pipeline.expected_number_of_MSAs,
             max_families=pipeline.max_families,
             a3m_dir=a3m_simulated_dir,
             pdb_dir=None,
@@ -126,7 +128,8 @@ class EndToEndSimulator:
             armstrong_cutoff=None,
             rate_matrix=None,
             n_process=pipeline.n_process,
-            expected_number_of_MSAs=pipeline.max_families,  # BC we only generated max_families MSAs!
+            a3m_dir_full=pipeline.a3m_dir_full,
+            expected_number_of_MSAs=pipeline.expected_number_of_MSAs,
             max_families=pipeline.max_families,
             a3m_dir=a3m_simulated_dir,
             pdb_dir=None,
@@ -154,7 +157,8 @@ class EndToEndSimulator:
             armstrong_cutoff=None,
             rate_matrix=None,
             n_process=pipeline.n_process,
-            expected_number_of_MSAs=pipeline.max_families,  # BC we only generated max_families MSAs!
+            a3m_dir_full=pipeline.a3m_dir_full,
+            expected_number_of_MSAs=pipeline.expected_number_of_MSAs,
             max_families=pipeline.max_families,
             a3m_dir=a3m_simulated_dir,
             pdb_dir=None,

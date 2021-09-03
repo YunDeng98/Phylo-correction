@@ -1,8 +1,10 @@
+from logging import Filter
 import os
 import time
 import numpy as np
 
 from typing import List, Optional, Union
+from src import maximum_parsimony
 
 from src.phylogeny_generation import PhylogenyGenerator
 from src.contact_generation import ContactGenerator
@@ -90,9 +92,24 @@ class Pipeline:
             of the NUMBER OF EDGES. This is used to filter out unreliable
             maximum parsimony transitions.
         n_process: How many processes to use.
+        a3m_dir_full: The MSA directory which contains ALL the MSAs.
+            This is needed because if one wants to run the pipeline
+            on a subset of families (via max_families argument),
+            then we need a way to determine what those families
+            are. These are chosen uniformly randomly from the families
+            in a3m_dir_full. Note that a3m_dir_full need not be the
+            same as a3m_dir, for example when performing an end-to-end
+            simulation: In this case, a3m_dir_full will point to the
+            _real_ MSAs, while a3m_dir will point to the _synthetic_
+            MSAs. Since subsampling a3m_dir uniformly at random
+            is not guaranteed to produce the same families as
+            subsampling from a3m_dir_full uniformly at random
+            (given the same seed), then a3m_dir_full is needed.
         expected_number_of_MSAs: This is just used to check that the
-            directory with the MSAs has the expected number of files.
-            I.e. just used to perform a pedantic check.
+            directory with the MSAs a3m_dir_full has the expected number
+            of files. This is needed to make sure that when using
+            the max_families feature to run the pipeline on a subset of
+            families, the same families are chosen every single time.
         max_families: One can choose to run the pipeline on ONLY the
             first 'max_families'. This is super useful for testing the pipeline
             before running it on all data.
@@ -152,6 +169,7 @@ class Pipeline:
         max_path_height: int,
         keep_outliers: bool,
         n_process: int,
+        a3m_dir_full: str,
         expected_number_of_MSAs: int,
         max_families: int,
         a3m_dir: str,
@@ -192,12 +210,17 @@ class Pipeline:
         if device not in ['cuda', 'cpu']:
             raise ValueError(f"device should be 'cuda' or 'cpu', {device} provided.")
         # Check that the global context is correct.
-        global_context = str([a3m_dir, pdb_dir, precomputed_contact_dir, precomputed_tree_dir, precomputed_maximum_parsimony_dir])
+        global_context = str([a3m_dir_full, a3m_dir, pdb_dir, precomputed_contact_dir, precomputed_tree_dir, precomputed_maximum_parsimony_dir])
         global_context_filepath = os.path.join(outdir, 'global_context.txt')
         if os.path.exists(global_context_filepath):
             previous_global_context = open(global_context_filepath, "r").read()
             if global_context != previous_global_context:
-                raise PipelineContextError(f"Trying to run pipeline with outdir from a previous pipeline with a different context. Please use a different outdir. Previous context: {previous_global_context}. New context: {global_context}.")
+                raise PipelineContextError(
+                    f"Trying to run pipeline with outdir from a previous "
+                    f"pipeline with a different context. Please use a different "
+                    f"outdir. Previous context: {previous_global_context}. "
+                    f"New context: {global_context}."
+                    f"outdir = {outdir}")
         else:
             os.makedirs(outdir)
             with open(global_context_filepath, "w") as global_context_file:
@@ -210,6 +233,7 @@ class Pipeline:
         self.armstrong_cutoff = armstrong_cutoff
         self.rate_matrix = rate_matrix
         self.n_process = n_process
+        self.a3m_dir_full = a3m_dir_full
         self.expected_number_of_MSAs = expected_number_of_MSAs
         self.max_families = max_families
         self.a3m_dir = a3m_dir
@@ -235,50 +259,65 @@ class Pipeline:
 
         # Output data directories
         # Where the phylogenies will be stored
-        self.tree_dir = os.path.join(outdir, f"trees_{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM")
+        tree_params = f"{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM"
+        self.tree_dir = os.path.join(outdir, f"trees_{tree_params}")
         # Where the contacts will be stored
-        self.contact_dir = os.path.join(outdir, f"contacts_{armstrong_cutoff}_angstrom")
+        contact_params = f"{armstrong_cutoff}_angstrom"
+        self.contact_dir = os.path.join(outdir, f"contacts_{contact_params}")
         # Where the maximum parsimony reconstructions will be stored
-        self.maximum_parsimony_dir = os.path.join(outdir, f"maximum_parsimony_{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM")
+        maximum_parsimony_params = tree_params
+        self.maximum_parsimony_dir = os.path.join(outdir, f"maximum_parsimony_{maximum_parsimony_params}")
         # Where the transitions obtained from the maximum parsimony phylogenies will be stored
-        self.transitions_dir = os.path.join(outdir, f"transitions_{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM")
+        transitions_params = maximum_parsimony_params
+        self.transitions_dir = os.path.join(outdir, f"transitions_{transitions_params}")
         # Where the transition matrices obtained by quantizing transition edges will be stored
         cherry_str = "" if edge_or_cherry == "edge" else "_cherry"
-        self.matrices_dir = os.path.join(outdir, f"matrices__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}")
+        filter_params = f"{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}"
+        matrices_params = f"{max_families}_families__{transitions_params}__{filter_params}"
+        self.matrices_dir = os.path.join(outdir, f"matrices__{matrices_params}")
         # Where the co-transitions obtained from the maximum parsimony phylogenies will be stored
+        co_transitions_params = f"{maximum_parsimony_params}_{contact_params}"
         self.co_transitions_dir = os.path.join(
             outdir,
-            f"co_transitions_{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom",
+            f"co_transitions_{co_transitions_params}",
         )
         # Where the co-transition matrices obtained by quantizing transition edges will be stored
+        co_matrices_params = f"{max_families}_families__{co_transitions_params}__{filter_params}"
         self.co_matrices_dir = os.path.join(
             outdir,
-            f"co_matrices__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}",
+            f"co_matrices__{co_matrices_params}",
         )
         str_init_jtt_ipw = "_init-JTT-IPW" if init_jtt_ipw else ""
+        optimizer_params = f"{num_epochs}_epochs{str_init_jtt_ipw}"
+        learnt_rate_matrix_params = f"{matrices_params}__{optimizer_params}"
         self.learnt_rate_matrix_dir = os.path.join(
             outdir,
-            f"Q1__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}__{num_epochs}_epochs{str_init_jtt_ipw}"
+            f"Q1__{learnt_rate_matrix_params}"
         )
+        learnt_rate_matrix_JTT_params = matrices_params
         self.learnt_rate_matrix_dir_JTT = os.path.join(
             outdir,
-            f"Q1_JTT__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}"
+            f"Q1_JTT__{learnt_rate_matrix_JTT_params}"
         )
+        learnt_rate_matrix_JTT_IPW_params = matrices_params
         self.learnt_rate_matrix_dir_JTT_IPW = os.path.join(
             outdir,
-            f"Q1_JTT-IPW__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}"
+            f"Q1_JTT-IPW__{learnt_rate_matrix_JTT_IPW_params}"
         )
+        learnt_co_rate_matrix_params = f"{co_matrices_params}__{optimizer_params}"
         self.learnt_co_rate_matrix_dir = os.path.join(
             outdir,
-            f"Q2__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}__{num_epochs}_epochs{str_init_jtt_ipw}"
+            f"Q2__{learnt_co_rate_matrix_params}"
         )
+        learnt_co_rate_matrix_JTT_params = co_matrices_params
         self.learnt_co_rate_matrix_dir_JTT = os.path.join(
             outdir,
-            f"Q2_JTT__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}"
+            f"Q2_JTT__{learnt_co_rate_matrix_JTT_params}"
         )
+        learnt_co_rate_matrix_JTT_IPW_params = co_matrices_params
         self.learnt_co_rate_matrix_dir_JTT_IPW = os.path.join(
             outdir,
-            f"Q2_JTT-IPW__{max_families}_families__{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}_RM_{armstrong_cutoff}_angstrom__{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height{cherry_str}"
+            f"Q2_JTT-IPW__{learnt_co_rate_matrix_JTT_IPW_params}"
         )
 
     def run(self):
@@ -296,6 +335,7 @@ class Pipeline:
         max_path_height = self.max_path_height
         keep_outliers = self.keep_outliers
         n_process = self.n_process
+        a3m_dir_full = self.a3m_dir_full
         expected_number_of_MSAs = self.expected_number_of_MSAs
         max_families = self.max_families
         a3m_dir = self.a3m_dir
@@ -329,6 +369,7 @@ class Pipeline:
         t_start = time.time()
         if precomputed_tree_dir is None and precomputed_maximum_parsimony_dir is None:
             phylogeny_generator = PhylogenyGenerator(
+                a3m_dir_full=a3m_dir_full,
                 a3m_dir=a3m_dir,
                 n_process=n_process,
                 expected_number_of_MSAs=expected_number_of_MSAs,
@@ -357,6 +398,7 @@ class Pipeline:
             assert armstrong_cutoff is not None
             assert pdb_dir is not None
             contact_generator = ContactGenerator(
+                a3m_dir_full=a3m_dir_full,
                 a3m_dir=a3m_dir,
                 pdb_dir=pdb_dir,
                 armstrong_cutoff=armstrong_cutoff,
@@ -377,6 +419,7 @@ class Pipeline:
         t_start = time.time()
         if precomputed_maximum_parsimony_dir is None:
             maximum_parsimony_reconstructor = MaximumParsimonyReconstructor(
+                a3m_dir_full=a3m_dir_full,
                 a3m_dir=a3m_dir,
                 tree_dir=tree_dir,
                 n_process=n_process,
@@ -394,6 +437,7 @@ class Pipeline:
         # Generate single-site transitions
         t_start = time.time()
         transition_extractor = TransitionExtractor(
+            a3m_dir_full=a3m_dir_full,
             a3m_dir=a3m_dir,
             parsimony_dir=maximum_parsimony_dir,
             n_process=n_process,
@@ -408,6 +452,7 @@ class Pipeline:
         # Generate single-site transition matrices
         t_start = time.time()
         matrix_generator = MatrixGenerator(
+            a3m_dir_full=a3m_dir_full,
             a3m_dir=a3m_dir,
             transitions_dir=transitions_dir,
             n_process=n_process,
@@ -477,6 +522,7 @@ class Pipeline:
         t_start = time.time()
         if learn_pairwise_model:
             co_transition_extractor = CoTransitionExtractor(
+                a3m_dir_full=a3m_dir_full,
                 a3m_dir=a3m_dir,
                 parsimony_dir=maximum_parsimony_dir,
                 n_process=n_process,
@@ -493,6 +539,7 @@ class Pipeline:
         t_start = time.time()
         if learn_pairwise_model:
             matrix_generator_pairwise = MatrixGenerator(
+                a3m_dir_full=a3m_dir_full,
                 a3m_dir=a3m_dir,
                 transitions_dir=co_transitions_dir,
                 n_process=n_process,
@@ -620,6 +667,7 @@ class Pipeline:
             f"method = {self.method}\n" \
             f"keep_outliers = {self.keep_outliers}\n" \
             f"n_process = {self.n_process}\n" \
+            f"a3m_dir_full = {self.a3m_dir_full}\n" \
             f"expected_number_of_MSAs = {self.expected_number_of_MSAs}\n" \
             f"max_families = {self.max_families}\n" \
             f"a3m_dir = {self.a3m_dir}\n" \
@@ -627,7 +675,8 @@ class Pipeline:
             f"precomputed_contact_dir = {self.precomputed_contact_dir}\n" \
             f"precomputed_tree_dir = {self.precomputed_tree_dir}\n" \
             f"precomputed_maximum_parsimony_dir = {self.precomputed_maximum_parsimony_dir}\n" \
-            f"learn_pairwise_model = {self.learn_pairwise_model}\n"
+            f"learn_pairwise_model = {self.learn_pairwise_model}\n" \
+            f"init_jtt_ipw = {self.init_jtt_ipw}\n"
         return res
 
     def get_learned_Q1(self) -> np.array:

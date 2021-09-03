@@ -193,7 +193,7 @@ class CoTransitionExtractor:
         n_process: Number of processes used to parallelize computation.
         expected_number_of_MSAs: The number of files in a3m_dir. This argument
             is only used to sanity check that the correct a3m_dir is being used.
-            It has no functional implications. DEPRECATED
+            It has no functional implications.
         outdir: Directory where the generated transitions will be found (.transitions files)
         max_families: Only run on 'max_families' randomly chosen files in a3m_dir.
             This is useful for testing and to see what happens if less data is used.

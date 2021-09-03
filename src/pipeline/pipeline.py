@@ -679,7 +679,8 @@ class Pipeline:
             f"precomputed_tree_dir = {self.precomputed_tree_dir}\n" \
             f"precomputed_maximum_parsimony_dir = {self.precomputed_maximum_parsimony_dir}\n" \
             f"learn_pairwise_model = {self.learn_pairwise_model}\n" \
-            f"init_jtt_ipw = {self.init_jtt_ipw}\n"
+            f"init_jtt_ipw = {self.init_jtt_ipw}\n" \
+            f"rate_matrix_parameterization = {self.rate_matrix_parameterization}"
         return res
 
     def get_learned_Q1(self) -> np.array:

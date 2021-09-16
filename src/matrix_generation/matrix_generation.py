@@ -39,7 +39,7 @@ def map_func(args: List) -> pd.DataFrame:
     seed = int(
         hashlib.md5(("".join(protein_family_names_for_shard) + "matrix_generation").encode()).hexdigest()[:8], 16
     )
-    logger.info(f"Setting random seed to: {seed}")
+    # logger.info(f"Setting random seed to: {seed}")
     np.random.seed(seed)
     random.seed(seed)
     logger.info(f"Starting on {len(protein_family_names_for_shard)} families")
@@ -178,6 +178,9 @@ class MatrixGenerator:
         self.edge_or_cherry = edge_or_cherry
 
     def run(self) -> None:
+        logger = logging.getLogger("phylo_correction.matrix_generation")
+        logger.info(f"Starting on max_families={self.max_families} ...")
+
         a3m_dir_full = self.a3m_dir_full
         a3m_dir = self.a3m_dir
         transitions_dir = self.transitions_dir
@@ -195,13 +198,11 @@ class MatrixGenerator:
         max_path_height = self.max_path_height
         edge_or_cherry = self.edge_or_cherry
 
-        logger = logging.getLogger("phylo_correction.matrix_generation")
-
         # Caching pattern: skip any computation as soon as possible
         out_filepath_total = os.path.join(outdir, "matrices.txt")
         out_filepath_quantized = os.path.join(outdir, "matrices_by_quantized_branch_length.txt")
         if use_cached and os.path.exists(out_filepath_total) and os.path.exists(out_filepath_quantized):
-            logger.info(f"Skipping. Cached matrices for {transitions_dir} at {out_filepath_total} and {out_filepath_quantized}")
+            # logger.info(f"Skipping. Cached matrices for {transitions_dir} at {out_filepath_total} and {out_filepath_quantized}")
             return
 
         assert num_sites in [1, 2]

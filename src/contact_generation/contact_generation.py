@@ -24,13 +24,14 @@ def map_func(args: List) -> None:
     # Caching pattern: skip any computation as soon as possible
     outfile = os.path.join(outdir, protein_family_name + ".cm")
     if use_cached and os.path.exists(outfile):
-        logger.info(f"Skipping. Cached contact matrix for family {protein_family_name} at {outfile}")
+        # logger.info(f"Skipping. Cached contact matrix for family {protein_family_name} at {outfile}")
         return
 
     seed = int(hashlib.md5((protein_family_name + "contact_generation").encode()).hexdigest()[:8], 16)
-    logger.info(f"Setting random seed to: {seed}")
+    # logger.info(f"Setting random seed to: {seed}")
     np.random.seed(seed)
     random.seed(seed)
+    logger.info(f"Starting on family {protein_family_name}")
 
     contact_matrix = ContactMatrix(
         pdb_dir=pdb_dir,
@@ -90,6 +91,9 @@ class ContactGenerator:
         self.use_cached = use_cached
 
     def run(self) -> None:
+        logger = logging.getLogger("phylo_correction.contact_generation")
+        logger.info(f"Starting on max_families={self.max_families} ...")
+
         a3m_dir_full = self.a3m_dir_full
         a3m_dir = self.a3m_dir
         pdb_dir = self.pdb_dir

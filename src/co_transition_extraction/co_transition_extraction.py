@@ -119,11 +119,11 @@ def map_func(args: List) -> None:
     # Caching pattern: skip any computation as soon as possible
     transition_filename = os.path.join(outdir, protein_family_name + ".transitions")
     if use_cached and os.path.exists(transition_filename):
-        logger.info(f"Skipping. Cached co-transitions for family {protein_family_name} at {transition_filename}.")
+        # logger.info(f"Skipping. Cached co-transitions for family {protein_family_name} at {transition_filename}.")
         return
 
     seed = int(hashlib.md5((protein_family_name + "co_transition_extraction").encode()).hexdigest()[:8], 16)
-    logger.info(f"Setting random seed to: {seed}")
+    # logger.info(f"Setting random seed to: {seed}")
     np.random.seed(seed)
     random.seed(seed)
     logger.info(f"Starting on family {protein_family_name}")
@@ -235,7 +235,7 @@ class CoTransitionExtractor:
         use_cached = self.use_cached
 
         logger = logging.getLogger("phylo_correction.co_transition_extraction")
-        logger.info("Starting ... ")
+        logger.info(f"Starting on max_families={self.max_families} ...")
 
         if not os.path.exists(outdir):
             os.makedirs(outdir)

@@ -148,13 +148,14 @@ def map_func(args) -> None:
     output_tree_filepath = os.path.join(outdir, protein_family_name + ".newick")
     output_parsimony_filepath = os.path.join(outdir, protein_family_name + ".parsimony")
     if use_cached and os.path.exists(output_tree_filepath) and os.path.exists(output_parsimony_filepath):
-        logger.info(f"Skipping. Cached maximum parsimony results for family {protein_family_name} at {output_tree_filepath} and {output_parsimony_filepath}")
+        # logger.info(f"Skipping. Cached maximum parsimony results for family {protein_family_name} at {output_tree_filepath} and {output_parsimony_filepath}")
         return
 
     seed = int(hashlib.md5((protein_family_name + "maximum_parsimony").encode()).hexdigest()[:8], 16)
-    logger.info(f"Setting random seed to: {seed}")
+    # logger.info(f"Setting random seed to: {seed}")
     np.random.seed(seed)
     random.seed(seed)
+    logger.info(f"Starting on family {protein_family_name}")
 
     msa = MSA(a3m_dir=a3m_dir, protein_family_name=protein_family_name, max_seqs=max_seqs, max_sites=max_sites)
     # Read tree. Careful: Some trees might be corrupted / not exist due to MSA issues.
@@ -266,6 +267,9 @@ class MaximumParsimonyReconstructor:
             #   test_data/solution.txt
 
     def run(self) -> None:
+        logger = logging.getLogger("phylo_correction.maximum_parsimony")
+        logger.info(f"Starting on max_families={self.max_families} ...")
+
         a3m_dir_full = self.a3m_dir_full
         a3m_dir = self.a3m_dir
         tree_dir = self.tree_dir
@@ -277,9 +281,6 @@ class MaximumParsimonyReconstructor:
 
         max_seqs = 0
         max_sites = 0
-
-        logger = logging.getLogger("phylo_correction.maximum_parsimony")
-        logger.info("Starting ... ")
 
         if os.path.exists(outdir) and not use_cached:
             raise ValueError(f"outdir {outdir} already exists. Aborting not to " f"overwrite!")

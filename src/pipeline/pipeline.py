@@ -641,7 +641,7 @@ class Pipeline:
         Useful for profiling and finding bottlenecks.
         """
         res = (
-            f"time_total = {self.time_total}. Breakdown:\n"
+            f"max_families={self.max_families}; time_total = {self.time_total}. Breakdown:\n"
             + f"time_PhylogenyGenerator = {self.time_PhylogenyGenerator}\n"
             + f"time_ContactGenerator = {self.time_ContactGenerator}\n"
             + f"time_MaximumParsimonyReconstructor = {self.time_MaximumParsimonyReconstructor}\n"

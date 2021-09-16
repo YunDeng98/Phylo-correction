@@ -243,22 +243,22 @@ class EndToEndSimulator:
         t_start = time.time()
         self.simulator.run()
         self.time_Simulator = time.time() - t_start
-        logger.info(f"time_Simulator = {self.time_Simulator}")
+        logger.info(f"max_families={pipeline.max_families}; time_Simulator = {self.time_Simulator}")
 
         if simulate_end_to_end:
             self.pipeline_on_simulated_data_end_to_end.run()
-            logger.info(f"time_simulate_end_to_end:\n" f"{self.pipeline_on_simulated_data_end_to_end.get_times()}")
+            logger.info(f"max_families={pipeline.max_families}; time_simulate_end_to_end:\n" f"{self.pipeline_on_simulated_data_end_to_end.get_times()}")
 
         if simulate_from_trees_wo_ancestral_states:
             self.pipeline_on_simulated_data_from_trees_wo_ancestral_states.run()
             logger.info(
-                f"time_simulate_from_trees_wo_ancestral_states:\n"
+                f"max_families={pipeline.max_families}; time_simulate_from_trees_wo_ancestral_states:\n"
                 f"{self.pipeline_on_simulated_data_from_trees_wo_ancestral_states.get_times()}"
             )
 
         if simulate_from_trees_w_ancestral_states:
             self.pipeline_on_simulated_data_from_trees_w_ancestral_states.run()
             logger.info(
-                f"time_simulate_from_trees_w_ancestral_states:\n"
+                f"max_families={pipeline.max_families}; time_simulate_from_trees_w_ancestral_states:\n"
                 f"{self.pipeline_on_simulated_data_from_trees_w_ancestral_states.get_times()}"
             )

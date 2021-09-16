@@ -34,17 +34,18 @@ class JTT:
     def train(
         self,
     ):
+        logger = logging.getLogger("phylo_correction.counting")
+        logger.info(f"Starting ... ")
+
         frequency_matrices = self.frequency_matrices
         output_dir = self.output_dir
         mask = self.mask
         use_cached = self.use_cached
         ipw = self.ipw
 
-        logger = logging.getLogger("phylo_correction.counting")
-
         # Create experiment directory
         if os.path.exists(output_dir) and use_cached:
-            logger.info(f"Skipping. Cached counting JTT results at {output_dir}")
+            # logger.info(f"Skipping. Cached counting JTT results at {output_dir}")
             return
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)

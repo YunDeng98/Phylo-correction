@@ -54,17 +54,18 @@ class RateMatrixLearner:
         num_epochs=2000,
         do_adam: bool = True,
     ):
+        logger = logging.getLogger("phylo_correction.ratelearner")
+        logger.info(f"Starting ...")
+
         torch.manual_seed(0)
         device = self.device
         output_dir = self.output_dir
         use_cached = self.use_cached
         initialization = self.initialization
 
-        logger = logging.getLogger("phylo_correction.ratelearner")
-
         # Create experiment directory
         if os.path.exists(output_dir) and use_cached:
-            logger.info(f"Skipping. Cached ratelearner results at {output_dir}")
+            # logger.info(f"Skipping. Cached ratelearner results at {output_dir}")
             return
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)

@@ -128,7 +128,7 @@ class FastTreePhylogeny:
         # Caching pattern: skip any computation as soon as possible
         outfile = os.path.join(outdir, protein_family_name) + ".newick"
         if use_cached and os.path.exists(outfile):
-            logger.info(f"Skipping. Cached FastTree output for family {protein_family_name} at {outfile}")
+            # logger.info(f"Skipping. Cached FastTree output for family {protein_family_name} at {outfile}")
             return
 
         dir_path = os.path.dirname(os.path.realpath(__file__))

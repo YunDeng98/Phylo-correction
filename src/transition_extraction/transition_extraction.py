@@ -106,11 +106,11 @@ def map_func(args: List) -> None:
     # Caching pattern: skip any computation as soon as possible
     transition_filename = os.path.join(outdir, protein_family_name + ".transitions")
     if use_cached and os.path.exists(transition_filename):
-        logger.info(f"Skipping. Cached transitions for family {protein_family_name} at {transition_filename}")
+        # logger.info(f"Skipping. Cached transitions for family {protein_family_name} at {transition_filename}")
         return
 
     seed = int(hashlib.md5((protein_family_name + "transition_extraction").encode()).hexdigest()[:8], 16)
-    logger.info(f"Setting random seed to: {seed}")
+    # logger.info(f"Setting random seed to: {seed}")
     np.random.seed(seed)
     random.seed(seed)
     logger.info(f"Starting on family {protein_family_name}")
@@ -203,6 +203,9 @@ class TransitionExtractor:
         self.use_cached = use_cached
 
     def run(self) -> None:
+        logger = logging.getLogger("phylo_correction.transition_extraction")
+        logger.info(f"Starting on max_families={self.max_families} ...")
+
         a3m_dir_full = self.a3m_dir_full
         a3m_dir = self.a3m_dir
         parsimony_dir = self.parsimony_dir
@@ -211,9 +214,6 @@ class TransitionExtractor:
         outdir = self.outdir
         max_families = self.max_families
         use_cached = self.use_cached
-
-        logger = logging.getLogger("phylo_correction.transition_extraction")
-        logger.info("Starting ... ")
 
         if not os.path.exists(outdir):
             os.makedirs(outdir)

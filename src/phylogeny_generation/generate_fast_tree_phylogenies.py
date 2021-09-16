@@ -22,7 +22,7 @@ def map_func(args) -> None:
 
     logger = logging.getLogger("phylo_correction.phylogeny_generation")
     seed = int(hashlib.md5((protein_family_name + "phylogeny_generation").encode()).hexdigest()[:8], 16)
-    logger.info(f"Setting random seed to: {seed}")
+    # logger.info(f"Setting random seed to: {seed}")
     np.random.seed(seed)
     random.seed(seed)
 
@@ -88,6 +88,9 @@ class PhylogenyGenerator:
         self.use_cached = use_cached
 
     def run(self) -> None:
+        logger = logging.getLogger("phylo_correction.generate_fast_tree_phylogenies")
+        logger.info(f"Starting on max_families={self.max_families} ...")
+
         a3m_dir_full = self.a3m_dir_full
         a3m_dir = self.a3m_dir
         n_process = self.n_process

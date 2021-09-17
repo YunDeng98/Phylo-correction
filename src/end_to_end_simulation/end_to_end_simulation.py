@@ -149,6 +149,7 @@ class EndToEndSimulator:
             method=pipeline.method,
             init_jtt_ipw=pipeline.init_jtt_ipw,
             rate_matrix_parameterization=pipeline.rate_matrix_parameterization,
+            learn_pairwise_model=pipeline.learn_pairwise_model,
         )
 
         self.pipeline_on_simulated_data_from_trees_wo_ancestral_states = Pipeline(
@@ -179,6 +180,7 @@ class EndToEndSimulator:
             method=pipeline.method,
             init_jtt_ipw=pipeline.init_jtt_ipw,
             rate_matrix_parameterization=pipeline.rate_matrix_parameterization,
+            learn_pairwise_model=pipeline.learn_pairwise_model,
         )
 
         self.pipeline_on_simulated_data_from_trees_w_ancestral_states = Pipeline(
@@ -209,6 +211,7 @@ class EndToEndSimulator:
             method=pipeline.method,
             init_jtt_ipw=pipeline.init_jtt_ipw,
             rate_matrix_parameterization=pipeline.rate_matrix_parameterization,
+            learn_pairwise_model=pipeline.learn_pairwise_model,
         )
 
     def run(self):
@@ -246,10 +249,12 @@ class EndToEndSimulator:
         logger.info(f"max_families={pipeline.max_families}; time_Simulator = {self.time_Simulator}")
 
         if simulate_end_to_end:
+            logger.info(f"max_families={pipeline.max_families}; Starting simulate_end_to_end")
             self.pipeline_on_simulated_data_end_to_end.run()
             logger.info(f"max_families={pipeline.max_families}; time_simulate_end_to_end:\n" f"{self.pipeline_on_simulated_data_end_to_end.get_times()}")
 
         if simulate_from_trees_wo_ancestral_states:
+            logger.info(f"max_families={pipeline.max_families}; Starting simulate_from_trees_wo_ancestral_states")
             self.pipeline_on_simulated_data_from_trees_wo_ancestral_states.run()
             logger.info(
                 f"max_families={pipeline.max_families}; time_simulate_from_trees_wo_ancestral_states:\n"
@@ -257,6 +262,7 @@ class EndToEndSimulator:
             )
 
         if simulate_from_trees_w_ancestral_states:
+            logger.info(f"max_families={pipeline.max_families}; Starting simulate_from_trees_w_ancestral_states")
             self.pipeline_on_simulated_data_from_trees_w_ancestral_states.run()
             logger.info(
                 f"max_families={pipeline.max_families}; time_simulate_from_trees_w_ancestral_states:\n"

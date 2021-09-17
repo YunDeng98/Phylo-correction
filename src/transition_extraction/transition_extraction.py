@@ -24,7 +24,9 @@ sys.path.append("../")
 def get_transitions(
     tree: Tree,
     sequences: Dict[str, str],
+    protein_family_name: str,
 ) -> List[Tuple[str, str, float, float, int, str, str, int, str]]:
+    logger = logging.getLogger("phylo_correction.transition_extraction")
     # The root's name was not written out by ete3 in the maximum_parsimony script,
     # so we name it ourselves.
     assert tree.name == ""
@@ -57,7 +59,9 @@ def get_transitions(
         # Add cherry at node v
         if path_height[v.name] == 1:
             children = v.get_children()
-            assert(len(children) == 2)
+            if len(children) < 2:
+                logger.error(f"Family {protein_family_name}: Alleged cherry {v.name} has {len(children)} children.")
+            assert(len(children) >= 2)
             u1, u2 = children[0], children[1]
             assert(path_height[u1.name] == 0 and path_height[u2.name] == 0)
             res.append(
@@ -129,7 +133,7 @@ def map_func(args: List) -> None:
             if i != 0:
                 sequences[line_contents[0]] = line_contents[1].rstrip("\n")
 
-    transitions = get_transitions(tree, sequences)
+    transitions = get_transitions(tree, sequences, protein_family_name)
     res = "starting_state,ending_state,length,height,path_height,starting_node,ending_node,site_id,edge_or_cherry\n"
     for transition in transitions:
         res += (

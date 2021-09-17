@@ -35,7 +35,7 @@ class JTT:
         self,
     ):
         logger = logging.getLogger("phylo_correction.counting")
-        logger.info(f"Starting ... ")
+        logger.info(f"Starting, outdir: {self.output_dir}")
 
         frequency_matrices = self.frequency_matrices
         output_dir = self.output_dir

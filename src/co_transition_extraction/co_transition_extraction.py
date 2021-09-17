@@ -224,6 +224,9 @@ class CoTransitionExtractor:
         self.use_cached = use_cached
 
     def run(self) -> None:
+        logger = logging.getLogger("phylo_correction.co_transition_extraction")
+        logger.info(f"Starting on max_families={self.max_families}, outdir: {self.outdir}")
+
         a3m_dir_full = self.a3m_dir_full
         a3m_dir = self.a3m_dir
         parsimony_dir = self.parsimony_dir
@@ -233,9 +236,6 @@ class CoTransitionExtractor:
         max_families = self.max_families
         contact_dir = self.contact_dir
         use_cached = self.use_cached
-
-        logger = logging.getLogger("phylo_correction.co_transition_extraction")
-        logger.info(f"Starting on max_families={self.max_families} ...")
 
         if not os.path.exists(outdir):
             os.makedirs(outdir)

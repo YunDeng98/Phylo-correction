@@ -268,7 +268,7 @@ class MaximumParsimonyReconstructor:
 
     def run(self) -> None:
         logger = logging.getLogger("phylo_correction.maximum_parsimony")
-        logger.info(f"Starting on max_families={self.max_families} ...")
+        logger.info(f"Starting on max_families={self.max_families}, outdir: {self.outdir}")
 
         a3m_dir_full = self.a3m_dir_full
         a3m_dir = self.a3m_dir

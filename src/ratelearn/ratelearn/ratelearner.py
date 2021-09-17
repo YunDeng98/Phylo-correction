@@ -55,7 +55,7 @@ class RateMatrixLearner:
         do_adam: bool = True,
     ):
         logger = logging.getLogger("phylo_correction.ratelearner")
-        logger.info(f"Starting ...")
+        logger.info(f"Starting, outdir: {self.output_dir}")
 
         torch.manual_seed(0)
         device = self.device

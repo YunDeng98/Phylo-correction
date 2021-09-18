@@ -94,7 +94,6 @@ def write_out_tree(
     with open(tree_filepath, "w") as file:
         file.write(f"{len(res) + 1}\n")
         file.write("".join(res))
-    os.system(f"chmod 555 {tree_filepath}")
 
 
 def write_out_msa(
@@ -112,7 +111,6 @@ def write_out_msa(
     with open(msa_filepath, "w") as outfile:
         outfile.write(f"{nleaves}\n")
         outfile.write(res)
-    os.system(f"chmod 555 {msa_filepath}")
 
 
 def map_parsimony_indexing_back_to_str(
@@ -131,6 +129,7 @@ def map_parsimony_indexing_back_to_str(
                     line_contents = line.split(" ")
                     res += f"{int_to_node_name[int(line_contents[0])]} {line_contents[1]}"
             outfile.write(res)
+            os.system(f"chmod 555 {parsimony_filepath}")
 
 
 def map_func(args) -> None:
@@ -167,6 +166,7 @@ def map_func(args) -> None:
     name_internal_nodes(tree)
     output_tree_filepath = os.path.join(outdir, protein_family_name + ".newick")
     tree.write(format=3, outfile=output_tree_filepath)
+    os.system(f"chmod 555 {output_tree_filepath}")
     # Create input for C++ maximum parsimony
     node_name_to_int, int_to_node_name = create_node_name_vs_int_mappings(tree)
 

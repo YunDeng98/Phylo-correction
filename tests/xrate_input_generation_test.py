@@ -30,6 +30,6 @@ class TestXRATEInputGenerator(unittest.TestCase):
                     use_cached=use_cached,
                 )
                 xrate_input_generator.run()
-                dcmp = dircmp(outdir, 'test_input_data/stockholm')
+                dcmp = dircmp(outdir, 'test_input_data/stockholm_small')
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)

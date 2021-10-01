@@ -58,7 +58,6 @@ def run_xrate(
     estimate_trees: bool = False,
 ):
     logger = logging.getLogger("phylo_correction.xrate")
-    logger.info = print
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     xrate_path = os.path.join(dir_path, 'x_rate_github')

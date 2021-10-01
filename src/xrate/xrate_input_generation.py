@@ -7,6 +7,7 @@ import os
 
 import logging
 import tqdm
+from ete3 import Tree
 
 from typing import List
 
@@ -15,6 +16,7 @@ from src.utils import subsample_protein_families
 
 
 def convert_parsimony_file_to_stock(
+    protein_family_name: str,
     parsimony_input_path: str,
     tree_input_path: str,
 ) -> str:
@@ -27,8 +29,14 @@ def convert_parsimony_file_to_stock(
     XRATE requires inputs in the Stockholm format, which is why this method exists.
     """
     res = "# STOCKHOLM 1.0\n"
-    tree = open(tree_input_path).read().strip('\n')
-    res += "#=GF NH " + tree + '\n'
+
+    def dfs_rename_nodes(v):
+        v.name = protein_family_name + '-' + v.name
+        for u in v.get_children():
+            dfs_rename_nodes(u)
+    tree = Tree(tree_input_path, format=3)
+    dfs_rename_nodes(tree)
+    res += "#=GF NH " + tree.write(format=3)
 
     # Read MSA
     with open(parsimony_input_path) as file:
@@ -41,7 +49,7 @@ def convert_parsimony_file_to_stock(
             protein_name = line[0]
             protein_seq = line[1]
             protein_seq.replace('-', '.')
-            res += protein_name + " " + protein_seq
+            res += protein_family_name + '-' + protein_name + " " + protein_seq
     return res
 
 
@@ -62,6 +70,7 @@ def map_func(args: List) -> None:
     logger.info(f"Starting on family {protein_family_name}")
 
     res = convert_parsimony_file_to_stock(
+        protein_family_name=protein_family_name,
         parsimony_input_path=os.path.join(parsimony_dir, f"{protein_family_name}.parsimony"),
         tree_input_path=os.path.join(parsimony_dir, f"{protein_family_name}.newick"),
     )
@@ -91,6 +100,7 @@ class XRATEInputGenerator:
             is only used to sanity check that the correct a3m_dir is being used.
             It has no functional implications.
         outdir: Directory where the generated stockholm files (.stock files)
+            will be found.
         max_families: Only run on 'max_families' randomly chosen files in a3m_dir_full.
             This is useful for testing and to see what happens if less data is used.
         use_cached: If True and the output file already exists for a family,

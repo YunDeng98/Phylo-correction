@@ -10,9 +10,6 @@ from src.xrate.xrate import XRATE, install_xrate
 
 
 class TestXRATEInputGenerator(unittest.TestCase):
-    def test_xrate_installation(self):
-        install_xrate()
-
     @parameterized.expand([("multiprocess", 3), ("single-process", 1)])
     def test_xrate_input_generator(self, name, n_process):
         """
@@ -22,6 +19,7 @@ class TestXRATEInputGenerator(unittest.TestCase):
         We run the same XRATEInputGenerator twice: first without caching,
         then with caching, to make sure that caching works.
         """
+        install_xrate()
         with tempfile.TemporaryDirectory() as root_dir:
             outdir = os.path.join(root_dir, 'stockholm')
             for use_cached in [False, True]:
@@ -44,6 +42,7 @@ class TestXRATEInputGenerator(unittest.TestCase):
         Test that XRATE runs and its output matches the expected
         output. The expected output is located at test_input_data/Q1_XRATE_small
         """
+        install_xrate()
         with tempfile.TemporaryDirectory() as root_dir:
             outdir = os.path.join(root_dir, 'xrate')
             for use_cached in [False, True]:

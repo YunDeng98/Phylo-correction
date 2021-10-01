@@ -316,8 +316,9 @@ class Pipeline:
         )
 
         # XRATE stuff
-        xrate_params = maximum_parsimony_params
-        self.xrate_input_dir = os.path.join(outdir, f"xrate_input__{xrate_params}")
+        xrate_input_params = maximum_parsimony_params  # File-level caching so no need for max_families
+        self.xrate_input_dir = os.path.join(outdir, f"xrate_input_params__{xrate_input_params}")
+        xrate_params = f"{max_families}_families__{xrate_input_params}"  # Need max_families!
         self.learnt_rate_matrix_dir_XRATE = os.path.join(
             outdir,
             f"Q1_XRATE__{xrate_params}"

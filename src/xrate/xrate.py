@@ -76,7 +76,7 @@ def xrate_to_numpy(xrate_output_file: str) -> np.array:
     with open(xrate_output_file, "r") as file:
         lines = list(file)
         for line in lines:
-            if line.startswith("  (mutate (from ("):
+            if line.startswith("  (mutate (from (") and "rate" in line:
                 aa1 = line[17].upper()
                 aa2 = line[26].upper()
                 rate = float(line.replace(')', '').split(' ')[-1])

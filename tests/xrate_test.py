@@ -1,8 +1,9 @@
 import os
 import unittest
 import tempfile
-from filecmp import dircmp
 from parameterized import parameterized
+import numpy as np
+from filecmp import dircmp
 
 from src.xrate.xrate_input_generation import XRATEInputGenerator
 from src.xrate.xrate import XRATE, install_xrate
@@ -55,6 +56,16 @@ class TestXRATEInputGenerator(unittest.TestCase):
                     use_cached=use_cached,
                 )
                 xrate.run()
-                dcmp = dircmp(outdir, 'test_input_data/Q1_XRATE_small')
-                diff_files = dcmp.diff_files
-                assert(len(diff_files) == 0)
+                learned_matrix_true_path = "test_input_data/Q1_XRATE_small/learned_matrix.txt"
+                learned_matrix_inferred_path = os.path.join(outdir, "learned_matrix.txt")
+                Q_true = np.loadtxt(learned_matrix_true_path)
+                Q_inferred = np.loadtxt(learned_matrix_inferred_path)
+                l1_error = np.sum(np.abs(Q_true - Q_inferred))
+                assert(l1_error < 0.01)
+
+                learned_matrix_true_path = "test_input_data/Q1_XRATE_small/learned_matrix_normalized.txt"
+                learned_matrix_inferred_path = os.path.join(outdir, "learned_matrix_normalized.txt")
+                Q_true = np.loadtxt(learned_matrix_true_path)
+                Q_inferred = np.loadtxt(learned_matrix_inferred_path)
+                l1_error = np.sum(np.abs(Q_true - Q_inferred))
+                assert(l1_error < 0.01)

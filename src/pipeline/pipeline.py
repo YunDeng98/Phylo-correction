@@ -541,6 +541,7 @@ class Pipeline:
         self.time_RateMatrixLearner_1 = time.time() - t_start
 
         # Estimate rate matrix with XRATE
+        t_start = time.time()
         if "XRATE" in method:
             xrate_input_generator = XRATEInputGenerator(
                 a3m_dir_full=a3m_dir_full,
@@ -552,6 +553,10 @@ class Pipeline:
                 use_cached=use_cached,
             )
             xrate_input_generator.run()
+        self.time_XRATEInputGenerator = time.time() - t_start
+
+        t_start = time.time()
+        if "XRATE" in method:
             xrate = XRATE(
                 a3m_dir_full=a3m_dir_full,
                 xrate_input_dir=xrate_input_dir,
@@ -561,6 +566,7 @@ class Pipeline:
                 use_cached=use_cached,
             )
             xrate.run()
+        self.time_XRATE = time.time() - t_start
 
         # Generate co-transitions
         t_start = time.time()
@@ -683,6 +689,8 @@ class Pipeline:
             + f"time_RateMatrixLearner_1 = {self.time_RateMatrixLearner_1}\n"
             + f"time_RateMatrixLearner_JTT_1 = {self.time_RateMatrixLearner_JTT_1}\n"
             + f"time_RateMatrixLearner_JTT_IPW_1 = {self.time_RateMatrixLearner_JTT_IPW_1}\n"
+            + f"time_XRATEInputGenerator = {self.time_XRATEInputGenerator}\n"
+            + f"time_XRATE = {self.time_XRATE}\n"
             + f"time_CoTransitionExtractor = {self.time_CoTransitionExtractor}\n"
             + f"time_MatrixGenerator_2 = {self.time_MatrixGenerator_2}\n"
             + f"time_RateMatrixLearner_2 = {self.time_RateMatrixLearner_2}\n"

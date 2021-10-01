@@ -1,10 +1,8 @@
-from logging import Filter
 import os
 import time
 import numpy as np
 
 from typing import List, Optional, Union, Tuple
-from src import maximum_parsimony
 import pandas as pd
 
 from src.phylogeny_generation import PhylogenyGenerator
@@ -16,6 +14,8 @@ from src.matrix_generation import MatrixGenerator
 from src.ratelearn import RateMatrixLearner
 from src.counting import JTT
 from src.utils import hash_str
+from src.xrate.xrate_input_generation import XRATEInputGenerator
+from src.xrate.xrate import XRATE
 
 
 class PipelineContextError(Exception):
@@ -314,6 +314,15 @@ class Pipeline:
             outdir,
             f"Q1_JTT-IPW__{learnt_rate_matrix_JTT_IPW_params}"
         )
+
+        # XRATE stuff
+        xrate_params = maximum_parsimony_params
+        self.xrate_input_dir = os.path.join(outdir, f"xrate_input__{xrate_params}")
+        self.learnt_rate_matrix_dir_XRATE = os.path.join(
+            outdir,
+            f"Q1_XRATE__{xrate_params}"
+        )
+
         learnt_co_rate_matrix_params = f"{co_matrices_params}__{optimizer_params}"
         self.learnt_co_rate_matrix_dir = os.path.join(
             outdir,
@@ -360,6 +369,8 @@ class Pipeline:
         learnt_rate_matrix_dir = self.learnt_rate_matrix_dir
         learnt_rate_matrix_dir_JTT = self.learnt_rate_matrix_dir_JTT
         learnt_rate_matrix_dir_JTT_IPW = self.learnt_rate_matrix_dir_JTT_IPW
+        xrate_input_dir = self.xrate_input_dir
+        learnt_rate_matrix_dir_XRATE = self.learnt_rate_matrix_dir_XRATE
         learnt_co_rate_matrix_dir = self.learnt_co_rate_matrix_dir
         learnt_co_rate_matrix_dir_JTT = self.learnt_co_rate_matrix_dir_JTT
         learnt_co_rate_matrix_dir_JTT_IPW = self.learnt_co_rate_matrix_dir_JTT_IPW
@@ -528,6 +539,28 @@ class Pipeline:
                 do_adam=True,
             )
         self.time_RateMatrixLearner_1 = time.time() - t_start
+
+        # Estimate rate matrix with XRATE
+        if "XRATE" in method:
+            xrate_input_generator = XRATEInputGenerator(
+                a3m_dir_full=a3m_dir_full,
+                parsimony_dir=maximum_parsimony_dir,
+                n_process=n_process,
+                expected_number_of_MSAs=expected_number_of_MSAs,
+                outdir=xrate_input_dir,
+                max_families=max_families,
+                use_cached=use_cached,
+            )
+            xrate_input_generator.run()
+            xrate = XRATE(
+                a3m_dir_full=a3m_dir_full,
+                xrate_input_dir=xrate_input_dir,
+                expected_number_of_MSAs=expected_number_of_MSAs,
+                outdir=learnt_rate_matrix_dir_XRATE,
+                max_families=max_families,
+                use_cached=use_cached,
+            )
+            xrate.run()
 
         # Generate co-transitions
         t_start = time.time()
@@ -711,6 +744,14 @@ class Pipeline:
         return np.loadtxt(
             os.path.join(
                 self.learnt_rate_matrix_dir_JTT,
+                "learned_matrix.txt",
+            )
+        )
+
+    def get_learned_Q1_XRATE(self) -> np.array:
+        return np.loadtxt(
+            os.path.join(
+                self.learnt_rate_matrix_dir_XRATE,
                 "learned_matrix.txt",
             )
         )

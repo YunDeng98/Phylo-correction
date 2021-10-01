@@ -50,8 +50,11 @@ class TestPipeline(unittest.TestCase):
                     precomputed_tree_dir=None,
                     precomputed_maximum_parsimony_dir=None,
                     learn_pairwise_model=True,
+                    method=["MLE", "XRATE"],
                 )
                 pipeline.run()
+                Q1_MLE = pipeline.get_learned_Q1()
+                Q1_XRATE = pipeline.get_learned_Q1_XRATE()
                 dcmp = dircmp(os.path.join(outdir, pipeline.matrices_dir), 'test_input_data/matrices_small')
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)

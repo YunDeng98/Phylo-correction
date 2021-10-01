@@ -38,23 +38,23 @@ class TestXRATEInputGenerator(unittest.TestCase):
                 diff_files = dcmp.diff_files
                 assert(len(diff_files) == 0)
 
-    # def test_xrate(self):
-    #     """
-    #     Test that XRATE runs and its output matches the expected
-    #     output. The expected output is located at test_input_data/Q1_XRATE_small
-    #     """
-    #     with tempfile.TemporaryDirectory() as root_dir:
-    #         outdir = os.path.join(root_dir, 'xrate')
-    #         for use_cached in [False, True]:
-    #             xrate = XRATE(
-    #                 a3m_dir_full='test_input_data/a3m_small',
-    #                 xrate_input_dir='test_input_data/stockholm_small',
-    #                 expected_number_of_MSAs=3,
-    #                 outdir=outdir,
-    #                 max_families=3,
-    #                 use_cached=use_cached,
-    #             )
-    #             xrate.run()
-    #             dcmp = dircmp(outdir, 'test_input_data/Q1_XRATE_small')
-    #             diff_files = dcmp.diff_files
-    #             assert(len(diff_files) == 0)
+    def test_xrate(self):
+        """
+        Test that XRATE runs and its output matches the expected
+        output. The expected output is located at test_input_data/Q1_XRATE_small
+        """
+        with tempfile.TemporaryDirectory() as root_dir:
+            outdir = os.path.join(root_dir, 'xrate')
+            for use_cached in [False, True]:
+                xrate = XRATE(
+                    a3m_dir_full='test_input_data/a3m_small',
+                    xrate_input_dir='test_input_data/stockholm_small',
+                    expected_number_of_MSAs=3,
+                    outdir=outdir,
+                    max_families=3,
+                    use_cached=use_cached,
+                )
+                xrate.run()
+                dcmp = dircmp(outdir, 'test_input_data/Q1_XRATE_small')
+                diff_files = dcmp.diff_files
+                assert(len(diff_files) == 0)

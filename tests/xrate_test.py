@@ -44,8 +44,7 @@ class TestXRATEInputGenerator(unittest.TestCase):
         """
         install_xrate()
         with tempfile.TemporaryDirectory() as root_dir:
-            # outdir = os.path.join(root_dir, 'xrate')
-            outdir = 'asdf'
+            outdir = os.path.join(root_dir, 'xrate')
             for use_cached in [False, True]:
                 xrate = XRATE(
                     a3m_dir_full='test_input_data/a3m_small',

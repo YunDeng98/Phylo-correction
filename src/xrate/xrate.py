@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import sys
 
-from typing import List
+from typing import List, Optional
 
 
 from src.utils import subsample_protein_families
@@ -55,6 +55,7 @@ def install_xrate():
 def run_xrate(
     stock_input_paths: List[str],
     output_path: str,
+    logfile: Optional[str] = None,
     estimate_trees: bool = False,
 ):
     logger = logging.getLogger("phylo_correction.xrate")
@@ -66,6 +67,8 @@ def run_xrate(
         cmd = f"{xrate_bin_path} {' '.join(stock_input_paths)} -e {xrate_path}/grammars/nullprot.eg -g {xrate_path}/grammars/nullprot.eg -t {output_path} -log 6"
     else:
         cmd = f"{xrate_bin_path} {' '.join(stock_input_paths)} -g {xrate_path}/grammars/nullprot.eg -t {output_path} -log 6"
+    if logfile is not None:
+        cmd += f" 2>&1 | tee {logfile}"
     logger.info(f"Running {cmd}")
     os.system(cmd)
 
@@ -155,7 +158,8 @@ class XRATE:
             stock_input_paths=[
                 os.path.join(xrate_input_dir, f"{protein_family_name}.stock") for protein_family_name in protein_family_names
             ],
-            output_path=os.path.join(outdir, "learned_matrix.xrate")
+            output_path=os.path.join(outdir, "learned_matrix.xrate"),
+            logfile=os.path.join(outdir, "xrate_log"),
         )
         Q = xrate_to_numpy(xrate_output_file=os.path.join(outdir, "learned_matrix.xrate"))
         np.savetxt(learned_matrix_path, Q)

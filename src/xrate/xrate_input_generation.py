@@ -36,7 +36,7 @@ def convert_parsimony_file_to_stock(
             dfs_rename_nodes(u)
     tree = Tree(tree_input_path, format=3)
     dfs_rename_nodes(tree)
-    res += "#=GF NH " + tree.write(format=3)
+    res += "#=GF NH " + tree.write(format=3) + "\n"
 
     # Read MSA
     with open(parsimony_input_path) as file:

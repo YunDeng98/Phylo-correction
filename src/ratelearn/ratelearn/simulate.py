@@ -83,8 +83,8 @@ def generate_data(
             err = (transition_probs_from_starting_state2 - transition_probs_from_starting_state).abs().max(1).values.max(1).values
             id_branch_max = err.argmax()
             id_branch_min = err.argmin()
-            print("max", branch_length_[id_branch_max], err.max())
-            print("min", branch_length_[id_branch_min], err.min())
+            # print("max", branch_length_[id_branch_max], err.max())
+            # print("min", branch_length_[id_branch_min], err.min())
 
         else:
             transition_probs_from_starting_state = torch.matrix_exp(

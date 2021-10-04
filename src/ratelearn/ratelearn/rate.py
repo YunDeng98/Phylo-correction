@@ -4,8 +4,16 @@ from typing import Optional
 import sys
 import numpy as np
 
-sys.path.append("../")
-import Phylo_util
+
+def solve_stationery_dist(rate_matrix):
+    eigvals, eigvecs = np.linalg.eig(rate_matrix.transpose())
+    eigvals = eigvals.real
+    eigvecs = eigvecs.real
+    eigvals = np.abs(eigvals)
+    index = np.argmin(eigvals)
+    stationery_dist = eigvecs[:, index]
+    stationery_dist = stationery_dist / sum(stationery_dist)
+    return stationery_dist
 
 
 class RateMatrix(nn.Module):
@@ -33,7 +41,7 @@ class RateMatrix(nn.Module):
             # Need to decompose the initialization into pande_reversible
             # components: 1/sqrt(pi) * S * sqrt(pi)
             # Need to be careful about inverting the activation functions.
-            pi = Phylo_util.solve_stationery_dist(initialization)
+            pi = solve_stationery_dist(initialization)
             if np.any(np.abs(pi) < 1e-8):
                 raise ValueError("Stationary distribution of initialization is degenerate.")
             if np.any(np.abs(mask.numpy() * initialization - initialization) > 1e-8):

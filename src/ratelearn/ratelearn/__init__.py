@@ -1,4 +1,4 @@
-from .rate import RateMatrix
+from .rate import RateMatrix, solve_stationery_dist
 from .simulate import convert_triplet_to_quantized, generate_data
 from .trainer import train_quantization, estimate_likelihood, train_quantization_N, train_diag_param
 from .ratelearner import RateMatrixLearner
@@ -6,6 +6,7 @@ from .ratelearner import RateMatrixLearner
 __version__ = "0.1.0"
 __all__ = [
     "RateMatrix",
+    "solve_stationery_dist",
     "generate_data",
     "convert_triplet_to_quantized",
     "train_quantization",

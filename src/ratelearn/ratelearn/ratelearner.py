@@ -6,16 +6,13 @@ import matplotlib.pyplot as plt
 from torch.utils.data import TensorDataset
 import logging
 from typing import Optional
+from scipy.stats import norm
 
-from . import RateMatrix, train_quantization
-
-import sys
-sys.path.append("../")
-import Phylo_util
+from . import RateMatrix, train_quantization, solve_stationery_dist
 
 
 def normalized(Q):
-    pi = Phylo_util.solve_stationery_dist(Q)
+    pi = solve_stationery_dist(Q)
     mutation_rate = pi @ -np.diag(Q)
     return Q / mutation_rate
 
@@ -149,13 +146,97 @@ class RateMatrixLearner:
         quantized_data = TensorDataset(qtimes, cmats)
         return quantized_data, n_features
 
+    def compute_fisher_information(self):
+        """Computes the Fisher information corresponding to a world
+        where observations have quantized branch lengths.
+
+        Returns
+        -------
+        tensor
+            2d Hessian (with respect to the vectorized rate matrix)
+        """
+        rate_module = self.mat_module
+        quantized_dataset = self.quantized_data
+        branches, cmat = quantized_dataset.tensors[0], quantized_dataset.tensors[1]
+
+        assert self.mat_module.mode == "pande_reversible"
+
+        Q = rate_module()
+        n_states = Q.shape[-1]
+        # WE ONLY DIFFERENTIATE WRT STRICT TRIANGULAR UPPER RATE MATRIX ELEMENTS
+        Q1d = Q[torch.triu_indices(n_states, n_states, offset=1).unbind()]
+
+        device = Q.device
+        branch_length = branches.to(device=device)
+        cmat = cmat.to(device=device)
+
+        def get_score(mat1d):
+            """Computes sum of scores given upper triangular rate matrix indices
+
+            Parameters
+            ----------
+            mat1d :
+                upper triangular rate matrix (1d)
+
+            Returns
+            -------
+            scalar
+                sum of scores
+            """            
+            mat = torch.zeros(n_states, n_states)
+            mat[torch.triu_indices(n_states, n_states, offset=1).unbind()] = mat1d
+            mat = mat + mat.T
+            # Does not change values on upper diagonal
+            mat = mat - torch.diag(mat.sum(0))
+            branch_length_ = branch_length
+            mats = torch.log(torch.matrix_exp(branch_length_[:, None, None] * mat))
+            mats = mats * cmat
+            # Observed Fisher is sum of the score Hessians
+            # Which is the same as the Hessian of the sum
+            return mats.sum()
+
+        return -torch.autograd.functional.hessian(get_score, Q1d)
+
+
+    def get_confidence_intervals(self, alpha):
+        """Returns marginal confidence intervals for each matrix coefficient"""
+        fisher_info = self.compute_fisher_information()
+        q = self.mat_module().detach()
+        num_states = q.shape[-1]
+        # q_ = q[
+        #     torch.triu_indices(num_states, num_states, offset=1).unbind()
+        # ]
+        # q1d = q_.reshape(-1)
+        n_obs = self.quantized_data.tensors[1].sum().item()
+
+        # From Jn estimate to J1
+        fisher_info = fisher_info / n_obs
+        inv_fisher_info = torch.inverse(fisher_info)
+        variances = torch.diag(inv_fisher_info)
+
+        all_variances = torch.zeros(num_states, num_states)
+        all_variances[torch.triu_indices(num_states, num_states, offset=1).unbind()] = variances
+        all_variances = all_variances + all_variances.T
+        all_variances += torch.diag(all_variances).sum(1)  
+        # variance of diagonal term is sum of row variances
+
+        all_qs = q
+        # This is the Hessian wrt to the vectorized features
+        zis = norm.ppf(1 - alpha / 2)
+        delta_vals = all_variances.sqrt() / np.sqrt(n_obs) * zis
+        vinf2d = all_qs - delta_vals
+        vsup2d = all_qs + delta_vals
+        return vinf2d, vsup2d
+
     def process_results(self):
         learned_matrix_path = os.path.join(self.output_dir, "learned_matrix.txt")
         Q = self.Qfinal.detach().cpu().numpy()
         np.savetxt(learned_matrix_path, Q)
         os.system(f"chmod 555 {learned_matrix_path}")
 
-        normalized_learned_matrix_path = os.path.join(self.output_dir, "learned_matrix_normalized.txt")
+        normalized_learned_matrix_path = os.path.join(
+            self.output_dir, "learned_matrix_normalized.txt"
+        )
         np.savetxt(normalized_learned_matrix_path, normalized(Q))
         os.system(f"chmod 555 {normalized_learned_matrix_path}")
 

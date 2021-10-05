@@ -6,8 +6,12 @@ for XRATE)
 """
 import multiprocessing
 import os
+import sys
+sys.path.append("../")
+import Phylo_util
 
 import logging
+import numpy as np
 import tqdm
 from ete3 import Tree
 
@@ -161,3 +165,63 @@ class XRATEInputGenerator:
                 list(tqdm.tqdm(pool.imap(map_func, map_args), total=len(map_args)))
         else:
             list(tqdm.tqdm(map(map_func, map_args), total=len(map_args)))
+
+
+def rate_matrix_to_grammar(Q: np.array) -> str:
+    assert(Q.shape == (20, 20))
+    res = """;; Grammar nullprot
+;;
+(grammar
+ (name nullprot)
+ (update-rates 1)
+ (update-rules 1)
+
+ ;; Transformation rules for grammar symbols
+
+ ;; State Start
+ ;;
+ (transform (from (Start)) (to (S0)) (prob 0.5))
+ (transform (from (Start)) (to ()) (prob 0.5))
+
+ ;; State S0
+ ;;
+ (transform (from (S0)) (to (A0 S0*)) (gaps-ok)
+  (minlen 1))
+ (transform (from (S0*)) (to ()) (prob 0.5))
+ (transform (from (S0*)) (to (S0)) (prob 0.5))
+
+ ;; Markov chain substitution models
+
+ (chain
+  (update-policy rev)
+  (terminal (A0))
+
+  ;; initial probability distribution
+"""
+    pi = Phylo_util.solve_stationery_dist(Q)
+    amino_acids = ["A", "R", "N", "D", "C", "Q", "E", "G", "H", "I", "L", "K", "M", "F", "P", "S", "T", "W", "Y", "V"]
+    for i, aa in enumerate(amino_acids):
+        res += f"  (initial (state ({aa.lower()})) (prob {pi[i]}))\n"
+    res += "\n"
+    res += "  ;; mutation rates\n"
+    for i, aa1 in enumerate(amino_acids):
+        for j, aa2 in enumerate(amino_acids):
+            if i != j:
+                res += f"  (mutate (from ({aa1.lower()})) (to ({aa2.lower()})) (rate {Q[i, j]}))\n"
+    res += """ )  ;; end chain A0
+
+)  ;; end grammar nullprot
+
+;; Alphabet Protein
+;;
+(alphabet
+ (name Protein)
+ (token (a r n d c q e g h i l k m f p s t w y v))
+ (extend (to x) (from a) (from r) (from n) (from d) (from c) (from q) (from e) (from g) (from h) (from i) (from l) (from k) (from m) (from f) (from p) (from s) (from t) (from w) (from y) (from v))
+ (extend (to b) (from n) (from d))
+ (extend (to z) (from q) (from e))
+ (wildcard *)
+)  ;; end alphabet Protein
+
+"""
+    return res

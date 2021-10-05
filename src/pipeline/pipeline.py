@@ -1,6 +1,7 @@
 import os
 import time
 import numpy as np
+import logging
 
 from typing import List, Optional, Union, Tuple
 import pandas as pd
@@ -14,7 +15,7 @@ from src.matrix_generation import MatrixGenerator
 from src.ratelearn import RateMatrixLearner
 from src.counting import JTT
 from src.utils import hash_str
-from src.xrate.xrate_input_generation import XRATEInputGenerator
+from src.xrate.xrate_input_generation import XRATEInputGenerator, rate_matrix_to_grammar
 from src.xrate.xrate import XRATE
 
 
@@ -147,6 +148,8 @@ class Pipeline:
         xrate_grammar: Path to the XRATE grammar file. If None,
             then the nullprot.eg grammar from XRATE will be used.
             (This grammar forbids some amino-acid transitions).
+            If "JTT-IPW", then the JTT-IPW initialization will be
+            used for XRATE.
 
     Attributes:
         tree_dir: Where the estimated phylogenies lie
@@ -348,6 +351,8 @@ class Pipeline:
         )
 
     def run(self):
+        logger = logging.getLogger("phylo_correction.pipeline")
+
         max_seqs = self.max_seqs
         max_sites = self.max_sites
         armstrong_cutoff = self.armstrong_cutoff
@@ -566,6 +571,16 @@ class Pipeline:
 
         t_start = time.time()
         if "XRATE" in method:
+            if xrate_grammar == "JTT-IPW":
+                # Override xrate_grammar
+                xrate_grammar = os.path.join(learnt_rate_matrix_dir_JTT_IPW, "learned_matrix.eg")
+                logger.info(f"XRATE will be ran with JTT-IPW grammar file at: {xrate_grammar}")
+                if not os.path.exists(xrate_grammar):
+                    Q1 = self.get_learned_Q1_JTT_IPW()
+                    grammar = rate_matrix_to_grammar(Q1)
+                    with open(xrate_grammar, "w") as outfile:
+                        outfile.write(grammar)
+                    os.system(f"chmod 555 {xrate_grammar}")
             xrate = XRATE(
                 a3m_dir_full=a3m_dir_full,
                 xrate_input_dir=xrate_input_dir,
@@ -682,6 +697,11 @@ class Pipeline:
             + self.time_RateMatrixLearner_2
             + self.time_RateMatrixLearner_JTT_2
             + self.time_RateMatrixLearner_JTT_IPW_2
+        )
+
+        logger.info(
+            f"Finished running pipeline. Total time: {self.time_total}. Execution time breakdown:\n"
+            f"{self.get_times()}"
         )
 
     def get_times(self) -> str:

@@ -51,6 +51,7 @@ class TestPipeline(unittest.TestCase):
                     precomputed_maximum_parsimony_dir=None,
                     learn_pairwise_model=True,
                     method=["MLE", "XRATE"],
+                    xrate_grammar="JTT-IPW",
                 )
                 pipeline.run()
                 Q1_MLE = pipeline.get_learned_Q1()

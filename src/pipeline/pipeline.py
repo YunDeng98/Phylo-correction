@@ -144,6 +144,9 @@ class Pipeline:
         init_jtt_ipw: if to initialize the MLE optimizer with the JTT-IPW
             estimate.
         rate_matrix_parameterization: e.g. "pande_reversible".
+        xrate_grammar: Path to the XRATE grammar file. If None,
+            then the nullprot.eg grammar from XRATE will be used.
+            (This grammar forbids some amino-acid transitions).
 
     Attributes:
         tree_dir: Where the estimated phylogenies lie
@@ -187,6 +190,7 @@ class Pipeline:
         init_jtt_ipw: bool = False,
         rate_matrix_parameterization: str = "pande_reversible",
         a3m_dir_full: Optional[str] = None,
+        xrate_grammar: Optional[str] = None,
     ):
         if a3m_dir_full is None:
             a3m_dir_full = a3m_dir
@@ -272,6 +276,7 @@ class Pipeline:
         self.method = method
         self.init_jtt_ipw = init_jtt_ipw
         self.rate_matrix_parameterization = rate_matrix_parameterization
+        self.xrate_grammar = xrate_grammar
 
         # Output data directories
         # Where the phylogenies will be stored
@@ -318,7 +323,9 @@ class Pipeline:
         # XRATE stuff
         xrate_input_params = maximum_parsimony_params  # File-level caching so no need for max_families
         self.xrate_input_dir = os.path.join(outdir, f"XRATE_input__{xrate_input_params}")
-        xrate_params = f"{max_families}_families__{xrate_input_params}"  # Need max_families!
+        xrate_grammar_hash = hash_str(xrate_grammar)
+        xrate_grammar_name = str(xrate_grammar).split('/')[-1]
+        xrate_params = f"{max_families}_families__{xrate_input_params}__{xrate_grammar_name}-{xrate_grammar_hash}_grammar"
         self.learnt_rate_matrix_dir_XRATE = os.path.join(
             outdir,
             f"Q1_XRATE__{xrate_params}"
@@ -383,6 +390,7 @@ class Pipeline:
         method = self.method
         init_jtt_ipw = self.init_jtt_ipw
         rate_matrix_parameterization = self.rate_matrix_parameterization
+        xrate_grammar = self.xrate_grammar
         path_mask_Q2 = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "../../input_data/synthetic_rate_matrices/mask_Q2.txt"
@@ -564,6 +572,7 @@ class Pipeline:
                 expected_number_of_MSAs=expected_number_of_MSAs,
                 outdir=learnt_rate_matrix_dir_XRATE,
                 max_families=max_families,
+                xrate_grammar=xrate_grammar,
                 use_cached=use_cached,
             )
             xrate.run()

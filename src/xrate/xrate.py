@@ -1,4 +1,6 @@
 r"""
+http://biowiki.org/wiki/index.php/Xrate_Software
+
 Run XRATE on stockholm files.
 """
 import multiprocessing
@@ -54,6 +56,7 @@ def install_xrate():
 
 def run_xrate(
     stock_input_paths: List[str],
+    xrate_grammar: Optional[str],
     output_path: str,
     logfile: Optional[str] = None,
     estimate_trees: bool = False,
@@ -63,10 +66,17 @@ def run_xrate(
     dir_path = os.path.dirname(os.path.realpath(__file__))
     xrate_path = os.path.join(dir_path, 'x_rate_github')
     xrate_bin_path = os.path.join(xrate_path, 'bin/xrate')
+
+    if xrate_grammar is None:
+        xrate_grammar = f"{xrate_path}/grammars/nullprot.eg"
+
+    if not os.path.exists(xrate_grammar):
+        raise ValueError(f"Grammar file {xrate_grammar} does not exist.")
+
     if estimate_trees:
-        cmd = f"{xrate_bin_path} {' '.join(stock_input_paths)} -e {xrate_path}/grammars/nullprot.eg -g {xrate_path}/grammars/nullprot.eg -t {output_path} -log 6"
+        cmd = f"{xrate_bin_path} {' '.join(stock_input_paths)} -e {xrate_grammar} -g {xrate_grammar} -t {output_path} -log 6"
     else:
-        cmd = f"{xrate_bin_path} {' '.join(stock_input_paths)} -g {xrate_path}/grammars/nullprot.eg -t {output_path} -log 6"
+        cmd = f"{xrate_bin_path} {' '.join(stock_input_paths)} -g {xrate_grammar} -t {output_path} -log 6"
     if logfile is not None:
         cmd += f" 2>&1 | tee {logfile}"
     logger.info(f"Running {cmd}")
@@ -105,6 +115,8 @@ class XRATE:
         outdir: Directory where the learned rate matrices will be found.
         max_families: Only run on 'max_families' randomly chosen files in a3m_dir_full.
             This is useful for testing and to see what happens if less data is used.
+        xrate_grammar: The XRATE grammar file containing the rate matrix
+            parameterization and initialization.
         use_cached: If True and the output file already exists for a family,
             all computation will be skipped for that family.
     """
@@ -115,6 +127,7 @@ class XRATE:
         expected_number_of_MSAs: int,
         outdir: str,
         max_families: int,
+        xrate_grammar: Optional[str],
         use_cached: bool = False,
     ):
         self.a3m_dir_full = a3m_dir_full
@@ -122,6 +135,7 @@ class XRATE:
         self.expected_number_of_MSAs = expected_number_of_MSAs
         self.outdir = outdir
         self.max_families = max_families
+        self.xrate_grammar = xrate_grammar
         self.use_cached = use_cached
 
     def run(self) -> None:
@@ -133,6 +147,7 @@ class XRATE:
         expected_number_of_MSAs = self.expected_number_of_MSAs
         outdir = self.outdir
         max_families = self.max_families
+        xrate_grammar = self.xrate_grammar
         use_cached = self.use_cached
 
         learned_matrix_path = os.path.join(self.outdir, "learned_matrix.txt")
@@ -158,6 +173,7 @@ class XRATE:
             stock_input_paths=[
                 os.path.join(xrate_input_dir, f"{protein_family_name}.stock") for protein_family_name in protein_family_names
             ],
+            xrate_grammar=xrate_grammar,
             output_path=os.path.join(outdir, "learned_matrix.xrate"),
             logfile=os.path.join(outdir, "xrate_log"),
         )

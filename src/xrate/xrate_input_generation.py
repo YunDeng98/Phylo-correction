@@ -1,4 +1,6 @@
 r"""
+http://biowiki.org/wiki/index.php/Xrate_Software
+
 Reads MSAs and trees and converts them to stockholm format (the input format
 for XRATE)
 """

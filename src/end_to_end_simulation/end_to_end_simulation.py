@@ -150,6 +150,7 @@ class EndToEndSimulator:
             init_jtt_ipw=pipeline.init_jtt_ipw,
             rate_matrix_parameterization=pipeline.rate_matrix_parameterization,
             learn_pairwise_model=pipeline.learn_pairwise_model,
+            xrate_grammar=pipeline.xrate_grammar,
         )
 
         self.pipeline_on_simulated_data_from_trees_wo_ancestral_states = Pipeline(
@@ -181,6 +182,7 @@ class EndToEndSimulator:
             init_jtt_ipw=pipeline.init_jtt_ipw,
             rate_matrix_parameterization=pipeline.rate_matrix_parameterization,
             learn_pairwise_model=pipeline.learn_pairwise_model,
+            xrate_grammar=pipeline.xrate_grammar,
         )
 
         self.pipeline_on_simulated_data_from_trees_w_ancestral_states = Pipeline(
@@ -212,6 +214,7 @@ class EndToEndSimulator:
             init_jtt_ipw=pipeline.init_jtt_ipw,
             rate_matrix_parameterization=pipeline.rate_matrix_parameterization,
             learn_pairwise_model=pipeline.learn_pairwise_model,
+            xrate_grammar=pipeline.xrate_grammar,
         )
 
     def run(self):

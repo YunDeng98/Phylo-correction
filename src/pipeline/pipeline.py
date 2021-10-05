@@ -326,7 +326,7 @@ class Pipeline:
         # XRATE stuff
         xrate_input_params = maximum_parsimony_params  # File-level caching so no need for max_families
         self.xrate_input_dir = os.path.join(outdir, f"XRATE_input__{xrate_input_params}")
-        xrate_grammar_hash = hash_str(xrate_grammar)
+        xrate_grammar_hash = hash_str(str(xrate_grammar))
         xrate_grammar_name = str(xrate_grammar).split('/')[-1]
         xrate_params = f"{max_families}_families__{xrate_input_params}__{xrate_grammar_name}-{xrate_grammar_hash}_grammar"
         self.learnt_rate_matrix_dir_XRATE = os.path.join(

@@ -36,6 +36,7 @@ class TestMatrixGenerator(unittest.TestCase):
                     keep_outliers=True,
                     max_height=1000.0,
                     max_path_height=1000,
+                    edge_or_cherry="cherry",
                 )
                 matrix_generator.run()
                 dcmp = dircmp(outdir, 'test_input_data/matrices_small')
@@ -70,6 +71,7 @@ class TestMatrixGenerator(unittest.TestCase):
                     keep_outliers=True,
                     max_height=1000.0,
                     max_path_height=1000,
+                    edge_or_cherry="cherry",
                 )
                 matrix_generator.run()
                 dcmp = dircmp(outdir, 'test_input_data/co_matrices_small')

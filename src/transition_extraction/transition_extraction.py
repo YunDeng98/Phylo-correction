@@ -25,6 +25,7 @@ def get_transitions(
     tree: Tree,
     sequences: Dict[str, str],
     protein_family_name: str,
+    edge_or_cherry: str,
 ) -> List[Tuple[str, str, float, float, int, str, str, int, str]]:
     logger = logging.getLogger("phylo_correction.transition_extraction")
     # The root's name was not written out by ete3 in the maximum_parsimony script,
@@ -43,19 +44,20 @@ def get_transitions(
             height[v.name] = max(height[v.name], height[u.name] + u.dist)
             path_height[v.name] = max(path_height[v.name], path_height[u.name] + 1)
         for u in v.get_children():
-            res.append(
-                (
-                    sequences[v.name][site_id],
-                    sequences[u.name][site_id],
-                    u.dist,
-                    height[v.name],
-                    path_height[v.name],
-                    v.name,
-                    u.name,
-                    site_id,
-                    "edge",
+            if edge_or_cherry == "edge":
+                res.append(
+                    (
+                        sequences[v.name][site_id],
+                        sequences[u.name][site_id],
+                        u.dist,
+                        height[v.name],
+                        path_height[v.name],
+                        v.name,
+                        u.name,
+                        site_id,
+                        "edge",
+                    )
                 )
-            )
         # Add cherry at node v
         if path_height[v.name] == 1:
             children = v.get_children()
@@ -64,32 +66,33 @@ def get_transitions(
             assert(len(children) >= 2)
             u1, u2 = children[0], children[1]
             assert(path_height[u1.name] == 0 and path_height[u2.name] == 0)
-            res.append(
-                (
-                    sequences[u1.name][site_id],
-                    sequences[u2.name][site_id],
-                    u1.dist + u2.dist,
-                    height[v.name],
-                    path_height[v.name],
-                    u1.name,
-                    u2.name,
-                    site_id,
-                    "cherry",
+            if edge_or_cherry == "cherry":
+                res.append(
+                    (
+                        sequences[u1.name][site_id],
+                        sequences[u2.name][site_id],
+                        u1.dist + u2.dist,
+                        height[v.name],
+                        path_height[v.name],
+                        u1.name,
+                        u2.name,
+                        site_id,
+                        "cherry",
+                    )
                 )
-            )
-            res.append(
-                (
-                    sequences[u2.name][site_id],
-                    sequences[u1.name][site_id],
-                    u2.dist + u1.dist,
-                    height[v.name],
-                    path_height[v.name],
-                    u2.name,
-                    u1.name,
-                    site_id,
-                    "cherry",
+                res.append(
+                    (
+                        sequences[u2.name][site_id],
+                        sequences[u1.name][site_id],
+                        u2.dist + u1.dist,
+                        height[v.name],
+                        path_height[v.name],
+                        u2.name,
+                        u1.name,
+                        site_id,
+                        "cherry",
+                    )
                 )
-            )
 
 
     L = len(sequences["internal-1"])
@@ -104,8 +107,13 @@ def map_func(args: List) -> None:
     protein_family_name = args[2]
     outdir = args[3]
     use_cached = args[4]
+    edge_or_cherry = args[5]
 
     logger = logging.getLogger("phylo_correction.transition_extraction")
+
+    if edge_or_cherry not in ['edge', 'cherry']:
+        logger.error("edge_or_cherry not in ['edge', 'cherry']")
+        raise ValueError("edge_or_cherry not in ['edge', 'cherry']")
 
     # Caching pattern: skip any computation as soon as possible
     transition_filename = os.path.join(outdir, protein_family_name + ".transitions")
@@ -133,7 +141,7 @@ def map_func(args: List) -> None:
             if i != 0:
                 sequences[line_contents[0]] = line_contents[1].rstrip("\n")
 
-    transitions = get_transitions(tree, sequences, protein_family_name)
+    transitions = get_transitions(tree, sequences, protein_family_name, edge_or_cherry)
     res = "starting_state,ending_state,length,height,path_height,starting_node,ending_node,site_id,edge_or_cherry\n"
     for transition in transitions:
         res += (
@@ -186,6 +194,7 @@ class TransitionExtractor:
             This is useful for testing and to see what happens if less data is used.
         use_cached: If True and the output file already exists for a family,
             all computation will be skipped for that family.
+        edge_or_cherry: Whether to extract edges or cherries.
     """
     def __init__(
         self,
@@ -196,6 +205,7 @@ class TransitionExtractor:
         expected_number_of_MSAs: int,
         outdir: str,
         max_families: int,
+        edge_or_cherry: str,
         use_cached: bool = False,
     ):
         self.a3m_dir_full = a3m_dir_full
@@ -205,6 +215,7 @@ class TransitionExtractor:
         self.expected_number_of_MSAs = expected_number_of_MSAs
         self.outdir = outdir
         self.max_families = max_families
+        self.edge_or_cherry = edge_or_cherry
         self.use_cached = use_cached
 
     def run(self) -> None:
@@ -218,6 +229,7 @@ class TransitionExtractor:
         expected_number_of_MSAs = self.expected_number_of_MSAs
         outdir = self.outdir
         max_families = self.max_families
+        edge_or_cherry = self.edge_or_cherry
         use_cached = self.use_cached
 
         if not os.path.exists(outdir):
@@ -235,7 +247,7 @@ class TransitionExtractor:
         # print(f"protein_family_names = {protein_family_names}")
 
         map_args = [
-            [a3m_dir, parsimony_dir, protein_family_name, outdir, use_cached]
+            [a3m_dir, parsimony_dir, protein_family_name, outdir, use_cached, edge_or_cherry]
             for protein_family_name in protein_family_names
         ]
         if n_process > 1:

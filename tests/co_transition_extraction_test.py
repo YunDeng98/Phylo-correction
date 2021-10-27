@@ -17,7 +17,7 @@ class TestCoTransitionExtractor(unittest.TestCase):
         then with caching, to make sure that caching works.
         """
         with tempfile.TemporaryDirectory() as root_dir:
-            outdir = os.path.join(root_dir, 'maximum_parsimony')
+            outdir = os.path.join(root_dir, 'co_transitions_small')
             for use_cached in [False, True]:
                 co_transition_extractor = CoTransitionExtractor(
                     a3m_dir_full='test_input_data/a3m_small',
@@ -28,6 +28,7 @@ class TestCoTransitionExtractor(unittest.TestCase):
                     outdir=outdir,
                     max_families=3,
                     contact_dir='test_input_data/contacts_small',
+                    edge_or_cherry="cherry",
                     use_cached=use_cached,
                 )
                 co_transition_extractor.run()

@@ -18,7 +18,7 @@ class TestTransitionExtractor(unittest.TestCase):
         then with caching, to make sure that caching works.
         """
         with tempfile.TemporaryDirectory() as root_dir:
-            outdir = os.path.join(root_dir, 'maximum_parsimony')
+            outdir = os.path.join(root_dir, 'transitions_small')
             for use_cached in [False, True]:
                 transition_extractor = TransitionExtractor(
                     a3m_dir_full='test_input_data/a3m_small',
@@ -28,6 +28,7 @@ class TestTransitionExtractor(unittest.TestCase):
                     expected_number_of_MSAs=3,
                     outdir=outdir,
                     max_families=3,
+                    edge_or_cherry="cherry",
                     use_cached=use_cached,
                 )
                 transition_extractor.run()

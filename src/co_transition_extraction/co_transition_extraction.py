@@ -21,7 +21,7 @@ sys.path.append("../")
 
 
 def get_transitions(
-    tree: Tree, sequences: Dict[str, str], contact_matrix: np.array, protein_family_name: str
+    tree: Tree, sequences: Dict[str, str], contact_matrix: np.array, protein_family_name: str, edge_or_cherry: str
 ) -> List[Tuple[str, str, float, float, int, str, str, int, int, str]]:
     logger = logging.getLogger("phylo_correction.co_transition_extraction")
     # The root's name was not written out by ete3 in the maximum_parsimony script,
@@ -40,20 +40,21 @@ def get_transitions(
             height[v.name] = max(height[v.name], height[u.name] + u.dist)
             path_height[v.name] = max(path_height[v.name], path_height[u.name] + 1)
         for u in v.get_children():
-            res.append(
-                (
-                    sequences[v.name][site1_id] + sequences[v.name][site2_id],
-                    sequences[u.name][site1_id] + sequences[u.name][site2_id],
-                    u.dist,
-                    height[v.name],
-                    path_height[v.name],
-                    v.name,
-                    u.name,
-                    site1_id,
-                    site2_id,
-                    "edge",
+            if edge_or_cherry == "edge":
+                res.append(
+                    (
+                        sequences[v.name][site1_id] + sequences[v.name][site2_id],
+                        sequences[u.name][site1_id] + sequences[u.name][site2_id],
+                        u.dist,
+                        height[v.name],
+                        path_height[v.name],
+                        v.name,
+                        u.name,
+                        site1_id,
+                        site2_id,
+                        "edge",
+                    )
                 )
-            )
         # Add cherry at node v
         if path_height[v.name] == 1:
             children = v.get_children()
@@ -62,34 +63,35 @@ def get_transitions(
             assert(len(children) >= 2)
             u1, u2 = children[0], children[1]
             assert(path_height[u1.name] == 0 and path_height[u2.name] == 0)
-            res.append(
-                (
-                    sequences[u1.name][site1_id] + sequences[u1.name][site2_id],
-                    sequences[u2.name][site1_id] + sequences[u2.name][site2_id],
-                    u1.dist + u2.dist,
-                    height[v.name],
-                    path_height[v.name],
-                    u1.name,
-                    u2.name,
-                    site1_id,
-                    site2_id,
-                    "cherry",
+            if edge_or_cherry == "cherry":
+                res.append(
+                    (
+                        sequences[u1.name][site1_id] + sequences[u1.name][site2_id],
+                        sequences[u2.name][site1_id] + sequences[u2.name][site2_id],
+                        u1.dist + u2.dist,
+                        height[v.name],
+                        path_height[v.name],
+                        u1.name,
+                        u2.name,
+                        site1_id,
+                        site2_id,
+                        "cherry",
+                    )
                 )
-            )
-            res.append(
-                (
-                    sequences[u2.name][site1_id] + sequences[u2.name][site2_id],
-                    sequences[u1.name][site1_id] + sequences[u1.name][site2_id],
-                    u2.dist + u1.dist,
-                    height[v.name],
-                    path_height[v.name],
-                    u2.name,
-                    u1.name,
-                    site1_id,
-                    site2_id,
-                    "cherry",
+                res.append(
+                    (
+                        sequences[u2.name][site1_id] + sequences[u2.name][site2_id],
+                        sequences[u1.name][site1_id] + sequences[u1.name][site2_id],
+                        u2.dist + u1.dist,
+                        height[v.name],
+                        path_height[v.name],
+                        u2.name,
+                        u1.name,
+                        site1_id,
+                        site2_id,
+                        "cherry",
+                    )
                 )
-            )
 
     L = len(sequences["internal-1"])
     assert contact_matrix.shape == (L, L)
@@ -116,8 +118,13 @@ def map_func(args: List) -> None:
     outdir = args[3]
     contact_dir = args[4]
     use_cached = args[5]
+    edge_or_cherry = args[6]
 
     logger = logging.getLogger("phylo_correction.co_transition_extraction")
+
+    if edge_or_cherry not in ['edge', 'cherry']:
+        logger.error("edge_or_cherry not in ['edge', 'cherry']")
+        raise ValueError("edge_or_cherry not in ['edge', 'cherry']")
 
     # Caching pattern: skip any computation as soon as possible
     transition_filename = os.path.join(outdir, protein_family_name + ".transitions")
@@ -148,7 +155,7 @@ def map_func(args: List) -> None:
     # Read contact matrix
     contact_matrix = np.loadtxt(os.path.join(contact_dir, protein_family_name + ".cm"))
 
-    transitions = get_transitions(tree, sequences, contact_matrix, protein_family_name)
+    transitions = get_transitions(tree, sequences, contact_matrix, protein_family_name, edge_or_cherry)
     res = "starting_state,ending_state,length,height,path_height,starting_node,ending_node,site1_id,site2_id,edge_or_cherry\n"
     for transition in transitions:
         res += (
@@ -204,6 +211,7 @@ class CoTransitionExtractor:
         contact_dir: Directory where the contact maps (.cm files) are found.
         use_cached: If True and the output file already exists for a family,
             all computation will be skipped for that family.
+        edge_or_cherry: Whether to extract edges or cherries.
     """
     def __init__(
         self,
@@ -215,6 +223,7 @@ class CoTransitionExtractor:
         outdir: str,
         max_families: int,
         contact_dir: str,
+        edge_or_cherry: str,
         use_cached: bool = False,
     ):
         self.a3m_dir_full = a3m_dir_full
@@ -225,6 +234,7 @@ class CoTransitionExtractor:
         self.outdir = outdir
         self.max_families = max_families
         self.contact_dir = contact_dir
+        self.edge_or_cherry = edge_or_cherry
         self.use_cached = use_cached
 
     def run(self) -> None:
@@ -239,6 +249,7 @@ class CoTransitionExtractor:
         outdir = self.outdir
         max_families = self.max_families
         contact_dir = self.contact_dir
+        edge_or_cherry = self.edge_or_cherry
         use_cached = self.use_cached
 
         if not os.path.exists(outdir):
@@ -256,7 +267,7 @@ class CoTransitionExtractor:
         # print(f"protein_family_names = {protein_family_names}")
 
         map_args = [
-            [a3m_dir, parsimony_dir, protein_family_name, outdir, contact_dir, use_cached]
+            [a3m_dir, parsimony_dir, protein_family_name, outdir, contact_dir, use_cached, edge_or_cherry]
             for protein_family_name in protein_family_names
         ]
         if n_process > 1:

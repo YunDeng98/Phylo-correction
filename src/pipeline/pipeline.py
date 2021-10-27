@@ -199,10 +199,10 @@ class Pipeline:
             a3m_dir_full = a3m_dir
 
         if not rate_matrix_parameterization in ["pande_reversible"]:
-            raise ValueError("Unknown rate_matrix_parameterization = {rate_matrix_parameterization}")
+            raise ValueError(f"Unknown rate_matrix_parameterization = {rate_matrix_parameterization}")
 
         if edge_or_cherry not in ["edge", "cherry"]:
-            raise ValueError(f"edge_or_cherry not in ['edge', 'cherry']")
+            raise ValueError("edge_or_cherry not in ['edge', 'cherry']")
 
         method = method[:]
         if type(method) is str:
@@ -294,14 +294,14 @@ class Pipeline:
         maximum_parsimony_params = tree_params
         self.maximum_parsimony_dir = os.path.join(outdir, f"maximum_parsimony_{maximum_parsimony_params}")
         # Where the transitions obtained from the maximum parsimony phylogenies will be stored
-        transitions_params = maximum_parsimony_params
+        transitions_params = f"{maximum_parsimony_params}__{edge_or_cherry}_eoc"
         self.transitions_dir = os.path.join(outdir, f"transitions_{transitions_params}")
         # Where the transition matrices obtained by quantizing transition edges will be stored
-        filter_params = f"{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height_{edge_or_cherry}_eoc"
+        filter_params = f"{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height"
         matrices_params = f"{max_families}_families__{transitions_params}__{filter_params}"
         self.matrices_dir = os.path.join(outdir, f"matrices__{matrices_params}")
         # Where the co-transitions obtained from the maximum parsimony phylogenies will be stored
-        co_transitions_params = f"{maximum_parsimony_params}_{contact_params}"
+        co_transitions_params = f"{maximum_parsimony_params}_{contact_params}__{edge_or_cherry}_eoc"
         self.co_transitions_dir = os.path.join(outdir, f"co_transitions_{co_transitions_params}")
         # Where the co-transition matrices obtained by quantizing transition edges will be stored
         co_matrices_params = f"{max_families}_families__{co_transitions_params}__{filter_params}"
@@ -481,6 +481,7 @@ class Pipeline:
             outdir=transitions_dir,
             max_families=max_families,
             use_cached=use_cached,
+            edge_or_cherry=edge_or_cherry,
         )
         transition_extractor.run()
         self.time_TransitionExtractor = time.time() - t_start
@@ -607,6 +608,7 @@ class Pipeline:
                 max_families=max_families,
                 contact_dir=contact_dir,
                 use_cached=use_cached,
+                edge_or_cherry=edge_or_cherry,
             )
             co_transition_extractor.run()
         self.time_CoTransitionExtractor = time.time() - t_start

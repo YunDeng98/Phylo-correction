@@ -29,6 +29,7 @@ class TestTransitionExtractor(unittest.TestCase):
                     outdir=outdir,
                     max_families=3,
                     edge_or_cherry="cherry",
+                    use_site_specific_rates=False,
                     use_cached=use_cached,
                 )
                 transition_extractor.run()

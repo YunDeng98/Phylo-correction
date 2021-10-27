@@ -34,7 +34,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
         then with caching, to make sure that caching works.
         """
         with tempfile.TemporaryDirectory() as root_dir:
-            outdir = os.path.join(root_dir, 'trees')
+            outdir = os.path.join(root_dir, 'trees_small')
             for use_cached in [False, True]:
                 phylogeny_generator = PhylogenyGenerator(
                     a3m_dir_full='test_input_data/a3m_small',
@@ -46,6 +46,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
                     max_sites=16,
                     max_families=3,
                     rate_matrix='None',
+                    fast_tree_cats=20,
                     use_cached=use_cached,
                 )
                 phylogeny_generator.run()
@@ -70,6 +71,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
                 max_sites=16,
                 max_families=3,
                 rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_FastTree.txt',
+                fast_tree_cats=20,
                 use_cached=False,
             )
             phylogeny_generator.run()
@@ -94,6 +96,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
                 max_sites=16,
                 max_families=3,
                 rate_matrix='input_data/synthetic_rate_matrices/Q1_uniform_halved_FastTree.txt',
+                fast_tree_cats=20,
                 use_cached=False,
             )
             phylogeny_generator.run()
@@ -120,6 +123,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
                 max_sites=16,
                 max_families=3,
                 rate_matrix='I-do-not-exist',
+                fast_tree_cats=20,
                 use_cached=False,
             )
             with self.assertRaises(PhylogenyGeneratorError):
@@ -142,6 +146,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
                 max_sites=16,
                 max_families=3,
                 rate_matrix='None',
+                fast_tree_cats=20,
                 use_cached=False,
             )
             with self.assertRaises(MSAError):
@@ -165,6 +170,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
                 max_sites=16,
                 max_families=3,
                 rate_matrix='None',
+                fast_tree_cats=20,
                 use_cached=False,
             )
             with self.assertRaises(ValueError):

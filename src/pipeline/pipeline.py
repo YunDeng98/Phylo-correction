@@ -150,6 +150,9 @@ class Pipeline:
             (This grammar forbids some amino-acid transitions).
             If "JTT-IPW", then the JTT-IPW initialization will be
             used for XRATE.
+        fast_tree_cats: How many rate categories to use in FastTree
+        use_site_specific_rates: If to use site specific rates for
+            inference, as in the LG paper.
 
     Attributes:
         tree_dir: Where the estimated phylogenies lie
@@ -194,6 +197,8 @@ class Pipeline:
         rate_matrix_parameterization: str = "pande_reversible",
         a3m_dir_full: Optional[str] = None,
         xrate_grammar: Optional[str] = None,
+        fast_tree_cats: Optional[int] = 20,
+        use_site_specific_rates: Optional[bool] = False,
     ):
         if a3m_dir_full is None:
             a3m_dir_full = a3m_dir
@@ -280,11 +285,13 @@ class Pipeline:
         self.init_jtt_ipw = init_jtt_ipw
         self.rate_matrix_parameterization = rate_matrix_parameterization
         self.xrate_grammar = xrate_grammar
+        self.fast_tree_cats = fast_tree_cats
+        self.use_site_specific_rates = use_site_specific_rates
 
         # Output data directories
         # Where the phylogenies will be stored
         rm_hash = hash_str(rate_matrix_name)
-        tree_params = f"{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}-{rm_hash}_RM"
+        tree_params = f"{max_seqs}_seqs_{max_sites}_sites_{rate_matrix_name}-{rm_hash}_RM_{fast_tree_cats}_cats"
         self.tree_params = tree_params
         self.tree_dir = os.path.join(outdir, f"trees_{tree_params}")
         # Where the contacts will be stored
@@ -294,7 +301,7 @@ class Pipeline:
         maximum_parsimony_params = tree_params
         self.maximum_parsimony_dir = os.path.join(outdir, f"maximum_parsimony_{maximum_parsimony_params}")
         # Where the transitions obtained from the maximum parsimony phylogenies will be stored
-        transitions_params = f"{maximum_parsimony_params}__{edge_or_cherry}_eoc"
+        transitions_params = f"{maximum_parsimony_params}__{edge_or_cherry}_eoc_{use_site_specific_rates}_site-rates"
         self.transitions_dir = os.path.join(outdir, f"transitions_{transitions_params}")
         # Where the transition matrices obtained by quantizing transition edges will be stored
         filter_params = f"{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height"
@@ -400,6 +407,8 @@ class Pipeline:
             os.path.dirname(os.path.realpath(__file__)),
             "../../input_data/synthetic_rate_matrices/mask_Q2.txt"
         )
+        fast_tree_cats = self.fast_tree_cats
+        use_site_specific_rates = self.use_site_specific_rates
 
         # First we need to generate the phylogenies
         t_start = time.time()
@@ -414,6 +423,7 @@ class Pipeline:
                 max_sites=max_sites,
                 max_families=max_families,
                 rate_matrix=rate_matrix,
+                fast_tree_cats=fast_tree_cats,
                 use_cached=use_cached,
             )
             phylogeny_generator.run()
@@ -482,6 +492,7 @@ class Pipeline:
             max_families=max_families,
             use_cached=use_cached,
             edge_or_cherry=edge_or_cherry,
+            use_site_specific_rates=use_site_specific_rates,
         )
         transition_extractor.run()
         self.time_TransitionExtractor = time.time() - t_start
@@ -762,7 +773,9 @@ class Pipeline:
             f"precomputed_maximum_parsimony_dir = {self.precomputed_maximum_parsimony_dir}\n" \
             f"learn_pairwise_model = {self.learn_pairwise_model}\n" \
             f"init_jtt_ipw = {self.init_jtt_ipw}\n" \
-            f"rate_matrix_parameterization = {self.rate_matrix_parameterization}"
+            f"rate_matrix_parameterization = {self.rate_matrix_parameterization}\n" \
+            f"fast_tree_cats = {self.fast_tree_cats}\n" \
+            f"use_site_specific_rates = {self.use_site_specific_rates}"
         return res
 
     def get_learned_Q1(self) -> np.array:

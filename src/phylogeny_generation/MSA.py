@@ -73,12 +73,13 @@ class MSA:
                         f"MSA do not have the same length! ({len(msa[i][1])} vs"
                         f" {len(msa[i + 1][1])})"
                     )
-            msa = MSA._subsample_msa(msa, max_seqs, max_sites)
+            msa, sites_kept = MSA._subsample_msa(msa, max_seqs, max_sites)
             self.msa = msa
             self.protein_family_name = protein_family_name
             self._nseqs = len(msa)
             self._nsites = len(msa[0][1])
             self._msa_dict = dict(msa)
+            self._sites_kept = sites_kept
 
     def get_sequence(self, sequence_name: str) -> str:
         r"""
@@ -114,12 +115,19 @@ class MSA:
         """
         return self._nsites
 
+    @property
+    def sites_kept(self) -> int:
+        r"""
+        Sites kept after subsampling
+        """
+        return self._sites_kept[:]
+
     @staticmethod
     def _subsample_msa(
         msa: List[Tuple[str, str]],
         max_seqs: int,
         max_sites: int,
-    ) -> List[Tuple[str, str]]:
+    ) -> Tuple[List[Tuple[str, str]], List[int]]:
         r"""
         Subsample an MSA (not in-place).
 
@@ -132,6 +140,7 @@ class MSA:
         """
         nseqs = len(msa)
         nsites = len(msa[0][1])
+
         if max_seqs:
             max_seqs = min(nseqs, max_seqs)
             seqs_to_keep = [0] + list(
@@ -141,6 +150,7 @@ class MSA:
             )
             seqs_to_keep = sorted(seqs_to_keep)
             msa = [msa[i] for i in seqs_to_keep]
+
         if max_sites:
             max_sites = min(nsites, max_sites)
             sites_to_keep = np.random.choice(
@@ -151,7 +161,9 @@ class MSA:
                 (msa[i][0], MSA._subsample_sites(msa[i][1], sites_to_keep))
                 for i in range(len(msa))
             ]
-        return msa
+        else:
+            sites_to_keep = list(range(nsites))
+        return msa, sites_to_keep
 
     @staticmethod
     def _subsample_sites(seq: str, sites_to_keep: List[int]) -> str:

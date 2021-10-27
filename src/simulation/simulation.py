@@ -220,6 +220,7 @@ def map_func(args: List) -> None:
     output_msa_path = os.path.join(a3m_simulated_dir, protein_family_name + ".a3m")
     with open(output_msa_path, "w") as file:
         file.write(msa)
+        file.flush()
     os.system(f"chmod 555 {output_msa_path}")
 
     # Write out ancestral states
@@ -231,6 +232,7 @@ def map_func(args: List) -> None:
     ancestral_states_path = os.path.join(ancestral_states_simulated_dir, protein_family_name + ".parsimony")
     with open(ancestral_states_path, "w") as file:
         file.write(f"{num_nodes}\n" + maximum_parsimony)
+        file.flush()
     os.system(f"chmod 555 {ancestral_states_path}")
 
 

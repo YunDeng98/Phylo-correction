@@ -88,6 +88,7 @@ class EndToEndSimulator:
             os.makedirs(outdir)
             with open(global_context_filepath, "w") as global_context_file:
                 global_context_file.write(global_context)
+                global_context_file.flush()
             os.system(f"chmod 555 {global_context_filepath}")
 
         fast_tree_rate_matrix = self.fast_tree_rate_matrix

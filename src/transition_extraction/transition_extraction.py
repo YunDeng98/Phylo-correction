@@ -160,6 +160,7 @@ def map_func(args: List) -> None:
     transition_filename = os.path.join(outdir, protein_family_name + ".transitions")
     with open(transition_filename, "w") as transition_file:
         transition_file.write(res)
+        transition_file.flush()
     os.system(f"chmod 555 {transition_filename}")
 
 

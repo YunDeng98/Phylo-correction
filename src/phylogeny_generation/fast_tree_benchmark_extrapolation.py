@@ -109,3 +109,4 @@ if __name__ == "__main__":
     )
     with open(os.path.join(outdir, "estimated_time.txt"), "w") as file:
         file.write(str(sum(times)))
+        file.flush()

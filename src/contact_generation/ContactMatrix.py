@@ -78,3 +78,4 @@ class ContactMatrix:
             res += "\n"
         with open(outfile, "w") as file:
             file.write(res)
+            file.flush()

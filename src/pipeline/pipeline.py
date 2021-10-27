@@ -580,6 +580,7 @@ class Pipeline:
                     grammar = rate_matrix_to_grammar(Q1)
                     with open(xrate_grammar, "w") as outfile:
                         outfile.write(grammar)
+                        outfile.flush()
                     os.system(f"chmod 555 {xrate_grammar}")
             xrate = XRATE(
                 a3m_dir_full=a3m_dir_full,

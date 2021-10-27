@@ -317,5 +317,6 @@ class MatrixGenerator:
         # Write out sentinel
         with open(out_filepath_quantized, "a") as outfile:
             outfile.write('9999.0\n')
+            outfile.flush()
         (0 * res[0]).to_csv(out_filepath_quantized, mode='a', sep=' ', header=False, index=False)
         os.system(f"chmod 555 {out_filepath_quantized}")

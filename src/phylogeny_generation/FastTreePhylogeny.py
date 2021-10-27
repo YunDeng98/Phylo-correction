@@ -32,6 +32,7 @@ def to_fast_tree_format(rate_matrix: np.array, output_path: str, pi: np.array):
         for aa in amino_acids:
             outfile.write(aa + "\t")
         outfile.write("*\n")
+        outfile.flush()
     rate_matrix_df.to_csv(output_path, sep="\t", header=False, mode='a')
 
 

@@ -84,6 +84,7 @@ def map_func(args: List) -> None:
     stock_filename = os.path.join(outdir, protein_family_name + ".stock")
     with open(stock_filename, "w") as stock_file:
         stock_file.write(res)
+        stock_file.flush()
     os.system(f"chmod 555 {stock_filename}")
 
 

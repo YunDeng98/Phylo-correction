@@ -172,3 +172,4 @@ class MSA:
             for protein_name, seq in self.msa:
                 file.write(">" + protein_name + "\n")
                 file.write(seq + "\n")
+                file.flush()

@@ -19,6 +19,7 @@ def map_func(args) -> None:
     max_sites = args[4]
     rate_matrix = args[5]
     use_cached = args[6]
+    fast_tree_cats = args[7]
 
     logger = logging.getLogger("phylo_correction.phylogeny_generation")
     seed = int(hashlib.md5((protein_family_name + "phylogeny_generation").encode()).hexdigest()[:8], 16)
@@ -33,6 +34,7 @@ def map_func(args) -> None:
         max_seqs=max_seqs,
         max_sites=max_sites,
         rate_matrix=rate_matrix,
+        fast_tree_cats=fast_tree_cats,
         use_cached=use_cached,
     )
 
@@ -74,6 +76,7 @@ class PhylogenyGenerator:
         max_sites: int,
         max_families: int,
         rate_matrix: str,
+        fast_tree_cats: int,
         use_cached: bool = False,
     ):
         self.a3m_dir_full = a3m_dir_full
@@ -85,6 +88,7 @@ class PhylogenyGenerator:
         self.max_sites = max_sites
         self.max_families = max_families
         self.rate_matrix = rate_matrix
+        self.fast_tree_cats = fast_tree_cats
         self.use_cached = use_cached
 
     def run(self) -> None:
@@ -100,6 +104,7 @@ class PhylogenyGenerator:
         max_sites = self.max_sites
         max_families = self.max_families
         rate_matrix = self.rate_matrix
+        fast_tree_cats = self.fast_tree_cats
         use_cached = self.use_cached
 
         if not os.path.exists(outdir):
@@ -115,7 +120,7 @@ class PhylogenyGenerator:
         )
 
         map_args = [
-            [a3m_dir, protein_family_name, outdir, max_seqs, max_sites, rate_matrix, use_cached]
+            [a3m_dir, protein_family_name, outdir, max_seqs, max_sites, rate_matrix, use_cached, fast_tree_cats]
             for protein_family_name in protein_family_names
         ]
         if n_process > 1:

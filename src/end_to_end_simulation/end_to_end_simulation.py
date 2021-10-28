@@ -26,6 +26,9 @@ class EndToEndSimulator:
         pipeline: Pipeline to perform end-to-end simulation on.
         simulation_pct_interacting_positions: What percent of sites will be
             considered contacting.
+        use_site_specific_rates_in_simulation: If to use site-specific
+            rates in the MSA simulation. If so, the rates are pulled from
+            the FastTree logs from the pipeline.
         Q1_ground_truth: Ground-truth single-site rate matrix.
         Q2_ground_truth: Ground-truth co-evolution rate matrix.
         fast_tree_rate_matrix: When the pipeline is run on the simulated data,
@@ -35,6 +38,19 @@ class EndToEndSimulator:
             different from standard amino-acid matrices. In that case,
             the phylogeny reconstruction step should use a matrix that
             aligns with Q1_ground_truth instead.
+        fast_tree_cats: When the pipeline is run on the simulated data,
+            these number of rate categories will be used instead in FastTree.
+            This is useful for, say, simulating data with 20 rate categories,
+            and then performing FastTree estimation with no rate categories.
+        use_site_specific_rates: When the pipeline is run on the simulated data,
+            use this use_site_specific_rates in the pipeline instead.
+            This is useful for, say, simulating data with 20 rate categories,
+            but running our cherry MLE method _without_ using rate categories,
+            much like WAG is the version of LG that does not use rate
+            categories. This allows for performing very interesting
+            experiments: how much does estimation worsen if site-specific
+            rates are not taken into account? This is the essence of the
+            LG paper.
         simulate_end_to_end: If to run end-to-end simulation, which starts from
             only the MSAs and contact maps.
         simulate_from_trees_wo_ancestral_states: If to run simulation starting
@@ -51,9 +67,12 @@ class EndToEndSimulator:
         outdir: str,
         pipeline: Pipeline,
         simulation_pct_interacting_positions: float,
+        use_site_specific_rates_in_simulation: bool,
         Q1_ground_truth: str,
         Q2_ground_truth: str,
         fast_tree_rate_matrix: str,
+        fast_tree_cats: int,
+        use_site_specific_rates: bool,
         simulate_end_to_end: Optional[bool],
         simulate_from_trees_wo_ancestral_states: Optional[bool],
         simulate_from_trees_w_ancestral_states: Optional[bool],
@@ -62,11 +81,14 @@ class EndToEndSimulator:
         self.outdir = outdir
         self.pipeline = pipeline
         self.simulation_pct_interacting_positions = simulation_pct_interacting_positions
+        self.use_site_specific_rates_in_simulation = use_site_specific_rates_in_simulation
         self.Q1_ground_truth = Q1_ground_truth
         Q1_ground_truth_name = str(Q1_ground_truth).split('/')[-1]
         self.Q2_ground_truth = Q2_ground_truth
         Q2_ground_truth_name = str(Q2_ground_truth).split('/')[-1]
         self.fast_tree_rate_matrix = fast_tree_rate_matrix
+        self.fast_tree_cats = fast_tree_cats
+        self.use_site_specific_rates = use_site_specific_rates
         self.simulate_end_to_end = simulate_end_to_end
         self.simulate_from_trees_wo_ancestral_states = simulate_from_trees_wo_ancestral_states
         self.simulate_from_trees_w_ancestral_states = simulate_from_trees_w_ancestral_states
@@ -94,7 +116,7 @@ class EndToEndSimulator:
         fast_tree_rate_matrix = self.fast_tree_rate_matrix
         Q1_gt_hash = hash_str(Q1_ground_truth)
         Q2_gt_hash = hash_str(Q2_ground_truth)
-        simulation_params = f"{pipeline.tree_params}__{Q1_ground_truth_name}-{Q1_gt_hash}_Q1_{Q2_ground_truth_name}-{Q2_gt_hash}_Q2_{simulation_pct_interacting_positions}_pct"
+        simulation_params = f"{pipeline.tree_params}__{Q1_ground_truth_name}-{Q1_gt_hash}_Q1_{Q2_ground_truth_name}-{Q2_gt_hash}_Q2_{simulation_pct_interacting_positions}_pct_{use_site_specific_rates_in_simulation}_site-rates"
         a3m_simulated_params = simulation_params
         a3m_simulated_dir = os.path.join(outdir, f"a3m_simulated_{a3m_simulated_params}")
         contact_simulated_params = simulation_params
@@ -115,6 +137,7 @@ class EndToEndSimulator:
             simulation_pct_interacting_positions=simulation_pct_interacting_positions,
             Q1_ground_truth=Q1_ground_truth,
             Q2_ground_truth=Q2_ground_truth,
+            use_site_specific_rates_in_simulation=use_site_specific_rates_in_simulation,
             use_cached=use_cached,
         )
 
@@ -152,6 +175,8 @@ class EndToEndSimulator:
             rate_matrix_parameterization=pipeline.rate_matrix_parameterization,
             learn_pairwise_model=pipeline.learn_pairwise_model,
             xrate_grammar=pipeline.xrate_grammar,
+            fast_tree_cats=fast_tree_cats,
+            use_site_specific_rates=use_site_specific_rates,
         )
 
         self.pipeline_on_simulated_data_from_trees_wo_ancestral_states = Pipeline(
@@ -184,6 +209,8 @@ class EndToEndSimulator:
             rate_matrix_parameterization=pipeline.rate_matrix_parameterization,
             learn_pairwise_model=pipeline.learn_pairwise_model,
             xrate_grammar=pipeline.xrate_grammar,
+            fast_tree_cats=fast_tree_cats,
+            use_site_specific_rates=use_site_specific_rates,
         )
 
         self.pipeline_on_simulated_data_from_trees_w_ancestral_states = Pipeline(
@@ -216,6 +243,8 @@ class EndToEndSimulator:
             rate_matrix_parameterization=pipeline.rate_matrix_parameterization,
             learn_pairwise_model=pipeline.learn_pairwise_model,
             xrate_grammar=pipeline.xrate_grammar,
+            fast_tree_cats=fast_tree_cats,
+            use_site_specific_rates=use_site_specific_rates,
         )
 
     def run(self):

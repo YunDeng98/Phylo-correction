@@ -17,6 +17,7 @@ from typing import Dict, List, Tuple
 from ete3 import Tree
 
 from src.maximum_parsimony import name_internal_nodes
+from src.phylogeny_generation.FastTreePhylogeny import get_rate_categories, get_site_rate_from_site_id, copy_file_and_chmod
 
 from src.utils import subsample_protein_families
 
@@ -38,10 +39,23 @@ def chain_jump(
     contacting_pairs: List[Tuple[int, int]],
     independent_sites: List[int],
     dist: float,
+    rates: List[float],
+    site_cats: List[int],
+    sites_kept: List[int],
 ) -> List[int]:
     res = []
-    for i in range(len(independent_sites)):
-        res.append(Phylo_util.ending_state_without_expm(initial_state_index=int_state[i], model=model_1, t=dist))
+    sites_kept_set = set(sites_kept)
+    # Note that sites that are not in sites_kept will be dropped at the very
+    # end, but due to indexing data structured, the easiest thing is to
+    # simulate data for these positions too, and then drop them at the end.
+    for i, site_id in enumerate(independent_sites):
+        rate = 1.0
+        if site_id in sites_kept_set:
+            # Find its rate
+            rate = get_site_rate_from_site_id(
+                site_id, rates, site_cats, sites_kept
+            )
+        res.append(Phylo_util.ending_state_without_expm(initial_state_index=int_state[i], model=model_1, t=dist * rate))
     for i in range(len(contacting_pairs)):
         res.append(
             Phylo_util.ending_state_without_expm(initial_state_index=int_state[len(independent_sites) + i], model=model_2, t=dist)
@@ -94,6 +108,9 @@ def run_chain(
     Q2_df: pd.DataFrame,
     contacting_pairs: List[Tuple[int, int]],
     independent_sites: List[int],
+    rates: List[float],
+    site_cats: List[int],
+    sites_kept: List[int],
 ) -> Dict[str, str]:
     r"""
     Run the chain down the tree, starting from the stationary distribution.
@@ -112,7 +129,7 @@ def run_chain(
         for u in v.get_children():
             # Set state of u
             int_states[u.name] = chain_jump(
-                int_states[v.name], model_1, model_2, contacting_pairs, independent_sites, u.dist
+                int_states[v.name], model_1, model_2, contacting_pairs, independent_sites, u.dist, rates, site_cats, sites_kept
             )
             dfs_run_chain(u)
 
@@ -135,6 +152,7 @@ def map_func(args: List) -> None:
     a3m_simulated_dir = args[7]
     ancestral_states_simulated_dir = args[8]
     use_cached = args[9]
+    use_site_specific_rates_in_simulation = args[10]
 
     # Caching pattern: skip any computation as soon as possible
     contact_matrix_path = os.path.join(contact_simulated_dir, protein_family_name + ".cm")
@@ -199,8 +217,32 @@ def map_func(args: List) -> None:
     for site in range(L):
         contact_matrix[site, site] = 1
 
+    rates, site_cats, sites_kept = get_rate_categories(
+        tree_dir=tree_dir,
+        protein_family_name=protein_family_name,
+        use_site_specific_rates=use_site_specific_rates_in_simulation,
+        L=L,
+    )
+
     # Run Markov process down the tree
-    states = run_chain(tree, Q1, Q2, contacting_pairs, independent_sites)
+    states = run_chain(tree, Q1, Q2, contacting_pairs, independent_sites, rates, site_cats, sites_kept)
+    # Keep only the sites_kept
+    for key in states:
+        state = states[key]
+        states[key] = ''.join([state[i] for i in sites_kept])
+    contact_matrix = contact_matrix[np.ix_(sites_kept, sites_kept)]
+    assert(contact_matrix.shape == (len(sites_kept), len(sites_kept)))
+
+    # Write out the FastTree log and sites_kept. We just need to copy-paste from the tree_dir
+    for extension in ['.log', '.sites_kept']:
+        copy_file_and_chmod(
+            input_filepath=os.path.join(
+                tree_dir, protein_family_name + extension
+            ),
+            output_filepath=os.path.join(
+                ancestral_states_simulated_dir, protein_family_name + extension
+            )
+        )
 
     # Write out contact matrix
     contact_matrix_path = os.path.join(contact_simulated_dir, protein_family_name + ".cm")
@@ -264,6 +306,7 @@ class Simulator:
             family will be in contact.
         Q1_ground_truth: Rate matrix for the evolution of single sites.
         Q2_ground_truth: Rate matrix for pairs of sites that are in contact.
+        use_site_specific_rates_in_simulation: If to use_site_specific_rates_in_simulation.
         use_cached: If True and an output file already exists, all computation will be skipped.
     """
     def __init__(
@@ -280,6 +323,7 @@ class Simulator:
         simulation_pct_interacting_positions,
         Q1_ground_truth: str,
         Q2_ground_truth: str,
+        use_site_specific_rates_in_simulation: bool,
         use_cached: bool = False,
     ):
         self.a3m_dir_full = a3m_dir_full
@@ -294,6 +338,7 @@ class Simulator:
         self.simulation_pct_interacting_positions = simulation_pct_interacting_positions
         self.Q1_ground_truth = Q1_ground_truth
         self.Q2_ground_truth = Q2_ground_truth
+        self.use_site_specific_rates_in_simulation = use_site_specific_rates_in_simulation
         self.use_cached = use_cached
 
     def run(self) -> None:
@@ -309,6 +354,7 @@ class Simulator:
         simulation_pct_interacting_positions = self.simulation_pct_interacting_positions
         Q1_ground_truth = self.Q1_ground_truth
         Q2_ground_truth = self.Q2_ground_truth
+        use_site_specific_rates_in_simulation = self.use_site_specific_rates_in_simulation
         use_cached = self.use_cached
 
         logger = logging.getLogger("phylo_correction.simulation")
@@ -342,6 +388,7 @@ class Simulator:
                 a3m_simulated_dir,
                 ancestral_states_simulated_dir,
                 use_cached,
+                use_site_specific_rates_in_simulation,
             ]
             for protein_family_name in protein_family_names
         ]

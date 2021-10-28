@@ -18,6 +18,7 @@ from ete3 import Tree
 
 from src.phylogeny_generation import MSA
 from src.utils import subsample_protein_families
+from src.phylogeny_generation.FastTreePhylogeny import copy_file_and_chmod
 
 sys.path.append("../")
 
@@ -149,9 +150,21 @@ def map_func(args) -> None:
     # Caching pattern: skip any computation as soon as possible
     output_tree_filepath = os.path.join(outdir, protein_family_name + ".newick")
     output_parsimony_filepath = os.path.join(outdir, protein_family_name + ".parsimony")
-    if use_cached and os.path.exists(output_tree_filepath) and os.path.exists(output_parsimony_filepath):
-        # logger.info(f"Skipping. Cached maximum parsimony results for family {protein_family_name} at {output_tree_filepath} and {output_parsimony_filepath}")
+    output_log_filepath = os.path.join(outdir, protein_family_name + ".log")
+    if use_cached and os.path.exists(output_tree_filepath) and os.path.exists(output_parsimony_filepath) and os.path.exists(output_log_filepath):
+        # logger.info(f"Skipping. Cached maximum parsimony results for family {protein_family_name} at {output_tree_filepath} and {output_parsimony_filepath} and {output_log_filepath}")
         return
+
+    # Write out the FastTree log and sites_kept. We just need to copy-paste from the tree_dir
+    for extension in ['.log', '.sites_kept']:
+        copy_file_and_chmod(
+            input_filepath=os.path.join(
+                tree_dir, protein_family_name + extension
+            ),
+            output_filepath=os.path.join(
+                outdir, protein_family_name + extension
+            )
+        )
 
     seed = int(hashlib.md5((protein_family_name + "maximum_parsimony").encode()).hexdigest()[:8], 16)
     # logger.info(f"Setting random seed to: {seed}")

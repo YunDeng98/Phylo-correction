@@ -6,6 +6,7 @@ import logging
 import sys
 sys.path.append("../")
 import Phylo_util
+from src.utils import verify_integrity
 
 
 def normalized(Q):
@@ -44,7 +45,11 @@ class JTT:
         ipw = self.ipw
 
         # Create experiment directory
+        learned_matrix_path = os.path.join(self.output_dir, "learned_matrix.txt")
+        normalized_learned_matrix_path = os.path.join(self.output_dir, "learned_matrix_normalized.txt")
         if os.path.exists(output_dir) and use_cached:
+            verify_integrity(learned_matrix_path)
+            verify_integrity(normalized_learned_matrix_path)
             # logger.info(f"Skipping. Cached counting JTT results at {output_dir}")
             return
         if not os.path.exists(output_dir):
@@ -96,11 +101,9 @@ class JTT:
         res = np.diag(M) @ CTPs
         np.fill_diagonal(res, -M)
 
-        learned_matrix_path = os.path.join(self.output_dir, "learned_matrix.txt")
         np.savetxt(learned_matrix_path, res)
         os.system(f"chmod 555 {learned_matrix_path}")
 
-        normalized_learned_matrix_path = os.path.join(self.output_dir, "learned_matrix_normalized.txt")
         np.savetxt(normalized_learned_matrix_path, normalized(res))
         os.system(f"chmod 555 {normalized_learned_matrix_path}")
 

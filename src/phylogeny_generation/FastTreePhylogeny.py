@@ -11,6 +11,7 @@ from .MSA import MSA
 import logging
 
 from ete3 import Tree
+from src.utils import verify_integrity
 
 sys.path.append("../")
 import Phylo_util
@@ -25,6 +26,7 @@ def copy_file_and_chmod(
     """
     if not os.path.exists(input_filepath):
         raise ValueError(f"Input file not exist at: {input_filepath}")
+    verify_integrity(input_filepath)
     with open(output_filepath, "w") as output_file:
         with open(input_filepath, "r") as input_file:
             output_file.write(input_file.read())
@@ -233,7 +235,12 @@ class FastTreePhylogeny:
 
         # Caching pattern: skip any computation as soon as possible
         outfile = os.path.join(outdir, protein_family_name) + ".newick"
-        if use_cached and os.path.exists(outfile):
+        outlog = os.path.join(outdir, protein_family_name) + ".log"
+        out_sites_kept = os.path.join(outdir, protein_family_name) + ".sites_kept"
+        if use_cached and os.path.exists(outfile) and os.path.exists(outlog) and os.path.exists(out_sites_kept):
+            verify_integrity(outfile)
+            verify_integrity(outlog)
+            verify_integrity(out_sites_kept)
             # logger.info(f"Skipping. Cached FastTree output for family {protein_family_name} at {outfile}")
             return
 
@@ -268,9 +275,6 @@ class FastTreePhylogeny:
             processed_msa_filename = processed_msa_file.name
             msa.write_to_file(processed_msa_filename)
             # Run FastTree on (preprocessed) MSA file
-            outfile = os.path.join(outdir, protein_family_name) + ".newick"
-            outlog = os.path.join(outdir, protein_family_name) + ".log"
-            out_sites_kept = os.path.join(outdir, protein_family_name) + ".sites_kept"
             with open(out_sites_kept, "w") as out_sites_kept_file:
                 out_sites_kept_file.write(' '.join(map(str, msa.sites_kept)))
                 out_sites_kept_file.flush()

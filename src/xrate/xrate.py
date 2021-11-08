@@ -15,7 +15,7 @@ import sys
 from typing import List, Optional
 
 
-from src.utils import subsample_protein_families
+from src.utils import subsample_protein_families, verify_integrity
 sys.path.append("../")
 import Phylo_util
 
@@ -150,9 +150,12 @@ class XRATE:
         xrate_grammar = self.xrate_grammar
         use_cached = self.use_cached
 
+        # Caching pattern
         learned_matrix_path = os.path.join(self.outdir, "learned_matrix.txt")
         normalized_learned_matrix_path = os.path.join(self.outdir, "learned_matrix_normalized.txt")
         if os.path.exists(learned_matrix_path) and os.path.exists(normalized_learned_matrix_path) and use_cached:
+            verify_integrity(learned_matrix_path)
+            verify_integrity(normalized_learned_matrix_path)
             # logger.info(f"Skipping. Cached XRATE results at {outdir}")
             return
 

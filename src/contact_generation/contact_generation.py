@@ -9,7 +9,7 @@ import random
 from typing import List
 
 from src.contact_generation.ContactMatrix import ContactMatrix
-from src.utils import subsample_protein_families
+from src.utils import subsample_protein_families, verify_integrity
 
 
 def map_func(args: List) -> None:
@@ -24,6 +24,7 @@ def map_func(args: List) -> None:
     # Caching pattern: skip any computation as soon as possible
     outfile = os.path.join(outdir, protein_family_name + ".cm")
     if use_cached and os.path.exists(outfile):
+        verify_integrity(outfile)
         # logger.info(f"Skipping. Cached contact matrix for family {protein_family_name} at {outfile}")
         return
 

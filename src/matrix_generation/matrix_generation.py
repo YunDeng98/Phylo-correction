@@ -16,7 +16,7 @@ import hashlib
 
 from typing import List
 
-from src.utils import subsample_protein_families
+from src.utils import subsample_protein_families, verify_integrity
 
 sys.path.append("../")
 
@@ -202,6 +202,8 @@ class MatrixGenerator:
         out_filepath_total = os.path.join(outdir, "matrices.txt")
         out_filepath_quantized = os.path.join(outdir, "matrices_by_quantized_branch_length.txt")
         if use_cached and os.path.exists(out_filepath_total) and os.path.exists(out_filepath_quantized):
+            verify_integrity(out_filepath_total)
+            verify_integrity(out_filepath_quantized)
             # logger.info(f"Skipping. Cached matrices for {transitions_dir} at {out_filepath_total} and {out_filepath_quantized}")
             return
 

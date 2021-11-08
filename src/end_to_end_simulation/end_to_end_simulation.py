@@ -6,7 +6,7 @@ from src.pipeline import Pipeline
 from src.simulation import Simulator
 
 from typing import Optional
-from src.utils import hash_str
+from src.utils import hash_str, verify_integrity
 
 
 class EndToEndSimulator:

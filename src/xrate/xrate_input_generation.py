@@ -18,7 +18,7 @@ from ete3 import Tree
 from typing import List
 
 
-from src.utils import subsample_protein_families
+from src.utils import subsample_protein_families, verify_integrity
 
 
 def convert_parsimony_file_to_stock(
@@ -70,6 +70,7 @@ def map_func(args: List) -> None:
     # Caching pattern: skip any computation as soon as possible
     transition_filename = os.path.join(outdir, protein_family_name + ".stock")
     if use_cached and os.path.exists(transition_filename):
+        verify_integrity(transition_filename)
         # logger.info(f"Skipping. Cached transitions for family {protein_family_name} at {transition_filename}")
         return
 

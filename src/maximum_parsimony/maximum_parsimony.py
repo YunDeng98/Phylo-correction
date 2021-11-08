@@ -17,7 +17,7 @@ import random
 from ete3 import Tree
 
 from src.phylogeny_generation import MSA
-from src.utils import subsample_protein_families
+from src.utils import subsample_protein_families, verify_integrity
 from src.phylogeny_generation.FastTreePhylogeny import copy_file_and_chmod
 
 sys.path.append("../")
@@ -151,8 +151,13 @@ def map_func(args) -> None:
     output_tree_filepath = os.path.join(outdir, protein_family_name + ".newick")
     output_parsimony_filepath = os.path.join(outdir, protein_family_name + ".parsimony")
     output_log_filepath = os.path.join(outdir, protein_family_name + ".log")
-    if use_cached and os.path.exists(output_tree_filepath) and os.path.exists(output_parsimony_filepath) and os.path.exists(output_log_filepath):
+    output_sites_kept_filepath = os.path.join(outdir, protein_family_name + ".sites_kept")
+    if use_cached and os.path.exists(output_tree_filepath) and os.path.exists(output_parsimony_filepath) and os.path.exists(output_log_filepath) and os.path.exists(output_sites_kept_filepath):
         # logger.info(f"Skipping. Cached maximum parsimony results for family {protein_family_name} at {output_tree_filepath} and {output_parsimony_filepath} and {output_log_filepath}")
+        verify_integrity(output_tree_filepath)
+        verify_integrity(output_parsimony_filepath)
+        verify_integrity(output_log_filepath)
+        verify_integrity(output_sites_kept_filepath)
         return
 
     # Write out the FastTree log and sites_kept. We just need to copy-paste from the tree_dir

@@ -8,6 +8,7 @@ import logging
 from typing import Optional
 
 from . import RateMatrix, train_quantization
+from src.utils import verify_integrity
 
 import sys
 sys.path.append("../")
@@ -47,6 +48,10 @@ class RateMatrixLearner:
         self.device = device
         self.use_cached = use_cached
         self.initialization = initialization
+        self._learned_matrix_path = os.path.join(self.output_dir, "learned_matrix.txt")
+        self._normalized_learned_matrix_path = os.path.join(self.output_dir, "learned_matrix_normalized.txt")
+        self._df_res_filepath = os.path.join(self.output_dir, "training_df.pickle")
+        self._figpath = os.path.join(self.output_dir, "training_plot.pdf")
 
     def train(
         self,
@@ -64,7 +69,12 @@ class RateMatrixLearner:
         initialization = self.initialization
 
         # Create experiment directory
+        # Caching pattern
         if os.path.exists(output_dir) and use_cached:
+            verify_integrity(self._learned_matrix_path)
+            verify_integrity(self._normalized_learned_matrix_path)
+            verify_integrity(self._df_res_filepath)
+            verify_integrity(self._figpath)
             # logger.info(f"Skipping. Cached ratelearner results at {output_dir}")
             return
         if not os.path.exists(output_dir):
@@ -150,19 +160,20 @@ class RateMatrixLearner:
         return quantized_data, n_features
 
     def process_results(self):
-        learned_matrix_path = os.path.join(self.output_dir, "learned_matrix.txt")
+        learned_matrix_path = self._learned_matrix_path
         Q = self.Qfinal.detach().cpu().numpy()
         np.savetxt(learned_matrix_path, Q)
         os.system(f"chmod 555 {learned_matrix_path}")
 
-        normalized_learned_matrix_path = os.path.join(self.output_dir, "learned_matrix_normalized.txt")
+        normalized_learned_matrix_path = self._normalized_learned_matrix_path
         np.savetxt(normalized_learned_matrix_path, normalized(Q))
         os.system(f"chmod 555 {normalized_learned_matrix_path}")
 
-        df_res_filepath = os.path.join(self.output_dir, "training_df.pickle")
+        df_res_filepath = self._df_res_filepath
         self.df_res.to_pickle(df_res_filepath)
         os.system(f"chmod 555 {df_res_filepath}")
 
+        figpath = self._figpath
         FT_SIZE = 13
         fig, axes = plt.subplots(figsize=(5, 4))
         self.df_res.loss.plot()
@@ -170,6 +181,5 @@ class RateMatrixLearner:
         plt.ylabel("Negative likelihood", fontsize=FT_SIZE)
         plt.xlabel("# of iterations", fontsize=FT_SIZE)
         plt.tight_layout()
-        figpath = os.path.join(self.output_dir, "training_plot.pdf")
         plt.savefig(figpath)
         os.system(f"chmod 555 {figpath}")

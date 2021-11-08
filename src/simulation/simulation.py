@@ -19,7 +19,7 @@ from ete3 import Tree
 from src.maximum_parsimony import name_internal_nodes
 from src.phylogeny_generation.FastTreePhylogeny import get_rate_categories, get_site_rate_from_site_id, copy_file_and_chmod
 
-from src.utils import subsample_protein_families
+from src.utils import subsample_protein_families, verify_integrity
 
 sys.path.append("../")
 import Phylo_util
@@ -160,6 +160,10 @@ def map_func(args: List) -> None:
     ancestral_states_path = os.path.join(ancestral_states_simulated_dir, protein_family_name + ".parsimony")
     output_msa_path = os.path.join(a3m_simulated_dir, protein_family_name + ".a3m")
     if use_cached and os.path.exists(contact_matrix_path) and os.path.exists(parsimony_tree_path) and os.path.exists(ancestral_states_path) and os.path.exists(output_msa_path):
+        verify_integrity(contact_matrix_path)
+        verify_integrity(parsimony_tree_path)
+        verify_integrity(ancestral_states_path)
+        verify_integrity(output_msa_path)
         # logger.info(f"Skipping. Cached simulation files for family {protein_family_name} at {contact_matrix_path} , {parsimony_tree_path} , {ancestral_states_path} , {output_msa_path}")
         return
 

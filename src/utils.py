@@ -1,8 +1,12 @@
+from multiprocessing import Value
 import os
 import random
 import hashlib
+import logging
 
 from typing import List
+
+logger = logging.getLogger("phylo_correction.utils")
 
 
 def subsample_protein_families(
@@ -26,3 +30,13 @@ def subsample_protein_families(
 
 def hash_str(a_string: str):
     return hashlib.sha512(a_string.encode()).hexdigest()[:8]
+
+
+def verify_integrity(filepath):
+    if not os.path.exists(filepath):
+        logger.error(f"Trying to verify the integrity of an inexistent file: {filepath}")
+        raise Exception(f"Trying to verify the integrity of an inexistent file: {filepath}")
+    mask = oct(os.stat(filepath).st_mode)[-3:]
+    if mask != '555':
+        logger.error(f"filename {filepath} does not have status 555. Instead, it has status: {mask}. It is most likely corrupted. Remove it and retry.")
+        raise Exception(f"filename {filepath} does not have status 555. Instead, it has status: {mask}. It is most likely corrupted. Remove it and retry.")

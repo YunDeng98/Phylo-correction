@@ -14,7 +14,7 @@ from src.co_transition_extraction import CoTransitionExtractor
 from src.matrix_generation import MatrixGenerator
 from src.ratelearn import RateMatrixLearner
 from src.counting import JTT
-from src.utils import hash_str
+from src.utils import hash_str, verify_integrity
 from src.xrate.xrate_input_generation import XRATEInputGenerator, rate_matrix_to_grammar
 from src.xrate.xrate import XRATE
 
@@ -594,6 +594,8 @@ class Pipeline:
                         outfile.write(grammar)
                         outfile.flush()
                     os.system(f"chmod 555 {xrate_grammar}")
+                else:
+                    verify_integrity(xrate_grammar)
             xrate = XRATE(
                 a3m_dir_full=a3m_dir_full,
                 xrate_input_dir=xrate_input_dir,

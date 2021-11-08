@@ -13,7 +13,7 @@ import random
 import hashlib
 
 from typing import Dict, Optional, List, Tuple
-from src.utils import subsample_protein_families
+from src.utils import subsample_protein_families, verify_integrity
 
 from ete3 import Tree
 
@@ -129,6 +129,7 @@ def map_func(args: List) -> None:
     # Caching pattern: skip any computation as soon as possible
     transition_filename = os.path.join(outdir, protein_family_name + ".transitions")
     if use_cached and os.path.exists(transition_filename):
+        verify_integrity(transition_filename)
         # logger.info(f"Skipping. Cached co-transitions for family {protein_family_name} at {transition_filename}.")
         return
 

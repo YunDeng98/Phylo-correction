@@ -16,7 +16,7 @@ from typing import Dict, List, Tuple
 
 from ete3 import Tree
 
-from src.utils import subsample_protein_families
+from src.utils import subsample_protein_families, verify_integrity
 from src.phylogeny_generation.FastTreePhylogeny import get_rate_categories, get_site_rate_from_site_id
 
 sys.path.append("../")
@@ -132,6 +132,7 @@ def map_func(args: List) -> None:
     # Caching pattern: skip any computation as soon as possible
     transition_filename = os.path.join(outdir, protein_family_name + ".transitions")
     if use_cached and os.path.exists(transition_filename):
+        verify_integrity(transition_filename)
         # logger.info(f"Skipping. Cached transitions for family {protein_family_name} at {transition_filename}")
         return
 

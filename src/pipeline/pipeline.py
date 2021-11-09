@@ -440,25 +440,26 @@ class Pipeline:
 
         # Generate the contacts
         t_start = time.time()
-        if precomputed_contact_dir is None:
-            assert armstrong_cutoff is not None
-            assert pdb_dir is not None
-            contact_generator = ContactGenerator(
-                a3m_dir_full=a3m_dir_full,
-                a3m_dir=a3m_dir,
-                pdb_dir=pdb_dir,
-                armstrong_cutoff=armstrong_cutoff,
-                n_process=n_process,
-                expected_number_of_families=expected_number_of_MSAs,
-                outdir=contact_dir,
-                max_families=max_families,
-                use_cached=use_cached,
-            )
-            contact_generator.run()
-        else:
-            assert armstrong_cutoff is None
-            assert pdb_dir is None
-            contact_dir = precomputed_contact_dir
+        if learn_pairwise_model:
+            if precomputed_contact_dir is None:
+                assert armstrong_cutoff is not None
+                assert pdb_dir is not None
+                contact_generator = ContactGenerator(
+                    a3m_dir_full=a3m_dir_full,
+                    a3m_dir=a3m_dir,
+                    pdb_dir=pdb_dir,
+                    armstrong_cutoff=armstrong_cutoff,
+                    n_process=n_process,
+                    expected_number_of_families=expected_number_of_MSAs,
+                    outdir=contact_dir,
+                    max_families=max_families,
+                    use_cached=use_cached,
+                )
+                contact_generator.run()
+            else:
+                assert armstrong_cutoff is None
+                assert pdb_dir is None
+                contact_dir = precomputed_contact_dir
         self.time_ContactGenerator = time.time() - t_start
 
         # Generate the maximum parsimony reconstructions

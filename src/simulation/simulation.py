@@ -255,12 +255,21 @@ def map_func(args: List) -> None:
 
     # Write out MSA
     msa = ""
-    # First seq1 (the reference)
-    msa += ">seq1\n"
-    msa += states["seq1"] + "\n"
+    # First seq1 (the reference). Note that in pfam it is called seq1,
+    # but in other datasets, like LG, there is no reference sequence
+    # (since we dont care about contacts), so we just use an arbitrary
+    # leaf.
+    a_leaf_name = None
+    for leaf in tree:
+        a_leaf_name = leaf.name
+        break
+    assert a_leaf_name is not None
+    reference_sequence_name = "seq1" if "seq1" in states else a_leaf_name
+    msa += f">{reference_sequence_name}\n"
+    msa += states[reference_sequence_name] + "\n"
     # Now all other states
     for leaf in tree:
-        if leaf.name != "seq1":
+        if leaf.name != reference_sequence_name:
             msa += ">" + leaf.name + "\n"
             msa += states[leaf.name] + "\n"
     output_msa_path = os.path.join(a3m_simulated_dir, protein_family_name + ".a3m")

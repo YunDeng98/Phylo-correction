@@ -74,6 +74,9 @@ void dfs(int p, int v, int site_id){
         dp[v][i] = 0;
         if(G[v].size() == 0){
             // Leaf! Base case!
+            if(sequences[v] == ""){
+                cerr << "Leaf " << v << " has empty sequence!" << endl;
+            }
             assert(sequences[v] != "");
             if(aa_to_int(sequences[v][site_id]) != i)
                 dp[v][i] = INF;

@@ -191,6 +191,8 @@ def map_func(args) -> None:
     # Create input for C++ maximum parsimony
     node_name_to_int, int_to_node_name = create_node_name_vs_int_mappings(tree)
 
+    # This is helpful for debugging the C++ code if it crashes on execution:
+    # it allows us to inspect the inputs and see what might have gone wrong.
     # if True:
     #     if True:
     #         if True:
@@ -211,12 +213,12 @@ def map_func(args) -> None:
 
                 # Run C++ maximum parsimony
                 dir_path = os.path.dirname(os.path.realpath(__file__))
-                call_result = os.system(
-                    f"{dir_path}/maximum_parsimony {tree_filepath} {msa_filepath} {cpp_parsimony_filepath}"
-                )
+                command = f"{dir_path}/maximum_parsimony {tree_filepath} {msa_filepath} {cpp_parsimony_filepath}"
+                call_result = os.system(command)
                 # logger.info(f"Call result for family {protein_family_name} = {call_result}")
                 if call_result != 0:
-                    logger.error(f"Failed to run C++ maximum parsimony on family {protein_family_name}")
+                    logger.error(f"Failed to run C++ maximum parsimony on family {protein_family_name}. Command was:\n{command}\n")
+                    raise Exception(f"Failed to run C++ maximum parsimony on family {protein_family_name}. Command was:\n{command}\n")
                 # Convert .parsimony's indexing into string based.
                 try:
                     output_parsimony_filepath = os.path.join(outdir, protein_family_name + ".parsimony")

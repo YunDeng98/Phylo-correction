@@ -304,14 +304,14 @@ class Pipeline:
         transitions_params = f"{maximum_parsimony_params}__{edge_or_cherry}_eoc_{use_site_specific_rates}_site-rates"
         self.transitions_dir = os.path.join(outdir, f"transitions_{transitions_params}")
         # Where the transition matrices obtained by quantizing transition edges will be stored
-        filter_params = f"{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_max_height_{max_path_height}_max_path_height"
-        matrices_params = f"{max_families}_families__{transitions_params}__{filter_params}"
+        filter_params = f"{center}_center_{step_size}_step_size_{n_steps}_n_steps_{keep_outliers}_outliers_{max_height}_mh_{max_path_height}_mph"
+        matrices_params = f"{max_families}_fams__{transitions_params}__{filter_params}"
         self.matrices_dir = os.path.join(outdir, f"matrices__{matrices_params}")
         # Where the co-transitions obtained from the maximum parsimony phylogenies will be stored
         co_transitions_params = f"{maximum_parsimony_params}_{contact_params}__{edge_or_cherry}_eoc"
         self.co_transitions_dir = os.path.join(outdir, f"co_transitions_{co_transitions_params}")
         # Where the co-transition matrices obtained by quantizing transition edges will be stored
-        co_matrices_params = f"{max_families}_families__{co_transitions_params}__{filter_params}"
+        co_matrices_params = f"{max_families}_fams__{co_transitions_params}__{filter_params}"
         self.co_matrices_dir = os.path.join(outdir, f"co_matrices__{co_matrices_params}")
         optimizer_params = f"{num_epochs}_epochs_{init_jtt_ipw}_init-JTT-IPW_{rate_matrix_parameterization}_param"
         learnt_rate_matrix_params = f"{matrices_params}__{optimizer_params}"
@@ -335,7 +335,7 @@ class Pipeline:
         self.xrate_input_dir = os.path.join(outdir, f"XRATE_input__{xrate_input_params}")
         xrate_grammar_hash = hash_str(str(xrate_grammar))
         xrate_grammar_name = str(xrate_grammar).split('/')[-1]
-        xrate_params = f"{max_families}_families__{xrate_input_params}__{xrate_grammar_name}-{xrate_grammar_hash}_grammar"
+        xrate_params = f"{max_families}_fams__{xrate_input_params}__{xrate_grammar_name}-{xrate_grammar_hash}_grammar"
         self.learnt_rate_matrix_dir_XRATE = os.path.join(
             outdir,
             f"Q1_XRATE__{xrate_params}"

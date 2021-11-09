@@ -1,6 +1,8 @@
 import os
 import logging
 import numpy as np
+import pandas as pd
+import tempfile
 from typing import Optional, Tuple
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -117,4 +119,51 @@ def get_phyml_site_ll(phyml_site_ll_filepath: str) -> float:
             res.append(float(line.split()[1]))
         if line.startswith("Site"):
             started = True
+    return res
+
+
+def get_number_of_taxa(phyml_stats_filepath: str) -> int:
+    for line in open(phyml_stats_filepath, "r"):
+        if "Number of taxa:" in line:
+            return int(line.split()[-1])
+    raise Exception(f"Could not parse Number of taxa from file:\n{phyml_stats_filepath}")
+
+
+def get_number_of_sites(phyml_site_ll_filepath: str) -> int:
+    return len(get_phyml_site_ll(phyml_site_ll_filepath))
+
+
+def reproduce_Treebase_JTT_WAG_LG(
+    treebase_dir: str,
+    verbose: bool = False,
+):
+    filenames = sorted(list(os.listdir(treebase_dir)))
+    rows = []
+    for filename in filenames:
+        protein_family_name = filename.split('.')[0]
+        if verbose:
+            print(f"Processing: {filename}")
+        abspath = os.path.join(treebase_dir, filename)
+        row = {}
+        for model in ["JTT", "WAG", "LG"]:
+            if verbose:
+                print(f"Processing: {protein_family_name} with {model}")
+            with tempfile.TemporaryDirectory() as phyml_outdir:
+                phyml_stats_filepath, phyml_site_ll_filepath = run_phyml(
+                    rate_matrix_path=None,
+                    model=model,
+                    input_msa_path=abspath,
+                    num_rate_categories=4,
+                    random_seed=0,
+                    optimize_rates=True,
+                    outdir=phyml_outdir,
+                )
+                row[model] = get_phyml_ll(phyml_stats_filepath)
+                row["Name"] = protein_family_name
+                row["Tax"] = get_number_of_taxa(phyml_stats_filepath)
+                row["Sites"] = get_number_of_sites(phyml_site_ll_filepath)
+        rows.append(row)
+    res = pd.DataFrame(rows, columns=["Name", "Tax", "Sites", "JTT", "WAG", "LG"])
+    res.sort_values(by=["Name"], inplace=True)
+    res.reset_index(inplace=True)
     return res

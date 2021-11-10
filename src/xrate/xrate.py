@@ -15,7 +15,7 @@ import sys
 from typing import List, Optional
 
 
-from src.utils import subsample_protein_families, verify_integrity
+from src.utils import subsample_protein_families, verify_integrity, pushd
 sys.path.append("../")
 import Phylo_util
 
@@ -43,13 +43,13 @@ def install_xrate():
             f"git clone https://github.com/ihh/dart {xrate_path}"
         )
         logger.info(f"cd {xrate_path} ...")
-        os.chdir(xrate_path)
-        logger.info(f"Current working directory: {os.getcwd()}")
-        logger.info("./configure --without-guile ...")
-        os.system("./configure --without-guile")
-        logger.info("make xrate ...")
-        os.system("make xrate")
-        logger.info("Done!")
+        with pushd(xrate_path):
+            logger.info(f"Current working directory: {os.getcwd()}")
+            logger.info("./configure --without-guile ...")
+            os.system("./configure --without-guile")
+            logger.info("make xrate ...")
+            os.system("make xrate")
+            logger.info("Done!")
     if not os.path.exists(xrate_bin_path):
         raise ValueError(f"Failed to install XRATE")
 

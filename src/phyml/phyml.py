@@ -27,17 +27,17 @@ def install_phyml():
         os.system(
             f"git clone https://github.com/stephaneguindon/phyml {phyml_path}"
         )
-        os.chdir(phyml_path)
-        commands = [
-            "bash ./autogen.sh",
-            f"./configure --enable-phyml --prefix={dir_path}",
-            "make",
-            "make install",
-        ]
-        for command in commands:
-            logger.info(command)
-            os.system(command)
-        logger.info("Done!")
+        with pushd(phyml_path):
+            commands = [
+                "bash ./autogen.sh",
+                f"./configure --enable-phyml --prefix={dir_path}",
+                "make",
+                "make install",
+            ]
+            for command in commands:
+                logger.info(command)
+                os.system(command)
+            logger.info("Done!")
     if not os.path.exists(phyml_bin_path):
         raise Exception("Failed to install PhyML")
 

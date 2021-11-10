@@ -3,10 +3,21 @@ import os
 import random
 import hashlib
 import logging
+import contextlib
 
 from typing import List
 
 logger = logging.getLogger("phylo_correction.utils")
+
+
+@contextlib.contextmanager
+def pushd(new_dir):
+    previous_dir = os.getcwd()
+    os.chdir(new_dir)
+    try:
+        yield
+    finally:
+        os.chdir(previous_dir)
 
 
 def subsample_protein_families(
@@ -40,3 +51,22 @@ def verify_integrity(filepath):
     if mask != '555':
         logger.error(f"filename {filepath} does not have status 555. Instead, it has status: {mask}. It is most likely corrupted. Remove it and retry.")
         raise Exception(f"filename {filepath} does not have status 555. Instead, it has status: {mask}. It is most likely corrupted. Remove it and retry.")
+
+
+def verify_integrity_of_directory(dirpath: str, expected_number_of_files: int):
+    """
+    Makes sure that the directory has the expected number of files and that they are all write protected.
+    """
+    dirpath = os.path.abspath(dirpath)
+    if not os.path.exists(dirpath):
+        logger.error(f"Trying to verify the integrity of an inexistent directory: {dirpath}")
+        raise Exception(f"Trying to verify the integrity of an inexistent diretory: {dirpath}")
+    filenames = sorted(list(os.listdir(dirpath)))
+    if len(filenames) != expected_number_of_files:
+        raise Exception(
+            f"{dirpath} already exists but does not contain the expected_number_of_files."
+            f"\nExpected: {expected_number_of_files}\nFound: {len(filenames)}"
+        )
+    for filename in filenames:
+        filepath = os.path.join(dirpath, filename)
+        verify_integrity(filepath=filepath)

@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import tempfile
 from typing import Optional, Tuple
+from src.utils import pushd
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 phyml_path = os.path.join(dir_path, 'phyml_github')
@@ -65,38 +66,41 @@ def run_phyml(
         random_seed: Random seed for PhyML determinism.
         outdir: Where to write the output.
     """
+    if rate_matrix_path:
+        rate_matrix_path = os.path.abspath(rate_matrix_path)
+    input_msa_path = os.path.abspath(input_msa_path)
+    outdir = os.path.abspath(outdir)
     if rate_matrix_path is not None and model is not None:
         raise ValueError(f"Only one of rate_matrix_path and model can be provided. You provided:\n{rate_matrix_path}\nand\n{model}")
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     phyml_log_filepath = os.path.join(outdir, "phyml_log.txt")
-    os.system(f"pushd {outdir}")
-    os.system(f"cp {input_msa_path} {outdir}")
-    protein_family_name = input_msa_path.split('/')[-1]
-    input_msa_path = os.path.join(outdir, protein_family_name)
-    command = \
-        f"{phyml_bin_path} " \
-        f"--input {input_msa_path} " \
-        f"--datatype aa " \
-        f"--nclasses {num_rate_categories} " \
-        f"--pinv e "
-    if not optimize_rates:
-        command += "-o tl "
-    command += \
-        f"--r_seed {random_seed} " \
-        f"--bootstrap 0 " \
-        f"-f m " \
-        f"--alpha e " \
-        f"--print_site_lnl "
-    if model is not None:
-        command += f"--model {model} "
-    if rate_matrix_path is not None:
+    with pushd(outdir):
+        os.system(f"cp {input_msa_path} {outdir}")
+        protein_family_name = input_msa_path.split('/')[-1]
+        input_msa_path = os.path.join(outdir, protein_family_name)
+        command = \
+            f"{phyml_bin_path} " \
+            f"--input {input_msa_path} " \
+            f"--datatype aa " \
+            f"--nclasses {num_rate_categories} " \
+            f"--pinv e "
+        if not optimize_rates:
+            command += "-o tl "
         command += \
-            f"--model custom " \
-            f"--aa_rate_file {rate_matrix_PAML} "
-    command += f"> {phyml_log_filepath}"
-    os.system(command)
-    os.system("popd")
+            f"--r_seed {random_seed} " \
+            f"--bootstrap 0 " \
+            f"-f m " \
+            f"--alpha e " \
+            f"--print_site_lnl "
+        if model is not None:
+            command += f"--model {model} "
+        if rate_matrix_path is not None:
+            command += \
+                f"--model custom " \
+                f"--aa_rate_file {rate_matrix_PAML} "
+        command += f"> {phyml_log_filepath}"
+        os.system(command)
     phyml_stats_filepath = os.path.abspath(os.path.join(outdir, protein_family_name + "_phyml_stats.txt"))
     phyml_site_ll_filepath = os.path.abspath(os.path.join(outdir, protein_family_name + "_phyml_lk.txt"))
     if not os.path.exists(phyml_stats_filepath) or not os.path.exists(phyml_site_ll_filepath):
@@ -104,17 +108,23 @@ def run_phyml(
     return phyml_stats_filepath, phyml_site_ll_filepath
 
 
-def get_phyml_ll(phyml_stats_filepath: str) -> float:
-    for line in open(phyml_stats_filepath, "r"):
+def get_phyml_ll(phyml_stats: str) -> float:
+    """
+    Given the phyml_stats file contents, return the Log-likelihood.
+    """
+    for line in phyml_stats.split('\n'):
         if "Log-likelihood:" in line:
             return float(line.split()[-1])
-    raise Exception(f"Could not parse Log-likelihood from file:\n{phyml_stats_filepath}")
+    raise Exception(f"Could not parse Log-likelihood from file contents:\n{phyml_stats}")
 
 
-def get_phyml_site_ll(phyml_site_ll_filepath: str) -> float:
+def get_phyml_site_ll(phyml_site_ll: str) -> float:
+    """
+    Given the phyml_site_ll file contents, return the Site Log-likelihood.
+    """
     res = []
     started = False
-    for line in open(phyml_site_ll_filepath, "r"):
+    for line in phyml_site_ll.split('\n')[:-1]:
         if started:
             res.append(float(line.split()[1]))
         if line.startswith("Site"):
@@ -122,48 +132,18 @@ def get_phyml_site_ll(phyml_site_ll_filepath: str) -> float:
     return res
 
 
-def get_number_of_taxa(phyml_stats_filepath: str) -> int:
-    for line in open(phyml_stats_filepath, "r"):
+def get_number_of_taxa(phyml_stats: str) -> int:
+    """
+    Given the phyml_stats file contents, return the Log-likelihood.
+    """
+    for line in phyml_stats.split('\n'):
         if "Number of taxa:" in line:
             return int(line.split()[-1])
-    raise Exception(f"Could not parse Number of taxa from file:\n{phyml_stats_filepath}")
+    raise Exception(f"Could not parse Number of taxa from file contents:\n{phyml_stats}")
 
 
-def get_number_of_sites(phyml_site_ll_filepath: str) -> int:
-    return len(get_phyml_site_ll(phyml_site_ll_filepath))
-
-
-def reproduce_Treebase_JTT_WAG_LG(
-    treebase_dir: str,
-    verbose: bool = False,
-):
-    filenames = sorted(list(os.listdir(treebase_dir)))
-    rows = []
-    for filename in filenames:
-        protein_family_name = filename.split('.')[0]
-        if verbose:
-            print(f"Processing: {filename}")
-        abspath = os.path.join(treebase_dir, filename)
-        row = {}
-        for model in ["JTT", "WAG", "LG"]:
-            if verbose:
-                print(f"Processing: {protein_family_name} with {model}")
-            with tempfile.TemporaryDirectory() as phyml_outdir:
-                phyml_stats_filepath, phyml_site_ll_filepath = run_phyml(
-                    rate_matrix_path=None,
-                    model=model,
-                    input_msa_path=abspath,
-                    num_rate_categories=4,
-                    random_seed=0,
-                    optimize_rates=True,
-                    outdir=phyml_outdir,
-                )
-                row[model] = get_phyml_ll(phyml_stats_filepath)
-                row["Name"] = protein_family_name
-                row["Tax"] = get_number_of_taxa(phyml_stats_filepath)
-                row["Sites"] = get_number_of_sites(phyml_site_ll_filepath)
-        rows.append(row)
-    res = pd.DataFrame(rows, columns=["Name", "Tax", "Sites", "JTT", "WAG", "LG"])
-    res.sort_values(by=["Name"], inplace=True)
-    res.reset_index(inplace=True)
-    return res
+def get_number_of_sites(phyml_site_ll: str) -> int:
+    """
+    Given the phyml_site_ll file contents, return the Site Log-likelihood.
+    """
+    return len(get_phyml_site_ll(phyml_site_ll))

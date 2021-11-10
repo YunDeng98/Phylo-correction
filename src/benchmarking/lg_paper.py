@@ -219,7 +219,7 @@ def reproduce_Treebase_JTT_WAG_LG(
     rows = []
     for filename in filenames[:max_families]:
         protein_family_name = filename.split(".")[0]
-        abspath = os.path.join(treebase_dir, filename)
+        input_msa_path = os.path.join(treebase_dir, filename)
         row = {}
         for model in ["JTT", "WAG", "LG"]:
             if verbose:
@@ -227,7 +227,7 @@ def reproduce_Treebase_JTT_WAG_LG(
             phyml_stats, phyml_site_ll = run_phyml_cached(
                 rate_matrix_path=None,
                 model=model,
-                input_msa_path=abspath,
+                input_msa_path=input_msa_path,
                 num_rate_categories=num_rate_categories,
                 random_seed=random_seed,
                 optimize_rates=optimize_rates,

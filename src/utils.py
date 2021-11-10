@@ -42,7 +42,7 @@ def hash_str(a_string: str):
     return hashlib.sha512(a_string.encode()).hexdigest()[:8]
 
 
-def verify_integrity(filepath: str, mode: str):
+def verify_integrity(filepath: str, mode: str = '555'):
     if not os.path.exists(filepath):
         logger.error(
             f"Trying to verify the integrity of an inexistent file: {filepath}"

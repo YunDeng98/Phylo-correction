@@ -1,14 +1,12 @@
-import os
 import logging
-import numpy as np
-import pandas as pd
-import tempfile
+import os
 from typing import Optional, Tuple
+
 from src.utils import pushd
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
-phyml_path = os.path.join(dir_path, 'phyml_github')
-phyml_bin_path = os.path.join(dir_path, 'bin/phyml')
+phyml_path = os.path.join(dir_path, "phyml_github")
+phyml_bin_path = os.path.join(dir_path, "bin/phyml")
 
 
 def install_phyml():
@@ -23,8 +21,12 @@ def install_phyml():
     logger.info("Checking for PhyML ...")
     if not os.path.exists(phyml_bin_path):
         # TODO: Make this part of installation?
-        logger.info(f"git clone https://github.com/stephaneguindon/phyml {phyml_path}")
-        os.system(f"git clone https://github.com/stephaneguindon/phyml {phyml_path}")
+        logger.info(
+            f"git clone https://github.com/stephaneguindon/phyml {phyml_path}"
+        )
+        os.system(
+            f"git clone https://github.com/stephaneguindon/phyml {phyml_path}"
+        )
         os.chdir(phyml_path)
         commands = [
             "bash ./autogen.sh",
@@ -71,40 +73,50 @@ def run_phyml(
     input_msa_path = os.path.abspath(input_msa_path)
     outdir = os.path.abspath(outdir)
     if rate_matrix_path is not None and model is not None:
-        raise ValueError(f"Only one of rate_matrix_path and model can be provided. You provided:\n{rate_matrix_path}\nand\n{model}")
+        raise ValueError(
+            f"Only one of rate_matrix_path and model can be provided. You provided:\n{rate_matrix_path}\nand\n{model}"
+        )
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     phyml_log_filepath = os.path.join(outdir, "phyml_log.txt")
     with pushd(outdir):
         os.system(f"cp {input_msa_path} {outdir}")
-        protein_family_name = input_msa_path.split('/')[-1]
+        protein_family_name = input_msa_path.split("/")[-1]
         input_msa_path = os.path.join(outdir, protein_family_name)
-        command = \
-            f"{phyml_bin_path} " \
-            f"--input {input_msa_path} " \
-            f"--datatype aa " \
-            f"--nclasses {num_rate_categories} " \
+        command = (
+            f"{phyml_bin_path} "
+            f"--input {input_msa_path} "
+            f"--datatype aa "
+            f"--nclasses {num_rate_categories} "
             f"--pinv e "
+        )
         if not optimize_rates:
             command += "-o tl "
-        command += \
-            f"--r_seed {random_seed} " \
-            f"--bootstrap 0 " \
-            f"-f m " \
-            f"--alpha e " \
+        command += (
+            f"--r_seed {random_seed} "
+            f"--bootstrap 0 "
+            f"-f m "
+            f"--alpha e "
             f"--print_site_lnl "
+        )
         if model is not None:
             command += f"--model {model} "
         if rate_matrix_path is not None:
-            command += \
-                f"--model custom " \
-                f"--aa_rate_file {rate_matrix_PAML} "
+            command += f"--model custom " f"--aa_rate_file {rate_matrix_PAML} "
         command += f"> {phyml_log_filepath}"
         os.system(command)
-    phyml_stats_filepath = os.path.abspath(os.path.join(outdir, protein_family_name + "_phyml_stats.txt"))
-    phyml_site_ll_filepath = os.path.abspath(os.path.join(outdir, protein_family_name + "_phyml_lk.txt"))
-    if not os.path.exists(phyml_stats_filepath) or not os.path.exists(phyml_site_ll_filepath):
-        raise Exception(f"PhyML failed to run. Files:\n{phyml_stats_filepath}\nAnd\n{phyml_site_ll_filepath}\ndo not both exist.\nCommand:\n{command}\n")
+    phyml_stats_filepath = os.path.abspath(
+        os.path.join(outdir, protein_family_name + "_phyml_stats.txt")
+    )
+    phyml_site_ll_filepath = os.path.abspath(
+        os.path.join(outdir, protein_family_name + "_phyml_lk.txt")
+    )
+    if not os.path.exists(phyml_stats_filepath) or not os.path.exists(
+        phyml_site_ll_filepath
+    ):
+        raise Exception(
+            f"PhyML failed to run. Files:\n{phyml_stats_filepath}\nAnd\n{phyml_site_ll_filepath}\ndo not both exist.\nCommand:\n{command}\n"
+        )
     return phyml_stats_filepath, phyml_site_ll_filepath
 
 
@@ -112,10 +124,12 @@ def get_phyml_ll(phyml_stats: str) -> float:
     """
     Given the phyml_stats file contents, return the Log-likelihood.
     """
-    for line in phyml_stats.split('\n'):
+    for line in phyml_stats.split("\n"):
         if "Log-likelihood:" in line:
             return float(line.split()[-1])
-    raise Exception(f"Could not parse Log-likelihood from file contents:\n{phyml_stats}")
+    raise Exception(
+        f"Could not parse Log-likelihood from file contents:\n{phyml_stats}"
+    )
 
 
 def get_phyml_site_ll(phyml_site_ll: str) -> float:
@@ -124,7 +138,7 @@ def get_phyml_site_ll(phyml_site_ll: str) -> float:
     """
     res = []
     started = False
-    for line in phyml_site_ll.split('\n')[:-1]:
+    for line in phyml_site_ll.split("\n")[:-1]:
         if started:
             res.append(float(line.split()[1]))
         if line.startswith("Site"):
@@ -136,10 +150,12 @@ def get_number_of_taxa(phyml_stats: str) -> int:
     """
     Given the phyml_stats file contents, return the Log-likelihood.
     """
-    for line in phyml_stats.split('\n'):
+    for line in phyml_stats.split("\n"):
         if "Number of taxa:" in line:
             return int(line.split()[-1])
-    raise Exception(f"Could not parse Number of taxa from file contents:\n{phyml_stats}")
+    raise Exception(
+        f"Could not parse Number of taxa from file contents:\n{phyml_stats}"
+    )
 
 
 def get_number_of_sites(phyml_site_ll: str) -> int:

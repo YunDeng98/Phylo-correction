@@ -166,7 +166,7 @@ def cached(
                     except:
                         raise Exception(f"Corrupt cache file due to unpickling error, even though success token was present!: {filename}")
             else:
-                if os.path.isfile(filename):
+                if os.path.isfile(filename) and use_cached:
                     assert(not os.path.isfile(success_token_filename))  # Should be true because we are in the else statement
                     logger.info("Success token missing but pickle file is present. "
                                 "Thus pickle file is most likely corrupt. "

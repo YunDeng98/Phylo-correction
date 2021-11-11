@@ -104,7 +104,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
                 tree_true_path = f"test_input_data/trees_small_Q1_uniform_halved/{protein_family_name}.newick"
                 tree_inferred_path = os.path.join(outdir, protein_family_name + '.newick')
                 l1_error = branch_length_l1_error(tree_true_path, tree_inferred_path)
-                assert(l1_error < 0.01)  # Redundant, but just in case
+                assert(l1_error < 0.02)  # Redundant, but just in case
 
     @parameterized.expand([("multiprocess", 3), ("single-process", 1)])
     def test_inexistent_rate_matrix_raises_error(self, name, n_process):

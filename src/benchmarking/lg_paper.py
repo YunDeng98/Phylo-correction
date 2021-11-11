@@ -225,8 +225,8 @@ def reproduce_Treebase_JTT_WAG_LG(
         for model in ["JTT", "WAG", "LG"]:
             if verbose:
                 print(f"Processing: {filename} with {model}")
-            phyml_stats, phyml_site_ll = run_phyml_cached(
-                rate_matrix_path=None,
+            row[model_name] = get_phyml_ll(
+                rate_matrix_path=rate_matrix_path,
                 model=model,
                 input_msa_path=input_msa_path,
                 num_rate_categories=num_rate_categories,

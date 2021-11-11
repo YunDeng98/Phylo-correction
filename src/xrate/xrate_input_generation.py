@@ -50,7 +50,10 @@ def convert_parsimony_file_to_stock(
         n_lines = len(lines)
         for i in range(0, n_lines):
             line = lines[i].split(' ')
-            if not line[0].startswith('seq'):
+            if len(line) == 1:
+                assert(i == 0)
+                continue
+            if line[0].startswith('internal-'):
                 continue
             protein_name = line[0]
             protein_seq = line[1]

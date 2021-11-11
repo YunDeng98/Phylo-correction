@@ -1,8 +1,13 @@
 import logging
 import os
+import sys
 from typing import Optional, Tuple
 
+import numpy as np
 from src.utils import pushd
+
+sys.path.append("../")
+from Phylo_util import solve_stationery_dist
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 phyml_path = os.path.join(dir_path, "phyml_github")
@@ -40,6 +45,30 @@ def install_phyml():
             logger.info("Done!")
     if not os.path.exists(phyml_bin_path):
         raise Exception("Failed to install PhyML")
+
+
+def to_paml_format(
+    input_rate_matrix_path: str,
+    output_rate_matrix_path: str,
+):
+    """
+    Convert a rate matrix into the PAML format required to run PhyML.
+    """
+    Q = np.loadtxt(input_rate_matrix_path)
+    pi = solve_stationery_dist(Q)
+    E, F = Q / pi, np.diag(pi)
+    res = ""
+    n = Q.shape[0]
+    for i in range(n):
+        for j in range(i):
+            res += "%.6f " % E[i, j]
+        res += "\n"
+    res += "\n"
+    for i in range(n):
+        res += "%.6f " % F[i, i]
+    with open(output_rate_matrix_path, "w") as outfile:
+        outfile.write(res)
+        outfile.flush()
 
 
 def run_phyml(

@@ -24,6 +24,8 @@ def copy_file_and_chmod(
     """
     Copy file and chmod to 555
     """
+    input_filepath = os.path.abspath(input_filepath)
+    output_filepath = os.path.abspath(output_filepath)
     if not os.path.exists(input_filepath):
         raise ValueError(f"Input file not exist at: {input_filepath}")
     verify_integrity(input_filepath)
@@ -131,7 +133,7 @@ def run_fast_tree_with_custom_rate_matrix(
     outfile: str,
     outlog: str,
     fast_tree_cats: int,
-) -> None:
+) -> str:
     r"""
     This wrapper deals with the fact that FastTree only accepts normalized rate matrices
     as input. Therefore, to run FastTree with an arbitrary rate matrix, we first have
@@ -157,14 +159,16 @@ def run_fast_tree_with_custom_rate_matrix(
             mutation_rate = pi @ -np.diag(Q)
             if abs(mutation_rate - 1.0) < 0.00001:
                 # Can just use the original rate matrix
-                os.system(f"{dir_path}/FastTree -quiet -trans {rate_matrix} -log {outlog} -cat {fast_tree_cats} < {processed_msa_filename} > {outfile}")
-                return
+                command = f"{dir_path}/FastTree -quiet -trans {rate_matrix} -log {outlog} -cat {fast_tree_cats} < {processed_msa_filename} > {outfile}"
+                os.system(command)
+                return command
             # Normalize Q
             Q_normalized = Q / mutation_rate
             # Write out Q_normalized in FastTree format, for use in FastTree
             to_fast_tree_format(Q_normalized, output_path=scaled_rate_matrix_filename, pi=pi.reshape(20))
             # Run FastTree!
-            os.system(f"{dir_path}/FastTree -quiet -trans {scaled_rate_matrix_filename} -log {outlog} -cat {fast_tree_cats} < {processed_msa_filename} > {scaled_tree_filename}")
+            command = f"{dir_path}/FastTree -quiet -trans {scaled_rate_matrix_filename} -log {outlog} -cat {fast_tree_cats} < {processed_msa_filename} > {scaled_tree_filename}"
+            os.system(command)
             # De-normalize the branch lengths of the tree
             tree = Tree(scaled_tree_filename)
 
@@ -174,6 +178,7 @@ def run_fast_tree_with_custom_rate_matrix(
                     dfs_scale_tree(u)
             dfs_scale_tree(tree)
             tree.write(format=2, outfile=outfile)
+            return command
 
 
 def post_process_fast_tree_log(outlog: str):
@@ -230,7 +235,7 @@ class FastTreePhylogeny:
         rate_matrix: str,
         fast_tree_cats: int,
         use_cached: bool = False,
-    ) -> None:
+    ):
         logger = logging.getLogger("phylo_correction.FastTreePhylogeny")
 
         # Caching pattern: skip any computation as soon as possible
@@ -241,6 +246,8 @@ class FastTreePhylogeny:
             verify_integrity(outfile)
             verify_integrity(outlog)
             verify_integrity(out_sites_kept)
+            if len(open(outfile).read()) < 3:
+                raise Exception(f"Tree at: {os.path.abspath(outfile)} is corrupted")
             # logger.info(f"Skipping. Cached FastTree output for family {protein_family_name} at {outfile}")
             return
 
@@ -256,7 +263,7 @@ class FastTreePhylogeny:
             logger.info("Compiling FastTree ...")
             # See http://www.microbesonline.org/fasttree/#Install
             os.system(
-                f"gcc -DNO_SSE -O3 -finline-functions -funroll-loops -Wall -o {fast_tree_bin_path} {fast_tree_path} -lm"
+                f"gcc -DNO_SSE -DUSE_DOUBLE -O3 -finline-functions -funroll-loops -Wall -o {fast_tree_bin_path} {fast_tree_path} -lm"
             )
 
         if not os.path.exists(outdir):
@@ -283,13 +290,14 @@ class FastTreePhylogeny:
             if rate_matrix[-4:] == 'None':
                 assert(not os.path.exists(rate_matrix))
                 logger.info(f"Running FastTree with default rate matrix on MSA:\n{msa}")
-                os.system(f"{dir_path}/FastTree -quiet -log {outlog} -cat {fast_tree_cats} < {processed_msa_filename} > {outfile}")
+                command = f"{dir_path}/FastTree -quiet -log {outlog} -cat {fast_tree_cats} < {processed_msa_filename} > {outfile}"
+                os.system(command)
             else:
                 if not os.path.exists(rate_matrix):
                     logger.error(f"Could not find rate matrix {rate_matrix}")
                     raise PhylogenyGeneratorError(f"Could not find rate matrix {rate_matrix}")
                 logger.info(f"Running FastTree with rate matrix {rate_matrix} on MSA:\n{msa}")
-                run_fast_tree_with_custom_rate_matrix(
+                command = run_fast_tree_with_custom_rate_matrix(
                     dir_path=dir_path,
                     rate_matrix=rate_matrix,
                     processed_msa_filename=processed_msa_filename,
@@ -306,6 +314,10 @@ class FastTreePhylogeny:
             os.system(f"chmod 555 {outfile}")
             os.system(f"chmod 555 {outlog}")
             os.system(f"chmod 555 {out_sites_kept}")
+            if len(open(outfile).read()) < 3:
+                raise Exception(
+                    f"Tree at: {os.path.abspath(outfile)} is corrupted."
+                    f"Command was: {command} . Input MSA was:\n{open(processed_msa_filename).read()}")
 
     @property
     def total_time(self) -> float:

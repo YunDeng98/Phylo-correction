@@ -20,17 +20,21 @@ from src.utils import pushd, verify_integrity_of_directory
 
 MODELS = [
     ("JTT", "JTT", None),
+    ("r__JTT", "r__JTT", None),
     ("WAG", "WAG", None),
-    # ("WAG_PAML", None, "./input_data/synthetic_rate_matrices/PAML/WAG.PAML.txt"),
+    ("WAG_PAML", None, "./input_data/synthetic_rate_matrices/PAML/WAG.PAML.txt"),
     ("r__LG", "r__LG", None),
     ("LG", "LG", None),
+    ("Cherry3_LG", None, "./input_data/Q3.PAML.txt"),
+    ("Cherry2_LG", None, "./input_data/Q2.PAML.txt"),
+    ("Cherry1_LG", None, "./input_data/Q1.PAML.txt"),
     ("Cherry_LG", None, "./input_data/synthetic_rate_matrices/PAML/Q_learnt_from_LG.PAML.txt"),
     ("Cherry_LG_nosr", None, "./input_data/synthetic_rate_matrices/PAML/Q_learnt_from_LG_no_site_rates.PAML.txt"),
     ("r__WAG'", "r__WAG'", None),
-    # ("LG_PAML", None, "./input_data/synthetic_rate_matrices/PAML/lg_LG.PAML.txt"),
-    # ("Cherry_LG_nosr", None, "./input_data/synthetic_rate_matrices/PAML/Q_learnt_from_LG_no_site_rates.PAML.txt"),
-    # ("Cherry_PFAM_32", None, "./input_data/synthetic_rate_matrices/PAML/Q_learnt_from_PFAM_32.PAML.txt"),
-    # ("Cherry_PFAM_32_nosr", None, "./input_data/synthetic_rate_matrices/PAML/Q_learnt_from_PFAM_32_no_site_rates.PAML.txt"),
+    ("LG_PAML", None, "./input_data/synthetic_rate_matrices/PAML/lg_LG.PAML.txt"),
+    ("Cherry_LG_nosr", None, "./input_data/synthetic_rate_matrices/PAML/Q_learnt_from_LG_no_site_rates.PAML.txt"),
+    ("Cherry_PFAM_32", None, "./input_data/synthetic_rate_matrices/PAML/Q_learnt_from_PFAM_32.PAML.txt"),
+    ("Cherry_PFAM_32_nosr", None, "./input_data/synthetic_rate_matrices/PAML/Q_learnt_from_PFAM_32_no_site_rates.PAML.txt"),
 ]
 
 

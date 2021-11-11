@@ -131,7 +131,7 @@ def run_phyml(
         if model is not None:
             command += f"--model {model} "
         if rate_matrix_path is not None:
-            command += f"--model custom " f"--aa_rate_file {rate_matrix_PAML} "
+            command += f"--model custom " f"--aa_rate_file {rate_matrix_path} "
         command += f"> {phyml_log_filepath}"
         os.system(command)
     phyml_stats_filepath = os.path.abspath(
@@ -149,7 +149,7 @@ def run_phyml(
     return phyml_stats_filepath, phyml_site_ll_filepath
 
 
-def get_phyml_ll(phyml_stats: str) -> float:
+def get_phyml_ll_from_phyml_stats(phyml_stats: str) -> float:
     """
     Given the phyml_stats file contents, return the Log-likelihood.
     """
@@ -161,7 +161,7 @@ def get_phyml_ll(phyml_stats: str) -> float:
     )
 
 
-def get_phyml_site_ll(phyml_site_ll: str) -> float:
+def get_phyml_site_ll_from_phyml_site_ll(phyml_site_ll: str) -> float:
     """
     Given the phyml_site_ll file contents, return the Site Log-likelihood.
     """
@@ -175,7 +175,7 @@ def get_phyml_site_ll(phyml_site_ll: str) -> float:
     return res
 
 
-def get_number_of_taxa(phyml_stats: str) -> int:
+def get_number_of_taxa_from_phyml_stats(phyml_stats: str) -> int:
     """
     Given the phyml_stats file contents, return the Log-likelihood.
     """
@@ -187,7 +187,7 @@ def get_number_of_taxa(phyml_stats: str) -> int:
     )
 
 
-def get_number_of_sites(phyml_site_ll: str) -> int:
+def get_number_of_sites_from_phyml_site_ll(phyml_site_ll: str) -> int:
     """
     Given the phyml_site_ll file contents, return the Site Log-likelihood.
     """

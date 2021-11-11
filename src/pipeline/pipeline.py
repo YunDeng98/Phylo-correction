@@ -142,8 +142,8 @@ class Pipeline:
         method: rate matrix estimation method, or list of rate matrix estimation
             methods. Possibilities: "MLE", "JTT", "JTT-IPW".
             (Note: cheap baseline will be run anyway.)
-        init_jtt_ipw: if to initialize the MLE optimizer with the JTT-IPW
-            estimate.
+        opt_init: What initialization to use for the optimizer. Can be e.g.
+            "JTT-IPW" or a path to a rate matrix. (Or none for random init)
         rate_matrix_parameterization: e.g. "pande_reversible".
         xrate_grammar: Path to the XRATE grammar file. If None,
             then the nullprot.eg grammar from XRATE will be used.
@@ -193,7 +193,7 @@ class Pipeline:
         edge_or_cherry: str = "edge",
         method: Union[str, List[str]] = "MLE",
         learn_pairwise_model: float = False,
-        init_jtt_ipw: bool = False,
+        opt_init: Optional[str] = None,
         rate_matrix_parameterization: str = "pande_reversible",
         a3m_dir_full: Optional[str] = None,
         xrate_grammar: Optional[str] = None,
@@ -282,7 +282,7 @@ class Pipeline:
         self.learn_pairwise_model = learn_pairwise_model
         self.edge_or_cherry = edge_or_cherry
         self.method = method
-        self.init_jtt_ipw = init_jtt_ipw
+        self.opt_init = opt_init
         self.rate_matrix_parameterization = rate_matrix_parameterization
         self.xrate_grammar = xrate_grammar
         self.fast_tree_cats = fast_tree_cats
@@ -313,7 +313,7 @@ class Pipeline:
         # Where the co-transition matrices obtained by quantizing transition edges will be stored
         co_matrices_params = f"{max_families}_fams__{co_transitions_params}__{filter_params}"
         self.co_matrices_dir = os.path.join(outdir, f"co_matrices__{co_matrices_params}")
-        optimizer_params = f"{num_epochs}_epochs_{init_jtt_ipw}_init-JTT-IPW_{rate_matrix_parameterization}_param"
+        optimizer_params = f"{num_epochs}_epochs_{opt_init}_opt_init_{rate_matrix_parameterization}_param"
         learnt_rate_matrix_params = f"{matrices_params}__{optimizer_params}"
         self.learnt_rate_matrix_dir = os.path.join(
             outdir,
@@ -400,7 +400,7 @@ class Pipeline:
         learn_pairwise_model = self.learn_pairwise_model
         edge_or_cherry = self.edge_or_cherry
         method = self.method
-        init_jtt_ipw = self.init_jtt_ipw
+        opt_init = self.opt_init
         rate_matrix_parameterization = self.rate_matrix_parameterization
         xrate_grammar = self.xrate_grammar
         path_mask_Q2 = os.path.join(
@@ -558,7 +558,7 @@ class Pipeline:
                 rate_matrix_parameterization=rate_matrix_parameterization,
                 device=device,
                 use_cached=use_cached,
-                initialization=self.get_learned_Q1_JTT_IPW() if init_jtt_ipw else None,
+                initialization=self.get_opt_init(opt_init=opt_init, single_site=True),
             )
             single_site_rate_matrix_learner.train(
                 lr=1e-1,
@@ -691,7 +691,7 @@ class Pipeline:
                     rate_matrix_parameterization=rate_matrix_parameterization,
                     device=device,
                     use_cached=use_cached,
-                    initialization=self.get_learned_Q2_JTT_IPW() if init_jtt_ipw else None,
+                    initialization=self.get_opt_init(opt_init=opt_init, single_site=False),
                 )
                 pair_of_site_rate_matrix_learner.train(
                     lr=1e-1,
@@ -775,7 +775,7 @@ class Pipeline:
             f"precomputed_tree_dir = {self.precomputed_tree_dir}\n" \
             f"precomputed_maximum_parsimony_dir = {self.precomputed_maximum_parsimony_dir}\n" \
             f"learn_pairwise_model = {self.learn_pairwise_model}\n" \
-            f"init_jtt_ipw = {self.init_jtt_ipw}\n" \
+            f"opt_init = {self.opt_init}\n" \
             f"rate_matrix_parameterization = {self.rate_matrix_parameterization}\n" \
             f"fast_tree_cats = {self.fast_tree_cats}\n" \
             f"use_site_specific_rates = {self.use_site_specific_rates}"
@@ -874,3 +874,15 @@ class Pipeline:
             index_col=0
         ).to_numpy()
         return self._get_number_of_transitions(mat)
+
+    def get_opt_init(self, opt_init: Optional[str], single_site: bool):
+        if opt_init is None:
+            return None
+        elif opt_init == "JTT-IPW" and single_site:
+            return self.get_learned_Q1_JTT_IPW()
+        elif opt_init == "JTT-IPW" and not single_site:
+            return self.get_learned_Q2_JTT_IPW()
+        else:
+            if not os.path.exists(opt_init):
+                raise ValueError(f"opt_init file: {opt_init} does not exist.")
+            return np.loadtxt(opt_init)

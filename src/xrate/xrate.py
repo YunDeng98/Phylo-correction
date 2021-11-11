@@ -74,9 +74,9 @@ def run_xrate(
         raise ValueError(f"Grammar file {xrate_grammar} does not exist.")
 
     if estimate_trees:
-        cmd = f"{xrate_bin_path} {' '.join(stock_input_paths)} -e {xrate_grammar} -g {xrate_grammar} -t {output_path} -log 6"
+        cmd = f"{xrate_bin_path} {' '.join(stock_input_paths)} -e {xrate_grammar} -g {xrate_grammar} -t {output_path} -log 6 -f 3"
     else:
-        cmd = f"{xrate_bin_path} {' '.join(stock_input_paths)} -g {xrate_grammar} -t {output_path} -log 6"
+        cmd = f"{xrate_bin_path} {' '.join(stock_input_paths)} -g {xrate_grammar} -t {output_path} -log 6 -f 3"
     if logfile is not None:
         cmd += f" 2>&1 | tee {logfile}"
     logger.info(f"Running {cmd}")

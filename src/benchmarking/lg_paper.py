@@ -25,7 +25,6 @@ MODELS = [
     ("r___WAG+LGF", "r__WAG+LG FRE", None),
     ("r__WAG'", "r__WAG'", None),
     # ("Cherry_mixed", None, "./input_data/synthetic_rate_matrices/PAML/Q_learnt_from_LG_no_site_rates.PAML.txt"),
-    # ("WAG_PAML", None, "./input_data/synthetic_rate_matrices/PAML/WAG.PAML.txt"),
     ("r__LG", "r__LG", None),
 
     ("XRATE1", None, "./input_data/Q1XRATE.PAML.txt"),
@@ -43,7 +42,7 @@ MODELS = [
     ("JTT-IPW2", None, "./input_data/Q2JTT_IPW.PAML.txt"),
     ("Parsimony2", None, "./input_data/Q2Parsimony.PAML.txt"),
     ("Cherry2_EQU", None, "./input_data/Q2EQU.PAML.txt"),
-    ("Cherry2", None, "./input_data/Q2.PAML.txt"),
+    ("Cherry2", None, "./input_data/Q2v2.PAML.txt"),  # Need Q2v2 because Q2 initialized with JTT_IPW, and then I started using initalization from the previous iterate. Results are almost identical, but want to keep the 1-2 definition the same for all models.
     ("Cherry2_div2", None, "./input_data/Q2div2.PAML.txt"),
     ("Cherry2_div4", None, "./input_data/Q2div4.PAML.txt"),
     ("Cherry2_div8", None, "./input_data/Q2div8.PAML.txt"),
@@ -56,16 +55,9 @@ MODELS = [
     ("LG", "LG", None),
     # ("EQU", None, "./input_data/synthetic_rate_matrices/PAML/EQU.PAML.txt"),
 
-    # Older ones
-    # ("Cherry2", None, "./input_data/Q2.PAML.txt"),
-    # ("Cherry2v2", None, "./input_data/Q2v2.PAML.txt"),
-    # ("Cherry3", None, "./input_data/Q3.PAML.txt"),
-    # ("Cherry4", None, "./input_data/Q4.PAML.txt"),
-    # ("Cherry", None, "./input_data/synthetic_rate_matrices/PAML/Q_learnt_from_LG.PAML.txt"),
-    # ("Cherry_LG_nosr", None, "./input_data/synthetic_rate_matrices/PAML/Q_learnt_from_LG_no_site_rates.PAML.txt"),
-    # ("LG_PAML", None, "./input_data/synthetic_rate_matrices/PAML/lg_LG.PAML.txt"),
-    # ("Cherry_PFAM_32", None, "./input_data/synthetic_rate_matrices/PAML/Q_learnt_from_PFAM_32.PAML.txt"),
-    # ("Cherry_PFAM_32_nosr", None, "./input_data/synthetic_rate_matrices/PAML/Q_learnt_from_PFAM_32_no_site_rates.PAML.txt"),
+    # Deprecated
+    # ("Cherry2_old", None, "./input_data/Q2.PAML.txt"),  # Need Q2v2 because Q2 initialized with JTT_IPW, and then I started using initalization from the previous iterate. Results are almost identical, but want to keep the 1-2 definition the same for all models.
+    # ("WAG_PAML", None, "./input_data/synthetic_rate_matrices/PAML/WAG.PAML.txt"),  # I just used this originally to test the PAML format. This should give almost identical results as "WAG".
 ]
 
 

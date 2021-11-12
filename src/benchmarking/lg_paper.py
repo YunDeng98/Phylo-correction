@@ -77,7 +77,6 @@ def get_models(model_names: Optional[List[str]]):
     return models[:]
 
 
-
 def init_logger():
     logger = logging.getLogger("phylo_correction.lg_paper")
     logger.setLevel(logging.DEBUG)

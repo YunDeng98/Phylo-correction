@@ -505,9 +505,9 @@ def reproduce_JTT_WAG_LG_table(
         verbose: Verbosity level.
     """
     if pfam_or_treebase == "pfam":
-        filenames = get_filenames_Pfam(pfam_dir=a3m_phylip_dir)
+        filenames = get_filenames_Pfam()
     elif pfam_or_treebase == "treebase":
-        filenames = get_filenames_Treebase(treebase_dir=a3m_phylip_dir)
+        filenames = get_filenames_Treebase()
 
     rows = []
     if model_names is None:

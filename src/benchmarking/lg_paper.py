@@ -10,10 +10,7 @@ import tqdm
 import wget
 
 from src.benchmarking import caching
-from src.phyml.phyml import (
-    get_phyml_ll_from_phyml_stats,
-    run_phyml,
-)
+from src.phyml.phyml import get_phyml_ll_from_phyml_stats, run_phyml
 from src.utils import pushd, verify_integrity_of_directory
 
 
@@ -51,12 +48,13 @@ def get_registered_models() -> List[Tuple[str, Optional[str], Optional[str]]]:
     return [
         ("r__JTT", "r__JTT", None),
         ("r__WAG", "r__WAG", None),
+        # ("Cherry_mixed", None,
+        # "./input_data/synthetic_rate_matrices/PAML"
+        # "/Q_learnt_from_LG_no_site_rates.PAML.txt"),
         ("Cherry1nosr", None, "./input_data/Q1nosr.PAML.txt"),
         ("r__WAG+LGF", "r__WAG+LG FRE", None),
         ("r__WAG'", "r__WAG'", None),
-        # ("Cherry_mixed", None, "./input_data/synthetic_rate_matrices/PAML/Q_learnt_from_LG_no_site_rates.PAML.txt"),
         ("r__LG", "r__LG", None),
-
         ("XRATE1", None, "./input_data/Q1XRATE.PAML.txt"),
         ("JTT-IPW1", None, "./input_data/Q1JTT_IPW.PAML.txt"),
         ("Parsimony1", None, "./input_data/Q1Parsimony.PAML.txt"),
@@ -68,38 +66,37 @@ def get_registered_models() -> List[Tuple[str, Optional[str], Optional[str]]]:
         ("Cherry1_div16", None, "./input_data/Q1div16.PAML.txt"),
         ("Cherry1_div128", None, "./input_data/Q1div128.PAML.txt"),
         # ("Cherry1_div1024", None, "./input_data/Q1div1024.PAML.txt"),
-
         ("JTT-IPW2", None, "./input_data/Q2JTT_IPW.PAML.txt"),
         ("Parsimony2", None, "./input_data/Q2Parsimony.PAML.txt"),
         ("Cherry2_EQU", None, "./input_data/Q2EQU.PAML.txt"),
-        ("Cherry2", None, "./input_data/Q2v2.PAML.txt"),  # Need Q2v2 because Q2 initialized with JTT_IPW, and then I started using initalization from the previous iterate. Results are almost identical, but want to keep the 1-2 definition the same for all models.
+        ("Cherry2", None, "./input_data/Q2v2.PAML.txt"),
         ("Cherry2_div2", None, "./input_data/Q2div2.PAML.txt"),
         ("Cherry2_div4", None, "./input_data/Q2div4.PAML.txt"),
         ("Cherry2_div8", None, "./input_data/Q2div8.PAML.txt"),
         ("Cherry2_div16", None, "./input_data/Q2div16.PAML.txt"),
         ("Cherry2_div128", None, "./input_data/Q2div128.PAML.txt"),
-        # ("Cherry2_div1024", None, "./input_data/Q2div1024.PAML.txt"),  # ==> PhyML fails on one family for some reason. PhyML seems a bit unstable sometimes...
-
+        # ("Cherry2_div1024", None, "./input_data/Q2div1024.PAML.txt"),
+        #   ==> PhyML fails on one family for some reason...
         ("JTT", "JTT", None),
         ("WAG", "WAG", None),
         ("LG", "LG", None),
         ("EQU", None, "./input_data/synthetic_rate_matrices/PAML/EQU.PAML.txt"),
-
         # TODO: See how more iterations do.
         ("Cherry3", None, "./input_data/Q3v2.PAML.txt"),
         ("Cherry4", None, "./input_data/Q4v2.PAML.txt"),
-        ("Cherry5", None, "./input_data/Q5v2.PAML.txt"),  # ==> PhyML fails on one family for some reason. PhyML seems a bit unstable sometimes...
-
-        ("Cherry2_initJTTIPW", None, "./input_data/Q2.PAML.txt"),  # Need Q2v2 because Q2 initialized with JTT_IPW, and then I started using initalization from the previous iterate. Results are almost identical, but want to keep the 1-2 definition the same for all models.
-
+        ("Cherry5", None, "./input_data/Q5v2.PAML.txt"),
+        #   ==> PhyML fails on one family for some reason...
+        ("Cherry2_initJTTIPW", None, "./input_data/Q2.PAML.txt"),
         # Testing models
-        # ("WAG_PAML", None, "./input_data/synthetic_rate_matrices/PAML/WAG.PAML.txt"),  # I just used this originally to test the PAML format. This should give almost identical results as "WAG".
-        # ("LG_PAML", None, "./input_data/synthetic_rate_matrices/PAML/WAG.PAML.txt"),  # I just used this originally to test the PAML format. This should give almost identical results as "WAG".
+        # ("WAG_PAML", None,
+        #  "./input_data/synthetic_rate_matrices/PAML/WAG.PAML.txt"),
+        # ("LG_PAML", None,
+        #  "./input_data/synthetic_rate_matrices/PAML/WAG.PAML.txt"),
     ]
 
 
 def get_subset_of_registered_models(
-    model_names: List[str]
+    model_names: List[str],
 ) -> List[Tuple[str, Optional[str], Optional[str]]]:
     """
     Get a subset of the registered models.
@@ -111,7 +108,7 @@ def get_subset_of_registered_models(
     Raises:
         ValueError if some model name in model_names is not registered.
     """
-    assert(model_names is not None)
+    assert model_names is not None
     registered_models = get_registered_models()
     models = [x for x in registered_models if x[0] in model_names]
     known_model_names = [x[0] for x in registered_models]
@@ -188,13 +185,15 @@ def get_lg_TreeBase_data(
     """
     Download the lg_TreeBase data.
 
-    The data is hosted at http://www.atgc-montpellier.fr/download/datasets/models/
+    The data is hosted at:
+    http://www.atgc-montpellier.fr/download/datasets/models/
 
     Args:
         destination_directory: Where to download the data to.
     """
     wget_tarred_data_and_chmod(
-        url="http://www.atgc-montpellier.fr/download/datasets/models/lg_TreeBase.tar.gz",
+        url="http://www.atgc-montpellier.fr/download/datasets/models"
+        "/lg_TreeBase.tar.gz",
         destination_directory=destination_directory,
         expected_number_of_files=59,
         mode="555",
@@ -207,13 +206,15 @@ def get_lg_PfamTestingAlignments_data(
     """
     Download the lg_PfamTestingAlignments data
 
-    The data is hosted at http://www.atgc-montpellier.fr/download/datasets/models/
+    The data is hosted at:
+    http://www.atgc-montpellier.fr/download/datasets/models/
 
     Args:
         destination_directory: Where to download the data to.
     """
     wget_tarred_data_and_chmod(
-        url="http://www.atgc-montpellier.fr/download/datasets/models/lg_PfamTestingAlignments.tar.gz",
+        url="http://www.atgc-montpellier.fr/download/datasets/models"
+        "/lg_PfamTestingAlignments.tar.gz",
         destination_directory=destination_directory,
         expected_number_of_files=500,
         mode="555",
@@ -280,8 +281,10 @@ def get_lg_PfamTrainingAlignments_data(
     Args:
         destination_directory: Where to store the (converted) MSAs.
     """
-    url = "http://www.atgc-montpellier.fr/download/datasets/models" \
+    url = (
+        "http://www.atgc-montpellier.fr/download/datasets/models"
         "/lg_PfamTrainingAlignments.tar.gz"
+    )
     if (
         os.path.exists(destination_directory)
         and len(os.listdir(destination_directory)) > 0
@@ -364,9 +367,7 @@ def run_phyml_cached(
         return phyml_stats, phyml_site_ll
 
 
-def get_reported_results_df(
-    pfam_or_treebase: str
-):
+def get_reported_results_df(pfam_or_treebase: str):
     """
     Gets the results table of the LG paper.
 
@@ -382,8 +383,10 @@ def get_reported_results_df(
     elif pfam_or_treebase == "pfam":
         df = pd.read_csv(os.path.join(dir_path, "Pfam.txt"), sep="\t")
     else:
-        raise ValueError(f"pfam_or_treebase should be either 'pfam' or "
-                         f"'treebase'. You provided: {pfam_or_treebase}")
+        raise ValueError(
+            f"pfam_or_treebase should be either 'pfam' or "
+            f"'treebase'. You provided: {pfam_or_treebase}"
+        )
     df = df.drop(0)
     df.set_index(["Name"], inplace=True)
     return df
@@ -418,9 +421,9 @@ def get_phyml_ll(
         optimize_rates: Whether to optimize rates in PhyML.
     """
     if model is not None and model.startswith("r__"):
-        model_name = model.split('__')[-1]
+        model_name = model.split("__")[-1]
         df = get_reported_results_df(pfam_or_treebase=pfam_or_treebase)
-        protein_family_name = input_msa_path.split('/')[-1].split('.')[0]
+        protein_family_name = input_msa_path.split("/")[-1].split(".")[0]
         return df.loc[protein_family_name, model_name]
     else:
         phyml_stats, _ = run_phyml_cached(
@@ -442,20 +445,16 @@ def get_filenames_Treebase() -> List[str]:
     and Sites), making it easy to subset the smaller families for testing
     purposes.
     """
-    # We sort families by number of taxa and sites
-    filenames = [
-        'M2344', 'M1882', 'M1379', 'M1381', 'M1380', 'M1382', 'M964', 'M1046',
-        'M1496', 'M1384', 'M1385', 'M1383', 'M1497', 'M1502', 'M1498', 'M1506',
-        'M1374', 'M1507', 'M1989', 'M658', 'M2640', 'M2641', 'M2638', 'M1378',
-        'M2639', 'M2637', 'M1377', 'M1023', 'M2636', 'M1508', 'M1499', 'M1373',
-        'M1372', 'M1503', 'M2302', 'M1500', 'M2558', 'M1993', 'M1335', 'M2478',
-        'M2479', 'M2476', 'M1768', 'M2304', 'M1812', 'M1990', 'M1291', 'M1601',
-        'M1376', 'M1504', 'M2477', 'M2480', 'M2577', 'M337', 'M1487', 'M931',
-        'M730', 'M1392', 'M686']
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    df = pd.read_csv(os.path.join(dir_path, "Treebase.txt"), sep="\t")
+    df = df.drop(0)
+    filenames = list(df.sort_values(by=["Tax", "Sites"]).Name)
     # Put two families with massive number of sites at the end.
-    filenames = \
-        [x for x in filenames if x not in ["M2577", "M964"]] + ["M2577", "M964"]
-    filenames = [x + '.clean.ProtGB_phyml' for x in filenames]
+    filenames = [x for x in filenames if x not in ["M2577", "M964"]] + [
+        "M2577",
+        "M964",
+    ]
+    filenames = [x + ".clean.ProtGB_phyml" for x in filenames]
     return filenames
 
 
@@ -471,7 +470,7 @@ def get_filenames_Pfam() -> List[str]:
     df = pd.read_csv(os.path.join(dir_path, "Pfam.txt"), sep="\t")
     df = df.drop(0)
     filenames = list(df.sort_values(by=["Tax", "Sites"]).Name)
-    filenames = [x + '.txt-gb_phyml' for x in filenames]
+    filenames = [x + ".txt-gb_phyml" for x in filenames]
     return filenames
 
 
@@ -536,13 +535,19 @@ def reproduce_JTT_WAG_LG_table(
         rows,
         columns=[
             "Name",
-        ] + model_names,
+        ]
+        + model_names,
     )
     print(res.head())
     res.set_index("Name", inplace=True)
     # Need to add the Tax and Sites columns
     df_reported = get_reported_results_df(pfam_or_treebase=pfam_or_treebase)
-    res = res.merge(df_reported[["Tax", "Sites"]], left_index=True, right_index=True, how="left")
+    res = res.merge(
+        df_reported[["Tax", "Sites"]],
+        left_index=True,
+        right_index=True,
+        how="left",
+    )
     res = res[["Tax", "Sites"] + model_names]
     return res
 
@@ -600,9 +605,9 @@ def reproduce_JTT_WAG_LG_table_parallel(
         n_process: How many processes to use to parallelize computation.
     """
     if pfam_or_treebase == "pfam":
-        filenames = get_filenames_Pfam(pfam_dir=a3m_phylip_dir)
+        filenames = get_filenames_Pfam()
     elif pfam_or_treebase == "treebase":
-        filenames = get_filenames_Treebase(treebase_dir=a3m_phylip_dir)
+        filenames = get_filenames_Treebase()
 
     # First warm up the cache in parallel
     if model_names is None:

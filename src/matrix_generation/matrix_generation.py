@@ -14,7 +14,7 @@ import pandas as pd
 import random
 import hashlib
 
-from typing import List
+from typing import List, Optional
 
 from src.utils import subsample_protein_families, verify_integrity
 
@@ -64,8 +64,10 @@ def map_func(args: List) -> pd.DataFrame:
         transitions_df = pd.read_csv(os.path.join(transitions_dir, protein_family_name + ".transitions"), sep=",")
 
         # Filter transitions based on citeria
-        transitions_df = transitions_df[transitions_df.height <= max_height]
-        transitions_df = transitions_df[transitions_df.path_height <= max_path_height]
+        if max_height is not None:
+            transitions_df = transitions_df[transitions_df.height <= max_height]
+        if max_path_height is not None:
+            transitions_df = transitions_df[transitions_df.path_height <= max_path_height]
         transitions_df = transitions_df[transitions_df.edge_or_cherry == edge_or_cherry]
 
         # Assign edge lengths to closest quantized value (bucket). 'grid_point_id' is the index of the closest bucket,
@@ -131,10 +133,11 @@ class MatrixGenerator:
         max_height: Use only transitions whose starting node is at height
             at most max_height from the leaves in its subtree. This is
             used to filter out unreliable maximum parsimony transitions.
+            If None, no filtering is performed.
         max_path_height: Use only transitions whose starting node is at height
             at most max_path_height from the leaves in its subtree, in terms
             of the NUMBER OF EDGES. This is used to filter out unreliable
-            maximum parsimony transitions.
+            maximum parsimony transitions. If None, no filtering is performed.
         edge_or_cherry: If "edge", edge transitions will be used. If "cherry",
             cherry transitions will be used instead. Note that "cherry"
             transitions do not depend on the maximum parsimony reconstruction!
@@ -155,8 +158,8 @@ class MatrixGenerator:
         step_size: float,
         n_steps: int,
         keep_outliers: bool,
-        max_height: float,
-        max_path_height: int,
+        max_height: Optional[float],
+        max_path_height: Optional[int],
         edge_or_cherry: str = "edge",
         use_cached: bool = False,
     ):

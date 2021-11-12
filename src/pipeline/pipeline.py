@@ -90,10 +90,11 @@ class Pipeline:
         max_height: Use only transitions whose starting node is at height
             at most max_height from the leaves in its subtree. This is
             used to filter out unreliable maximum parsimony transitions.
+            If None, no filtering is performed.
         max_path_height: Use only transitions whose starting node is at height
             at most max_path_height from the leaves in its subtree, in terms
             of the NUMBER OF EDGES. This is used to filter out unreliable
-            maximum parsimony transitions.
+            maximum parsimony transitions. If None, no filtering is performed.
         n_process: How many processes to use.
         a3m_dir_full: The MSA directory which contains ALL the MSAs.
             This is needed because if one wants to run the pipeline
@@ -179,8 +180,8 @@ class Pipeline:
         center: float,
         step_size: float,
         n_steps: int,
-        max_height: float,
-        max_path_height: int,
+        max_height: Optional[float],
+        max_path_height: Optional[int],
         keep_outliers: bool,
         n_process: int,
         expected_number_of_MSAs: int,

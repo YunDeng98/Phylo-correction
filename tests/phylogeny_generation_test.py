@@ -60,7 +60,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
         Tests the use of a custom rate matrix in FastTree.
         """
         with tempfile.TemporaryDirectory() as root_dir:
-            outdir = os.path.join(root_dir, 'trees')
+            outdir = os.path.join(root_dir, 'trees_small_Q1_uniform')
             phylogeny_generator = PhylogenyGenerator(
                 a3m_dir_full='test_input_data/a3m_small',
                 a3m_dir='test_input_data/a3m_small',
@@ -85,7 +85,7 @@ class TestPhylogenyGenerator(unittest.TestCase):
         Tests the use of an UNNORMALIZED custom rate matrix in FastTree.
         """
         with tempfile.TemporaryDirectory() as root_dir:
-            outdir = os.path.join(root_dir, 'trees')
+            outdir = os.path.join(root_dir, 'trees_small_Q1_uniform_halved')
             phylogeny_generator = PhylogenyGenerator(
                 a3m_dir_full='test_input_data/a3m_small',
                 a3m_dir='test_input_data/a3m_small',

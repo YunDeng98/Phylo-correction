@@ -5,6 +5,7 @@ Run XRATE on stockholm files.
 """
 import multiprocessing
 import os
+import subprocess
 
 import logging
 import tqdm
@@ -80,7 +81,7 @@ def run_xrate(
     if logfile is not None:
         cmd += f" 2>&1 | tee {logfile}"
     logger.info(f"Running {cmd}")
-    os.system(cmd)
+    subprocess.run(cmd, shell=True, check=True)
 
 
 def xrate_to_numpy(xrate_output_file: str) -> np.array:

@@ -172,7 +172,7 @@ def cached(
                                 "Thus pickle file is most likely corrupt. "
                                 f"Will have to recompute: {filename}")
                 if read_only:
-                    logger.info(f"In read_only mode. Will not write to cache.")
+                    logger.info(f"In read_only mode. Will not write to cache. Would have written to: {filename}")
                     return func(*args, **kwargs)
                 # logger.info(f"Calling {func.__name__}")
                 st = time.time()

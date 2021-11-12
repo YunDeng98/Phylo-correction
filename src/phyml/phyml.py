@@ -109,6 +109,7 @@ def run_phyml(
         os.makedirs(outdir)
     phyml_log_filepath = os.path.join(outdir, "phyml_log.txt")
     with pushd(outdir):
+        input_msa_path_orig = input_msa_path
         os.system(f"cp {input_msa_path} {outdir}")
         protein_family_name = input_msa_path.split("/")[-1]
         input_msa_path = os.path.join(outdir, protein_family_name)
@@ -145,6 +146,12 @@ def run_phyml(
     ):
         raise Exception(
             f"PhyML failed to run. Files:\n{phyml_stats_filepath}\nAnd\n{phyml_site_ll_filepath}\ndo not both exist.\nCommand:\n{command}\n"
+        )
+    phyml_stats = open(phyml_stats_filepath).read()
+    phyml_site_ll = open(phyml_site_ll_filepath).read()
+    if len(phyml_stats) < 10 or len(phyml_site_ll) < 10:
+        raise Exception(
+            f"PhyML failed, returning:\n{phyml_stats}\n{phyml_site_ll}\nCommand was:\n{command}\nHere\n{input_msa_path}\ncan be replaced by:\n{input_msa_path_orig}\n"
         )
     return phyml_stats_filepath, phyml_site_ll_filepath
 

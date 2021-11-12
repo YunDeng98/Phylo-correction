@@ -424,9 +424,9 @@ def get_phyml_ll(
         return df.loc[protein_family_name, model_name]
     else:
         phyml_stats, _ = run_phyml_cached(
-            rate_matrix_path=rate_matrix_path,
-            model=model,
             input_msa_path=input_msa_path,
+            model=model,
+            rate_matrix_path=rate_matrix_path,
             num_rate_categories=num_rate_categories,
             random_seed=random_seed,
             optimize_rates=optimize_rates,
@@ -522,13 +522,13 @@ def reproduce_JTT_WAG_LG_table(
             if verbose:
                 print(f"Processing: {filename} with {model}")
             row[model_name] = get_phyml_ll(
-                rate_matrix_path=rate_matrix_path,
-                model=model,
+                pfam_or_treebase=pfam_or_treebase,
                 input_msa_path=input_msa_path,
+                model=model,
+                rate_matrix_path=rate_matrix_path,
                 num_rate_categories=num_rate_categories,
                 random_seed=random_seed,
                 optimize_rates=optimize_rates,
-                pfam_or_treebase=pfam_or_treebase,
             )
             row["Name"] = protein_family_name
         rows.append(row)
@@ -551,21 +551,21 @@ def _get_phyml_ll(args: List) -> float:
     """
     Multiprocessing wrapper for get_phyml_ll
     """
-    input_msa_path = args[0]
-    model = args[1]
-    rate_matrix_path = args[2]
-    num_rate_categories = args[3]
-    random_seed = args[4]
-    optimize_rates = args[5]
-    pfam_or_treebase = args[6]
+    pfam_or_treebase = args[0]
+    input_msa_path = args[1]
+    model = args[2]
+    rate_matrix_path = args[3]
+    num_rate_categories = args[4]
+    random_seed = args[5]
+    optimize_rates = args[6]
     return get_phyml_ll(
-        rate_matrix_path=rate_matrix_path,
-        model=model,
+        pfam_or_treebase=pfam_or_treebase,
         input_msa_path=input_msa_path,
+        model=model,
+        rate_matrix_path=rate_matrix_path,
         num_rate_categories=num_rate_categories,
         random_seed=random_seed,
         optimize_rates=optimize_rates,
-        pfam_or_treebase=pfam_or_treebase,
     )
 
 
@@ -614,13 +614,13 @@ def reproduce_JTT_WAG_LG_table_parallel(
         for (_, model, rate_matrix_path) in models:
             map_args.append(
                 (
+                    pfam_or_treebase,
                     input_msa_path,
                     model,
                     rate_matrix_path,
                     num_rate_categories,
                     random_seed,
                     optimize_rates,
-                    pfam_or_treebase,
                 )
             )
     map_func = _get_phyml_ll
@@ -632,12 +632,12 @@ def reproduce_JTT_WAG_LG_table_parallel(
 
     # Now get what we want
     return reproduce_JTT_WAG_LG_table(
+        pfam_or_treebase=pfam_or_treebase,
         a3m_phylip_dir=a3m_phylip_dir,
+        model_names=model_names,
         num_rate_categories=num_rate_categories,
         random_seed=random_seed,
         optimize_rates=optimize_rates,
         max_families=max_families,
         verbose=verbose,
-        pfam_or_treebase=pfam_or_treebase,
-        model_names=model_names,
     )

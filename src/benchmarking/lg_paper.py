@@ -5,6 +5,9 @@ import sys
 import tempfile
 from typing import List, Optional, Tuple
 
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import tqdm
 import wget
@@ -46,47 +49,62 @@ def get_registered_models() -> List[Tuple[str, Optional[str], Optional[str]]]:
     None.
     """
     return [
-        ("r__JTT", "r__JTT", None),
-        ("r__WAG", "r__WAG", None),
+        # # Reported & reproduced results
+        ("JTT (reported)", "r__JTT", None),
+        ("JTT (reproduced)", "JTT", None),
+        ("WAG (reported)", "r__WAG", None),
+        ("WAG (reproduced)", "WAG", None),
+        # ("WAG+LGF (reported)", "r__WAG+LG FRE", None),
+        ("WAG' (reported)", "r__WAG'", None),
+        ("WAG' reproduced (w/XRATE)", None, "./input_data/Q1XRATE.PAML.txt"),
+        ("LG (reported)", "r__LG", None),
+        ("LG (reproduced)", "LG", None),
+        # Our method, no site rates
+        ("Cherry; No site rates", None, "./input_data/Q1nosr.PAML.txt"),
+        # Our method
+        ("Cherry", None, "./input_data/Q1.PAML.txt"),
+        ("Cherry; 2nd iteration", None, "./input_data/Q2v2.PAML.txt"),
+        # FastTree initialization
+        ("Cherry; FastTree w/EQU", None, "./input_data/Q1EQU.PAML.txt"),
+        (
+            "Cherry; FastTree w/EQU; 2nd iteration",
+            None,
+            "./input_data/Q2EQU.PAML.txt",
+        ),
+        # Maximum Parsimony baseline (all edges)
+        ("MP (all edges)", None, "./input_data/Q1Parsimony.PAML.txt"),
+        (
+            "MP (all edges); 2nd iteration",
+            None,
+            "./input_data/Q2Parsimony.PAML.txt",
+        ),
+        # JTT-IPW baseline
+        ("JTT-IPW", None, "./input_data/Q1JTT_IPW.PAML.txt"),
+        ("JTT-IPW; 2nd iteration", None, "./input_data/Q2JTT_IPW.PAML.txt"),
+        # Varying dataset size
+        ("Cherry; 1/2 data", None, "./input_data/Q1div2.PAML.txt"),
+        ("Cherry; 1/4 data", None, "./input_data/Q1div4.PAML.txt"),
+        ("Cherry; 1/8 data", None, "./input_data/Q1div8.PAML.txt"),
+        ("Cherry; 1/16 data", None, "./input_data/Q1div16.PAML.txt"),
+        ("Cherry; 1/128 data", None, "./input_data/Q1div128.PAML.txt"),
+        # ("Cherry 1/1024 data", None, "./input_data/Q1div1024.PAML.txt"),
+        # ("Cherry 1/2 data; 2nd iteration", None, "./input_data/Q2div2.PAML.txt"),
+        # ("Cherry 1/4 data; 2nd iteration", None, "./input_data/Q2div4.PAML.txt"),
+        # ("Cherry 1/8 data; 2nd iteration", None, "./input_data/Q2div8.PAML.txt"),
+        # ("Cherry 1/16 data; 2nd iteration", None, "./input_data/Q2div16.PAML.txt"),
+        # ("Cherry 1/128 data; 2nd iteration", None, "./input_data/Q2div128.PAML.txt"),
+        # ("Cherry 1/1024 data; 2nd iteration", None, "./input_data/Q2div1024.PAML.txt"),
+        #   ==> PhyML fails on one family for some reason...
+        # ("EQU", None, "./input_data/synthetic_rate_matrices/PAML/EQU.PAML.txt"),
+        # TODO: See how more iterations do.
+        # ("Cherry; 3rd iteration", None, "./input_data/Q3v2.PAML.txt"),
+        # ("Cherry; 4th iteration", None, "./input_data/Q4v2.PAML.txt"),
+        # ("Cherry; 5th iteration", None, "./input_data/Q5v2.PAML.txt"),
+        #   ==> PhyML fails on one family for some reason...
+        # ("Cherry; 2nd iteration pytorh initJTTIPW", None, "./input_data/Q2.PAML.txt"),
         # ("Cherry_mixed", None,
         # "./input_data/synthetic_rate_matrices/PAML"
         # "/Q_learnt_from_LG_no_site_rates.PAML.txt"),
-        ("Cherry1nosr", None, "./input_data/Q1nosr.PAML.txt"),
-        ("r__WAG+LGF", "r__WAG+LG FRE", None),
-        ("r__WAG'", "r__WAG'", None),
-        ("r__LG", "r__LG", None),
-        ("XRATE1", None, "./input_data/Q1XRATE.PAML.txt"),
-        ("JTT-IPW1", None, "./input_data/Q1JTT_IPW.PAML.txt"),
-        ("Parsimony1", None, "./input_data/Q1Parsimony.PAML.txt"),
-        ("Cherry1_EQU", None, "./input_data/Q1EQU.PAML.txt"),
-        ("Cherry1", None, "./input_data/Q1.PAML.txt"),
-        ("Cherry1_div2", None, "./input_data/Q1div2.PAML.txt"),
-        ("Cherry1_div4", None, "./input_data/Q1div4.PAML.txt"),
-        ("Cherry1_div8", None, "./input_data/Q1div8.PAML.txt"),
-        ("Cherry1_div16", None, "./input_data/Q1div16.PAML.txt"),
-        ("Cherry1_div128", None, "./input_data/Q1div128.PAML.txt"),
-        # ("Cherry1_div1024", None, "./input_data/Q1div1024.PAML.txt"),
-        ("JTT-IPW2", None, "./input_data/Q2JTT_IPW.PAML.txt"),
-        ("Parsimony2", None, "./input_data/Q2Parsimony.PAML.txt"),
-        ("Cherry2_EQU", None, "./input_data/Q2EQU.PAML.txt"),
-        ("Cherry2", None, "./input_data/Q2v2.PAML.txt"),
-        ("Cherry2_div2", None, "./input_data/Q2div2.PAML.txt"),
-        ("Cherry2_div4", None, "./input_data/Q2div4.PAML.txt"),
-        ("Cherry2_div8", None, "./input_data/Q2div8.PAML.txt"),
-        ("Cherry2_div16", None, "./input_data/Q2div16.PAML.txt"),
-        ("Cherry2_div128", None, "./input_data/Q2div128.PAML.txt"),
-        # ("Cherry2_div1024", None, "./input_data/Q2div1024.PAML.txt"),
-        #   ==> PhyML fails on one family for some reason...
-        ("JTT", "JTT", None),
-        ("WAG", "WAG", None),
-        ("LG", "LG", None),
-        ("EQU", None, "./input_data/synthetic_rate_matrices/PAML/EQU.PAML.txt"),
-        # TODO: See how more iterations do.
-        ("Cherry3", None, "./input_data/Q3v2.PAML.txt"),
-        ("Cherry4", None, "./input_data/Q4v2.PAML.txt"),
-        ("Cherry5", None, "./input_data/Q5v2.PAML.txt"),
-        #   ==> PhyML fails on one family for some reason...
-        ("Cherry2_initJTTIPW", None, "./input_data/Q2.PAML.txt"),
         # Testing models
         # ("WAG_PAML", None,
         #  "./input_data/synthetic_rate_matrices/PAML/WAG.PAML.txt"),
@@ -186,7 +204,7 @@ def get_lg_TreeBase_data(
     Download the lg_TreeBase data.
 
     The data is hosted at:
-    http://www.atgc-montpellier.fr/download/datasets/models/
+    http://www.atgc-montpellier.fr/models/index.php?model=lg
 
     Args:
         destination_directory: Where to download the data to.
@@ -207,7 +225,7 @@ def get_lg_PfamTestingAlignments_data(
     Download the lg_PfamTestingAlignments data
 
     The data is hosted at:
-    http://www.atgc-montpellier.fr/download/datasets/models/
+    http://www.atgc-montpellier.fr/models/index.php?model=lg
 
     Args:
         destination_directory: Where to download the data to.
@@ -276,7 +294,7 @@ def get_lg_PfamTrainingAlignments_data(
     process*.
 
     The data is hosted at:
-    http://www.atgc-montpellier.fr/download/datasets/models/
+    http://www.atgc-montpellier.fr/models/index.php?model=lg
 
     Args:
         destination_directory: Where to store the (converted) MSAs.
@@ -372,7 +390,7 @@ def get_reported_results_df(pfam_or_treebase: str):
     Gets the results table of the LG paper.
 
     The data is hosted at:
-    http://www.atgc-montpellier.fr/download/datasets/models/
+    http://www.atgc-montpellier.fr/models/index.php?model=lg
 
     Args:
         pfam_or_treebase: 'pfam' or 'treebase'.
@@ -487,7 +505,7 @@ def reproduce_JTT_WAG_LG_table(
     """
     For either Pfam or Treebase (specified via `pfam_or_treebase` argument),
     reproduce and extend with more models the LG table of results provided at:
-    http://www.atgc-montpellier.fr/download/datasets/models/
+    http://www.atgc-montpellier.fr/models/index.php?model=lg
 
     Args:
         pfam_or_treebase: 'pfam' or 'treebase'.
@@ -538,7 +556,6 @@ def reproduce_JTT_WAG_LG_table(
         ]
         + model_names,
     )
-    print(res.head())
     res.set_index("Name", inplace=True)
     # Need to add the Tax and Sites columns
     df_reported = get_reported_results_df(pfam_or_treebase=pfam_or_treebase)
@@ -646,3 +663,125 @@ def reproduce_JTT_WAG_LG_table_parallel(
         max_families=max_families,
         verbose=verbose,
     )
+
+
+def reproduce_lg_paper_fig_4(
+    pfam_or_treebase: str,
+    a3m_phylip_dir: str,
+    model_names: Optional[List[str]] = None,
+    num_rate_categories: int = 4,
+    random_seed: int = 0,
+    optimize_rates: bool = True,
+    max_families: int = 100000000,
+    verbose: bool = False,
+    n_process: int = 32,
+    figsize: Tuple[float, float] = (6.4, 4.8),
+    bootstraps_for_ci: int = 0,
+) -> None:
+    """
+    Reproduce Fig. 4 of the LG paper, adding the desired models.
+
+    Args:
+        pfam_or_treebase: 'pfam' or 'treebase'.
+        a3m_phylip_dir: Where the alignments have been downloaded
+            (which can be done via the get_lg_TreeBase_data and
+            get_lg_PfamTestingAlignments_data functions).
+        model_names: What models to use. If None, will use all models
+            registered.
+        num_rate_categories: Number of discrete Gamma rate categories to use in
+            PhyML.
+        random_seed: The PhyML random seed.
+        optimize_rates: Whether to optimize rates in PhyML.
+        max_families: How many families to reproduce the results on. This is
+            useful for testing purposes, e.g. setting max_families=1.
+        verbose: Verbosity level.
+        n_process: How many processes to use to parallelize computation.
+        figsize: The plot figure size.
+        bootstraps_for_ci: How many MSA bootstraps to perform to estimate CIs.
+            If 0, won't plot CIs.
+    """
+    if model_names is None:
+        model_names = [x[0] for x in get_registered_models()]
+
+    df = reproduce_JTT_WAG_LG_table_parallel(
+        pfam_or_treebase=pfam_or_treebase,
+        a3m_phylip_dir=a3m_phylip_dir,
+        model_names=model_names,
+        num_rate_categories=num_rate_categories,
+        random_seed=random_seed,
+        optimize_rates=optimize_rates,
+        max_families=max_families,
+        verbose=verbose,
+        n_process=n_process,
+    )
+
+    def get_log_likelihoods(df: pd.DataFrame, model_names: List[str]):
+        """
+        Given a DataFrame like the LG results table, with Name as the index,
+        returns the sum of log likelihoods for each model.
+        """
+        num_sites = df.Sites.sum()
+        log_likelihoods = (
+            2.0
+            * (df[model_names].sum(axis=0) - df["JTT (reported)"].sum())
+            / num_sites
+        )
+        return log_likelihoods
+
+    y = get_log_likelihoods(df, model_names)
+    yerr = None
+    if bootstraps_for_ci > 0:
+        np.random.seed(0)
+        y_bootstraps = []
+        for _ in range(bootstraps_for_ci):
+            chosen_rows = np.random.choice(
+                df.index,
+                size=len(df.index),
+                replace=True,
+            )
+            df_bootstrap = df.loc[chosen_rows]
+            assert df_bootstrap.shape == df.shape
+            y_bootstrap = get_log_likelihoods(df_bootstrap, model_names)
+            y_bootstraps.append(y_bootstrap)
+        y_bootstraps = np.array(y_bootstraps)
+        assert y_bootstraps.shape == (bootstraps_for_ci, len(model_names))
+        yerr = np.array(
+            [
+                [
+                    y[i] - np.quantile(y_bootstraps[:, i], 0.025),  # Below
+                    np.quantile(y_bootstraps[:, i], 0.975) - y[i],  # Above
+                ]
+                for i in range(len(model_names))
+            ]
+        ).T
+
+    colors = []
+    for model_name in model_names:
+        if "reported" in model_name:
+            colors.append("black")
+        elif "reproduced" in model_name:
+            colors.append("blue")
+        elif "Cherry" in model_name:
+            colors.append("red")
+        elif "MP" in model_name:
+            colors.append("green")
+        elif "JTT-IPW" in model_name:
+            colors.append("grey")
+        else:
+            raise Exception(f"Unknown color for model: {model_name}")
+    plt.figure(figsize=figsize)
+    plt.title(pfam_or_treebase)
+    plt.bar(x=model_names, height=y, color=colors, yerr=yerr)
+    plt.xticks(rotation=270)
+    ax = plt.gca()
+    ax.yaxis.grid()
+    plt.legend(
+        handles=[
+            mpatches.Patch(color="black", label="Reported"),
+            mpatches.Patch(color="blue", label="Reproduced"),
+            mpatches.Patch(color="red", label="Cherry"),
+            mpatches.Patch(color="green", label="M. Parsimony"),
+            mpatches.Patch(color="grey", label="JTT-IPW"),
+        ]
+    )
+    plt.show()

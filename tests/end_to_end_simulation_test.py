@@ -66,7 +66,7 @@ class TestEndToEndSimulation(unittest.TestCase):
             edge_or_cherry="edge",
             method="MLE",
             learn_pairwise_model=False,
-            init_jtt_ipw=False,
+            opt_init=None,
             rate_matrix_parameterization="pande_reversible",
             fast_tree_cats=20,
             use_site_specific_rates=False,
@@ -113,7 +113,7 @@ class TestEndToEndSimulation(unittest.TestCase):
                 edge_or_cherry=edge_or_cherry,
                 method=method,
                 learn_pairwise_model=learn_pairwise_model,
-                init_jtt_ipw=init_jtt_ipw,
+                opt_init=opt_init,
                 rate_matrix_parameterization=rate_matrix_parameterization,
                 fast_tree_cats=fast_tree_cats,
                 use_site_specific_rates=use_site_specific_rates,
@@ -195,7 +195,7 @@ class TestEndToEndSimulation(unittest.TestCase):
                             max_seqs=max_seqs,
                             max_families=max_families,
                             edge_or_cherry="cherry",
-                            init_jtt_ipw=True,
+                            opt_init="JTT-IPW",
                         )
                         times.append(time.time() - st)
                         key += increment
@@ -300,7 +300,7 @@ class TestEndToEndSimulation(unittest.TestCase):
     #         edge_or_cherry="edge",
     #         method="MLE",
     #         learn_pairwise_model=False,
-    #         init_jtt_ipw=False,
+    #         opt_init=None,
     #         rate_matrix_parameterization="pande_reversible",
     #         xrate_grammar=None,
     #         ### End-to-end simulator parameters
@@ -343,7 +343,7 @@ class TestEndToEndSimulation(unittest.TestCase):
     #             edge_or_cherry=edge_or_cherry,
     #             method=method,
     #             learn_pairwise_model=learn_pairwise_model,
-    #             init_jtt_ipw=init_jtt_ipw,
+    #             opt_init=opt_init,
     #             rate_matrix_parameterization=rate_matrix_parameterization,
     #             xrate_grammar=xrate_grammar,
     #         )

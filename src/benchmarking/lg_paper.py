@@ -19,14 +19,12 @@ from src.utils import pushd, verify_integrity_of_directory
 
 
 MODELS = [
-    # ("JTT", "JTT", None),
     ("r__JTT", "r__JTT", None),
-    # ("WAG", "WAG", None),
     ("r__WAG", "r__WAG", None),
     ("Cherry1nosr", None, "./input_data/Q1nosr.PAML.txt"),
-    ("r__WAG'", "r__WAG'", None),
-    ("Cherry_mixed", None, "./input_data/synthetic_rate_matrices/PAML/Q_learnt_from_LG_no_site_rates.PAML.txt"),
     ("r___WAG+LGF", "r__WAG+LG FRE", None),
+    ("r__WAG'", "r__WAG'", None),
+    # ("Cherry_mixed", None, "./input_data/synthetic_rate_matrices/PAML/Q_learnt_from_LG_no_site_rates.PAML.txt"),
     # ("WAG_PAML", None, "./input_data/synthetic_rate_matrices/PAML/WAG.PAML.txt"),
     ("r__LG", "r__LG", None),
 
@@ -40,7 +38,7 @@ MODELS = [
     ("Cherry1_div8", None, "./input_data/Q1div8.PAML.txt"),
     ("Cherry1_div16", None, "./input_data/Q1div16.PAML.txt"),
     ("Cherry1_div128", None, "./input_data/Q1div128.PAML.txt"),
-    ("Cherry1_div1024", None, "./input_data/Q1div1024.PAML.txt"),
+    # ("Cherry1_div1024", None, "./input_data/Q1div1024.PAML.txt"),
 
     ("JTT-IPW2", None, "./input_data/Q2JTT_IPW.PAML.txt"),
     ("Parsimony2", None, "./input_data/Q2Parsimony.PAML.txt"),
@@ -53,8 +51,12 @@ MODELS = [
     ("Cherry2_div128", None, "./input_data/Q2div128.PAML.txt"),
     # ("Cherry2_div1024", None, "./input_data/Q2div1024.PAML.txt"),  # ==> Poor estimate, leads to numeric errors in phyml
 
+    ("JTT", "JTT", None),
+    ("WAG", "WAG", None),
     ("LG", "LG", None),
-    ("EQU", None, "./input_data/synthetic_rate_matrices/PAML/EQU.PAML.txt"),
+    # ("EQU", None, "./input_data/synthetic_rate_matrices/PAML/EQU.PAML.txt"),
+
+    # Older ones
     # ("Cherry2", None, "./input_data/Q2.PAML.txt"),
     # ("Cherry2v2", None, "./input_data/Q2v2.PAML.txt"),
     # ("Cherry3", None, "./input_data/Q3.PAML.txt"),
@@ -65,6 +67,23 @@ MODELS = [
     # ("Cherry_PFAM_32", None, "./input_data/synthetic_rate_matrices/PAML/Q_learnt_from_PFAM_32.PAML.txt"),
     # ("Cherry_PFAM_32_nosr", None, "./input_data/synthetic_rate_matrices/PAML/Q_learnt_from_PFAM_32_no_site_rates.PAML.txt"),
 ]
+
+
+def get_models(model_names: Optional[List[str]]):
+    """
+    Returns the triples of (model_name, _, _) from MODELS
+    for the given model_names.
+    """
+    if model_names is None:
+        models = MODELS
+    else:
+        models = [x for x in MODELS if x[0] in model_names]
+        known_model_names = [x[0] for x in MODELS]
+        for model_name in model_names:
+            if model_name not in known_model_names:
+                raise Exception(f"Unknown model_name = {model_name}")
+    return models[:]
+
 
 
 def init_logger():
@@ -306,7 +325,13 @@ def get_filenames_Treebase(treebase_dir: str) -> List[str]:
 
 
 def get_filenames_Pfam(pfam_dir: str) -> List[str]:
-    filenames = sorted(list(os.listdir(pfam_dir)))
+    # We sort families by number of taxa to ease testing with max_families
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    df = pd.read_csv(os.path.join(dir_path, "Pfam.txt"), sep="\t")
+    df = df.drop(0)
+    filenames = list(df.sort_values(by=["Tax", "Sites"]).Name)
+    filenames = [x + '.txt-gb_phyml' for x in filenames]
+    # filenames = sorted(list(os.listdir(pfam_dir)))
     return filenames
 
 
@@ -319,13 +344,15 @@ def reproduce_JTT_WAG_LG_table(
     max_families: int = 100000000,
     verbose: bool = False,
     pfam_or_treebase: Optional[str] = None,
+    model_names: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     rows = []
+    models = get_models(model_names=model_names)
     for filename in filenames[:max_families]:
         protein_family_name = filename.split(".")[0]
         input_msa_path = os.path.join(a3m_phylip_dir, filename)
         row = {}
-        for (model_name, model, rate_matrix_path) in MODELS:
+        for (model_name, model, rate_matrix_path) in models:
             if verbose:
                 print(f"Processing: {filename} with {model}")
             row[model_name] = get_phyml_ll(
@@ -343,7 +370,7 @@ def reproduce_JTT_WAG_LG_table(
         rows,
         columns=[
             "Name",
-        ] + [model[0] for model in MODELS]
+        ] + model_names
     )
     res.sort_values(by=["Name"], inplace=True)
     res.reset_index(inplace=True)
@@ -382,16 +409,18 @@ def reproduce_JTT_WAG_LG_table_parallel(
     verbose: bool = False,
     n_process: int = 32,
     pfam_or_treebase: Optional[str] = None,
+    model_names: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     """
     Wrapper on top of reproduce_JTT_WAG_LG_table that
     uses multiprocessing the speed up computation.
     """
     # First warm up the cache in parallel
+    models = get_models(model_names=model_names)
     map_args = []
     for filename in filenames[:max_families]:
         input_msa_path = os.path.join(a3m_phylip_dir, filename)
-        for (_, model, rate_matrix_path) in MODELS:
+        for (_, model, rate_matrix_path) in models:
             map_args.append(
                 (
                     input_msa_path,
@@ -420,6 +449,7 @@ def reproduce_JTT_WAG_LG_table_parallel(
         max_families=max_families,
         verbose=verbose,
         pfam_or_treebase=pfam_or_treebase,
+        model_names=model_names,
     )
 
 
@@ -431,6 +461,7 @@ def reproduce_JTT_WAG_LG_table_parallel_Treebase(
     max_families: int = 100000000,
     verbose: bool = False,
     n_process: int = 32,
+    model_names: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     return reproduce_JTT_WAG_LG_table_parallel(
         a3m_phylip_dir=treebase_dir,
@@ -442,6 +473,7 @@ def reproduce_JTT_WAG_LG_table_parallel_Treebase(
         verbose=verbose,
         n_process=n_process,
         pfam_or_treebase="treebase",
+        model_names=model_names,
     )
 
 
@@ -453,6 +485,7 @@ def reproduce_JTT_WAG_LG_table_parallel_Pfam(
     max_families: int = 100000000,
     verbose: bool = False,
     n_process: int = 32,
+    model_names: Optional[List[str]] = None,
 ) -> pd.DataFrame:
     return reproduce_JTT_WAG_LG_table_parallel(
         a3m_phylip_dir=pfam_dir,
@@ -464,4 +497,5 @@ def reproduce_JTT_WAG_LG_table_parallel_Pfam(
         verbose=verbose,
         n_process=n_process,
         pfam_or_treebase="pfam",
+        model_names=model_names,
     )

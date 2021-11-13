@@ -69,8 +69,10 @@ class Pipeline:
             All the intermediate data will also be written here.
         max_seqs: MSAs will be subsampled down to this number of sequences
             for the purpose of phylogeny generation with FastTree.
+            If 0 or None, all sequences will be used.
         max_sites: MSAs will be subsampled down to this number of sites
             for the purpose of phylogeny generation with FastTree.
+            If 0 or None, all sites will be used.
         armstrong_cutoff: Contact threshold
         rate_matrix: What rate matrix to use in FastTree for the phylogeny
             reconstruction step.

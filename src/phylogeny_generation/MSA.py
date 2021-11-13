@@ -1,5 +1,5 @@
 import os
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -26,10 +26,11 @@ class MSA:
     Args:
         a3m_dir: Directory where the MSA file (.a3m) is found.
         protein_family_name: Name of the protein family.
-        max_seqs: If nonzero, this number of sequences in the MSA file will be subsampled
-            uniformly at random. The first sequence in the MSA file will always be sampled.
-        max_sites: If nonzero, this number of sites in the MSA file will be subsampled
-            uniformly at random.
+        max_seqs: This number of sequences in the MSA file will be subsampled
+            uniformly at random. The first sequence in the MSA file will always
+            be sampled. If 0 or None, all sequences will be used.
+        max_sites: This number of sites in the MSA file will be subsampled
+            uniformly at random. If 0 or None, all sites will be used.
 
     Attributes:
         nseqs: Number of sequences in the MSA (after subsamping)
@@ -39,8 +40,8 @@ class MSA:
         self,
         a3m_dir: str,
         protein_family_name: str,
-        max_seqs: int,
-        max_sites: int,
+        max_seqs: Optional[int],
+        max_sites: Optional[int],
     ) -> None:
         filename = f"{protein_family_name}.a3m"
         if not os.path.exists(a3m_dir):
@@ -125,8 +126,8 @@ class MSA:
     @staticmethod
     def _subsample_msa(
         msa: List[Tuple[str, str]],
-        max_seqs: int,
-        max_sites: int,
+        max_seqs: Optional[int],
+        max_sites: Optional[int],
     ) -> Tuple[List[Tuple[str, str]], List[int]]:
         r"""
         Subsample an MSA (not in-place).

@@ -64,6 +64,11 @@ def get_registered_models() -> List[Tuple[str, Optional[str], Optional[str]]]:
         # Our method
         ("Cherry", None, "./input_data/Q1.PAML.txt"),
         ("Cherry; 2nd iteration", None, "./input_data/Q2v2.PAML.txt"),
+
+        # Our method, repro
+        # ("Cherry; repro", None, "./input_data/Q1_repro.PAML.txt"),
+        # ("Cherry; 2nd iteration; repro", None, "./input_data/Q2_repro.PAML.txt"),
+
         # FastTree initialization
         ("Cherry; FastTree w/EQU", None, "./input_data/Q1EQU.PAML.txt"),
         (

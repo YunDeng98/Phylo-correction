@@ -4,7 +4,7 @@ import time
 import tempfile
 import numpy as np
 import pandas as pd
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from .MSA import MSA
 
@@ -211,10 +211,11 @@ class FastTreePhylogeny:
         a3m_dir: Directory where the MSA file is found.
         protein_family_name: Name of the protein family.
         outdir: Directory where to write the output of FastTree - a .newick file.
-        max_seqs: If nonzero, this number of sequences in the MSA file will be subsampled
-            uniformly at random. The first sequence in the MSA file will always be sampled.
-        max_sites: If nonzero, this number of sites in the MSA file will be subsampled
-            uniformly at random.
+        max_seqs: This number of sequences in the MSA file will be subsampled
+            uniformly at random. The first sequence in the MSA file will always
+            be sampled. If 0 or None, all sequences will be used.
+        max_sites: This number of sites in the MSA file will be subsampled
+            uniformly at random. If 0 or None, all sites will be used.
         rate_matrix: Path to the rate matrix to use within FastTree. If ends in 'None', then
             the default rate matrix will be used in FastTree.
         fast_tree_cats: Number of Gamma rate categories to use in FastTree.
@@ -230,8 +231,8 @@ class FastTreePhylogeny:
         a3m_dir: str,
         protein_family_name: str,
         outdir: str,
-        max_seqs: int,
-        max_sites: int,
+        max_seqs: Optional[int],
+        max_sites: Optional[int],
         rate_matrix: str,
         fast_tree_cats: int,
         use_cached: bool = False,

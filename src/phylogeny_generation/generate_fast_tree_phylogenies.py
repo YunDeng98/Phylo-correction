@@ -6,6 +6,7 @@ import logging
 import numpy as np
 import random
 import tqdm
+from typing import Optional
 
 from .FastTreePhylogeny import FastTreePhylogeny
 from src.utils import subsample_protein_families
@@ -54,10 +55,11 @@ class PhylogenyGenerator:
             is only used to sanity check that the correct a3m_dir is being used.
             It has no functional implications.
         outdir: Directory where the trees will be written out to (.newick files).
-        max_seqs: If nonzero, this number of sequences in the MSA files will be subsampled
-            uniformly at random. The first sequence in the MSA files will always be sampled.
-        max_sites: If nonzero, this number of sites in the MSA files will be subsampled
-            uniformly at random.
+        max_seqs: This number of sequences in the MSA files will be subsampled
+            uniformly at random. The first sequence in the MSA files will
+            always be sampled. If 0 or None, all sequences will be used.
+        max_sites: This number of sites in the MSA files will be subsampled
+            uniformly at random. If 0 or None, all sites will be used.
         max_families: Only estimate trees for 'max_families' randomly chosen files in a3m_dir.
             This is useful for testing and to see what happens if less data is used.
         rate_matrix: Path to the rate matrix to use within FastTree. If ends in 'None', then
@@ -72,8 +74,8 @@ class PhylogenyGenerator:
         n_process: int,
         expected_number_of_MSAs: int,
         outdir: str,
-        max_seqs: int,
-        max_sites: int,
+        max_seqs: Optional[int],
+        max_sites: Optional[int],
         max_families: int,
         rate_matrix: str,
         fast_tree_cats: int,

@@ -676,8 +676,8 @@ def reproduce_lg_paper_fig_4(
     verbose: bool = False,
     n_process: int = 32,
     figsize: Tuple[float, float] = (6.4, 4.8),
-    bootstraps_for_ci: int = 0,
-) -> None:
+    n_bootstraps: int = 0,
+) -> Optional[pd.DataFrame]:
     """
     Reproduce Fig. 4 of the LG paper, adding the desired models.
 
@@ -697,8 +697,9 @@ def reproduce_lg_paper_fig_4(
         verbose: Verbosity level.
         n_process: How many processes to use to parallelize computation.
         figsize: The plot figure size.
-        bootstraps_for_ci: How many MSA bootstraps to perform to estimate CIs.
-            If 0, won't plot CIs.
+        n_bootstraps: If >0, this number of test set bootstraps will be
+            performed, and the resulting dataframe of size
+            (n_bootstraps X |model_names|) will be returned.
     """
     if model_names is None:
         model_names = [x[0] for x in get_registered_models()]
@@ -730,10 +731,10 @@ def reproduce_lg_paper_fig_4(
 
     y = get_log_likelihoods(df, model_names)
     yerr = None
-    if bootstraps_for_ci > 0:
+    if n_bootstraps > 0:
         np.random.seed(0)
         y_bootstraps = []
-        for _ in range(bootstraps_for_ci):
+        for _ in range(n_bootstraps):
             chosen_rows = np.random.choice(
                 df.index,
                 size=len(df.index),
@@ -744,16 +745,16 @@ def reproduce_lg_paper_fig_4(
             y_bootstrap = get_log_likelihoods(df_bootstrap, model_names)
             y_bootstraps.append(y_bootstrap)
         y_bootstraps = np.array(y_bootstraps)
-        assert y_bootstraps.shape == (bootstraps_for_ci, len(model_names))
-        yerr = np.array(
-            [
-                [
-                    y[i] - np.quantile(y_bootstraps[:, i], 0.025),  # Below
-                    np.quantile(y_bootstraps[:, i], 0.975) - y[i],  # Above
-                ]
-                for i in range(len(model_names))
-            ]
-        ).T
+        assert y_bootstraps.shape == (n_bootstraps, len(model_names))
+        # yerr = np.array(
+        #     [
+        #         [
+        #             y[i] - np.quantile(y_bootstraps[:, i], 0.025),  # Below
+        #             np.quantile(y_bootstraps[:, i], 0.975) - y[i],  # Above
+        #         ]
+        #         for i in range(len(model_names))
+        #     ]
+        # ).T
 
     colors = []
     for model_name in model_names:
@@ -785,3 +786,6 @@ def reproduce_lg_paper_fig_4(
         ]
     )
     plt.show()
+
+    if n_bootstraps:
+        return pd.DataFrame(y_bootstraps, columns=model_names)

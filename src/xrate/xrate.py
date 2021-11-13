@@ -6,6 +6,7 @@ Run XRATE on stockholm files.
 import multiprocessing
 import os
 import subprocess
+import tempfile
 
 import logging
 import tqdm
@@ -80,8 +81,14 @@ def run_xrate(
         cmd = f"{xrate_bin_path} {' '.join(stock_input_paths)} -g {xrate_grammar} -log 6 -f 3 -t {output_path}"
     if logfile is not None:
         cmd += f" 2>&1 | tee {logfile}"
-    logger.info(f"Running {cmd}")
-    subprocess.run(cmd, shell=True, check=True)
+    # Write the command to a file and run it from there with bash because
+    # running directly subprocess.run(cmd) fails due to command length limit.
+    with tempfile.NamedTemporaryFile("w") as bash_script_file:
+        bash_script_filename = bash_script_file.name
+        bash_script_file.write(cmd)
+        bash_script_file.flush()  # This is key, or else the call below will fail!
+        logger.info(f"Running {cmd}")
+        subprocess.run(f"bash {bash_script_filename}", shell=True, check=True)
 
 
 def xrate_to_numpy(xrate_output_file: str) -> np.array:

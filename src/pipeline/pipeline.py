@@ -64,6 +64,15 @@ class Pipeline:
     affects estimation error. You can create the exact same pipeline only varying the
     max_families parameter. Most of the computation will be re-used!
 
+    Regarding the max_sites parameter, its only purpose is to speed up FastTree.
+    So, even though a site is excluded for phylogeny reconstruction, all the
+    sites are still used later. These is one notable eception, which is when
+    use_site_specific_rates=True. In this case, only those sites used in
+    FastTree will have rate estimates, so only these sites will be used
+    downstream in RateMatrix estimation. If all this seems confusing, you
+    can just set max_sites=None, and then all sites will be kept all along,
+    in all scenarios.
+
     Args:
         outdir: Directory where the estimated matrices will be found.
             All the intermediate data will also be written here.

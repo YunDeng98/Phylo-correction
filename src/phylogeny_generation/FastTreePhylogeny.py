@@ -46,6 +46,9 @@ def get_rate_categories(
     Returns the rates, site_cats, sites_kept for the given protein
     family.
 
+    If use_site_specific_rates=False, it is assumed that all sites evolve
+    at the same rate of 1.
+
     Args:
         tree_dir: Directory where the FastTree log is found.
         protein_family_name: Protein family name.
@@ -68,7 +71,8 @@ def get_rate_categories(
         rates = [float(x) for x in lines[1][1:]]
         if not lines[2][0] == "SiteCategories":
             raise ValueError(f"SiteCategories not found in {outlog}")
-        site_cats = [int(x) - 1 for x in lines[2][1:]]  # FastTree uses 1-based indexing, so we shift by 1.
+        # FastTree uses 1-based indexing for SiteCategories, so we shift by 1.
+        site_cats = [int(x) - 1 for x in lines[2][1:]]
     out_sites_kept_path = os.path.join(tree_dir, protein_family_name + ".sites_kept")
     with open(out_sites_kept_path, "r") as out_sites_kept_file:
         sites_kept = [int(x) for x in out_sites_kept_file.read().strip().split()]

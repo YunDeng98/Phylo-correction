@@ -5,6 +5,7 @@ Run XRATE on stockholm files.
 """
 import multiprocessing
 import os
+from os.path import dirname
 import subprocess
 import tempfile
 
@@ -17,6 +18,7 @@ import sys
 from typing import List, Optional
 
 
+from src.xrate.xrate_input_generation import get_stock_filenames
 from src.utils import subsample_protein_families, verify_integrity, pushd
 sys.path.append("../")
 import Phylo_util
@@ -106,6 +108,43 @@ def xrate_to_numpy(xrate_output_file: str) -> np.array:
     return res_df.to_numpy()
 
 
+def get_stock_filenames_for_training(
+    stock_dir: str,
+    protein_family_names: List[str],
+    use_site_specific_rates: bool,
+    num_rate_categories: int,
+) -> List[str]:
+    """
+    Get filenames for training XRATE.
+
+    The caveat is that when use_site_specific_rates=True, some of the files
+    might contain empty MSAs because there were no sites with those rates, so we
+    want to exclude them to reduce the command length, and avoid possible
+    XRATE complaints.
+    """
+    filenames = get_stock_filenames(
+        stock_dir=stock_dir,
+        protein_family_names=protein_family_names,
+        use_site_specific_rates=use_site_specific_rates,
+        num_rate_categories=num_rate_categories,
+    )
+    training_filenames = []
+    for filename in filenames:
+        third_line = open(filename).read().split('\n')[2]
+        msa_length = len(third_line.split(' ')[1])
+        if msa_length == 0:
+            # This file must be skept.
+            if not use_site_specific_rates:
+                # This should never happen!
+                raise Exception(
+                    "stock file has an empty MSA, and you are not using site"
+                    "specific rates. This can never happen!"
+                )
+        else:
+            training_filenames.append(filename)
+    return training_filenames
+
+
 class XRATE:
     r"""
     Generate input for XRATE, given the MSAs and trees.
@@ -125,6 +164,10 @@ class XRATE:
             This is useful for testing and to see what happens if less data is used.
         xrate_grammar: The XRATE grammar file containing the rate matrix
             parameterization and initialization.
+        use_site_specific_rates: Whether to use site specific rates. When True,
+            we get the LG method; when False, we get the WAG method.
+        num_rate_categories: The number of rate categories, in case they shall
+            be used (when use_site_specific_rates=True).
         use_cached: If True and the output file already exists for a family,
             all computation will be skipped for that family.
     """
@@ -136,6 +179,8 @@ class XRATE:
         outdir: str,
         max_families: int,
         xrate_grammar: Optional[str],
+        use_site_specific_rates: bool,
+        num_rate_categories: int,
         use_cached: bool = False,
     ):
         self.a3m_dir_full = a3m_dir_full
@@ -144,6 +189,8 @@ class XRATE:
         self.outdir = outdir
         self.max_families = max_families
         self.xrate_grammar = xrate_grammar
+        self.use_site_specific_rates = use_site_specific_rates
+        self.num_rate_categories = num_rate_categories
         self.use_cached = use_cached
 
     def run(self) -> None:
@@ -156,6 +203,8 @@ class XRATE:
         outdir = self.outdir
         max_families = self.max_families
         xrate_grammar = self.xrate_grammar
+        use_site_specific_rates = self.use_site_specific_rates
+        num_rate_categories = self.num_rate_categories
         use_cached = self.use_cached
 
         # Caching pattern
@@ -181,9 +230,12 @@ class XRATE:
         )
 
         run_xrate(
-            stock_input_paths=[
-                os.path.join(xrate_input_dir, f"{protein_family_name}.stock") for protein_family_name in protein_family_names
-            ],
+            stock_input_paths=get_stock_filenames_for_training(
+                stock_dir=xrate_input_dir,
+                protein_family_names=protein_family_names,
+                use_site_specific_rates=use_site_specific_rates,
+                num_rate_categories=num_rate_categories,
+            ),
             xrate_grammar=xrate_grammar,
             output_path=os.path.join(outdir, "learned_matrix.xrate"),
             logfile=os.path.join(outdir, "xrate_log"),

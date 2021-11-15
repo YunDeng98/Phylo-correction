@@ -5,7 +5,7 @@ import pickle
 import time
 from functools import wraps
 from inspect import signature
-from typing import List
+from typing import List, Optional, Tuple
 
 import logging
 
@@ -99,12 +99,21 @@ def hash_all(xs: List[str]) -> str:
 
 
 def cached(
-    cache_keys=None,
+    cache_keys: Optional[Tuple]=None,
+    exclude_args: Optional[Tuple]=None,
 ):
     """
     In read_only mode, cached results are returned, but new results are not
     written to the cache. This avoids race conditions when running several
     notebooks at the same time.
+
+    Only one of cache_keys and exclude_args can be provided.
+
+    Args:
+        cache_keys: What arguments to use for the hash key.
+        exclude_args: What arguments to exclude from the hash key. E.g.
+            n_processes, which does not affect the result of the function.
+            If None, nothing will be excluded.
     """
     def f_res(func):
         @wraps(func)
@@ -126,6 +135,18 @@ def cached(
                         raise CacheUsageError(
                             f"{cache_key} is not an argument to {func.__name__}. Fix the cache_keys."
                         )
+            # Check that all exclude_args are present - it might be a typo!
+            if exclude_args is not None:
+                for arg in exclude_args:
+                    if arg not in binding.arguments:
+                        raise CacheUsageError(
+                            f"{arg} is not an argument to {func.__name__}. Fix the exclude_args."
+                        )
+            # Only one of cache_keys and exclude_args can be provided
+            if cache_keys is not None and exclude_args is not None:
+                raise CacheUsageError(
+                    f"Only one of cache_keys and exclude_args can be provided"
+                )
             if not hash:
                 path = (
                     [cache_dir]

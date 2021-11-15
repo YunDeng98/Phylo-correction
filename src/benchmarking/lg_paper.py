@@ -59,7 +59,11 @@ def get_registered_models() -> List[Tuple[str, Optional[str], Optional[str]]]:
         ("WAG' reproduced (w/XRATE); init JTT-IPW", None, "./input_data/Q1XRATE.PAML.txt"),
         ("WAG' reproduced (w/XRATE); nullprot", None, "./input_data/Q1XRATE_nullprot.PAML.txt"),
         ("LG (reported)", "r__LG", None),
-        ("LG (reproduced)", "LG", None),
+        ("LG reproduced (with LG mat)", "LG", None),
+        ("LG reproduced (with XRATE)", None, "./input_data/Q1XRATE_SR.PAML.txt"),
+        ("LG reproduced (with XRATE); 2nd it.", None, "./input_data/Q2XRATE_SR.PAML.txt"),
+        # ("LG reproduced (with XRATE); nullprot", None, "./input_data/Q1XRATE_SR_nullprot.PAML.txt"),
+        # ("LG reproduced (with XRATE); nullprot; 2nd it.", None, "./input_data/Q2XRATE_SR_nullprot.PAML.txt"),
         # Our method, no site rates
         ("Cherry; No site rates", None, "./input_data/Q1nosr.PAML.txt"),
         # Our method
@@ -703,7 +707,8 @@ def reproduce_lg_paper_fig_4(
     figsize: Tuple[float, float] = (6.4, 4.8),
     n_bootstraps: int = 0,
     exclude_families: List[str] = [],
-) -> Optional[pd.DataFrame]:
+    baseline_model: str = "JTT (reported)",
+) -> Tuple[pd.DataFrame, Optional[pd.DataFrame]]:
     """
     Reproduce Fig. 4 of the LG paper, adding the desired models.
 
@@ -729,6 +734,7 @@ def reproduce_lg_paper_fig_4(
         exclude_families: What protein families to exclude. This is useful
             for excluding protein families that PhyML crashes on due to numerial
             stability issues.
+        baseline_model: Which model to use as the reference.
     """
     if model_names is None:
         model_names = [x[0] for x in get_registered_models()]
@@ -754,7 +760,7 @@ def reproduce_lg_paper_fig_4(
         num_sites = df.Sites.sum()
         log_likelihoods = (
             2.0
-            * (df[model_names].sum(axis=0) - df["JTT (reported)"].sum())
+            * (df[model_names].sum(axis=0) - df[baseline_model].sum())
             / num_sites
         )
         return log_likelihoods
@@ -818,4 +824,6 @@ def reproduce_lg_paper_fig_4(
     plt.show()
 
     if n_bootstraps:
-        return pd.DataFrame(y_bootstraps, columns=model_names)
+        return y, pd.DataFrame(y_bootstraps, columns=model_names)
+    else:
+        return y, None

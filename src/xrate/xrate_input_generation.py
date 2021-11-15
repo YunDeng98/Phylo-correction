@@ -14,11 +14,13 @@ import logging
 import numpy as np
 import tqdm
 from ete3 import Tree
+import tempfile
 
-from typing import List
+from typing import List, Tuple
 
 
 from src.utils import subsample_protein_families, verify_integrity
+from src.phylogeny_generation.FastTreePhylogeny import get_rate_categories
 
 
 def convert_parsimony_file_to_stock(
@@ -62,34 +64,221 @@ def convert_parsimony_file_to_stock(
     return res
 
 
+def subset_sites(seq: str, sites_to_subset: List[int]):
+    """
+    Subset sites in a string. Used to subset the
+    positions of an MSA corresponding to a rate category.
+    """
+    return ''.join([seq[i] for i in sites_to_subset])
+
+
+def write_out_msa(
+    msa: List[Tuple[str, str]],
+    msa_filepath: str,
+) -> None:
+    """
+    Write out an msa consisting of (protein_name, sequence) tuples.
+
+    This is used to subset the positions of an MSA corresponding to a rate
+    category. The MSA thus has the same format as the output of the
+    maximum parsimony step.
+    """
+    res = f"{len(msa)}\n"
+    for (protein_name, sequence) in msa:
+        res += f"{protein_name} {sequence}\n"
+    with open(msa_filepath, "w") as outfile:
+        outfile.write(res)
+        outfile.flush()
+
+
+def convert_parsimony_file_to_one_stock_per_rate_category(
+    protein_family_name: str,
+    parsimony_dir: str,
+    num_rate_categories: int,
+) -> List[str]:
+    """
+    Converts the MSA for the given protein family into one .stock file per site
+    rate category.
+
+    The strategy is to just loop over each rate category and subset the
+    positions with the given rate category in the MSA, scale the tree,
+    then just call convert_parsimony_file_to_stock.
+    """
+    parsimony_input_path = os.path.join(parsimony_dir, f"{protein_family_name}.parsimony")
+    tree_input_path = os.path.join(parsimony_dir, f"{protein_family_name}.newick")
+
+    # Read MSA
+    msa = []
+    with open(parsimony_input_path) as file:
+        lines = list(file)
+        n_lines = len(lines)
+        for i in range(0, n_lines):
+            line = lines[i].split(' ')
+            if len(line) == 1:
+                assert(i == 0)
+                continue
+            assert(len(line) == 2)
+            protein_name = line[0]
+            protein_seq = line[1]
+            msa.append((protein_name, protein_seq))
+    L = len(msa[0][1])
+
+    rates, site_cats, sites_kept = get_rate_categories(
+        tree_dir=parsimony_dir,
+        protein_family_name=protein_family_name,
+        use_site_specific_rates=True,
+        L=L,
+    )
+
+    if len(rates) != num_rate_categories:
+        raise ValueError(
+            "The number of rate categories obtained from FastTree log is: "
+            f"{len(rates)}, but you were expecting to see "
+            f"{num_rate_categories}."
+        )
+
+    assert(len(sites_kept) == len(site_cats))
+
+    res = []
+    for rate_category in range(num_rate_categories):
+        # Subset the MSA for this rate category, and scale the tree.
+        # Determine the sites for this rate category
+        sites_for_rate_category = [sites_kept[i] for i in range(len(sites_kept)) if site_cats[i] == rate_category]
+        msa_subset = [
+            (
+                protein_name,
+                subset_sites(
+                    seq=protein_seq,
+                    sites_to_subset=sites_for_rate_category
+                )
+            )
+            for (protein_name, protein_seq) in msa
+        ]
+        tree = Tree(tree_input_path, format=3)
+
+        def dfs_scale_tree(v, scaling_factor: float):
+            v.dist = v.dist * scaling_factor
+            for u in v.get_children():
+                dfs_scale_tree(u, scaling_factor=scaling_factor)
+        tree = Tree(tree_input_path, format=3)
+        dfs_scale_tree(tree, scaling_factor=rates[rate_category])
+        # Now write out the MSA and the tree, and call
+        # convert_parsimony_file_to_stock
+        with tempfile.NamedTemporaryFile("w") as msa_subset_file:
+            msa_subset_filename = msa_subset_file.name
+            with tempfile.NamedTemporaryFile("w") as tree_file:
+                tree_filename = tree_file.name
+                write_out_msa(msa_subset, msa_subset_filename)
+                tree.write(format=3, outfile=tree_filename)
+                stock = convert_parsimony_file_to_stock(
+                    protein_family_name=protein_family_name + f'__rc_{rate_category}',
+                    parsimony_input_path=msa_subset_filename,
+                    tree_input_path=tree_filename,
+                )
+                res.append(stock)
+    if len(res) == 0:
+        raise Exception("It appears like no rate category contained any "
+                        "sites. This is not possible!")
+    return res
+
+
+def get_stock_path_for_rate_category(
+    dirname: str,
+    protein_family_name: str,
+    rate_category: int
+):
+    """
+    The path to the stockholm filepath for `protein_family_name`
+    and rate category `rate_category` under dirname.
+    """
+    return os.path.join(dirname, f"{protein_family_name}__rc_{rate_category}.stock")
+
+
+def get_stock_filenames(
+    stock_dir: str,
+    protein_family_names: List[str],
+    use_site_specific_rates: bool,
+    num_rate_categories: int,
+) -> List[str]:
+    """
+    Logic to get the stock files. This logic depends on whether we
+    use_site_specific_rates
+    """
+    if not use_site_specific_rates:
+        stock_input_paths=[
+            os.path.join(stock_dir, f"{protein_family_name}.stock")
+            for protein_family_name in protein_family_names
+        ]
+    else:
+        stock_input_paths=[
+            get_stock_path_for_rate_category(
+                stock_dir,
+                protein_family_name,
+                i
+            )
+            for protein_family_name in protein_family_names for i in range(num_rate_categories)
+        ]
+    return stock_input_paths
+
+
 def map_func(args: List) -> None:
     parsimony_dir = args[0]
     protein_family_name = args[1]
     outdir = args[2]
     use_cached = args[3]
+    use_site_specific_rates = args[4]
+    num_rate_categories = args[5]
 
     logger = logging.getLogger("phylo_correction.xrate_input_generator")
 
     # Caching pattern: skip any computation as soon as possible
-    transition_filename = os.path.join(outdir, protein_family_name + ".stock")
-    if use_cached and os.path.exists(transition_filename):
-        verify_integrity(transition_filename)
-        # logger.info(f"Skipping. Cached transitions for family {protein_family_name} at {transition_filename}")
+    stock_filenames = get_stock_filenames(
+        stock_dir=outdir,
+        protein_family_names=[protein_family_name],
+        use_site_specific_rates=use_site_specific_rates,
+        num_rate_categories=num_rate_categories,
+    )
+    if use_cached and all([os.path.exists(stock_filename) for stock_filename in stock_filenames]):
+        [verify_integrity(stock_filename) for stock_filename in stock_filenames]
         return
 
     logger.info(f"Starting on family {protein_family_name}")
+    if not use_site_specific_rates:
+        res = convert_parsimony_file_to_stock(
+            protein_family_name=protein_family_name,
+            parsimony_input_path=os.path.join(parsimony_dir, f"{protein_family_name}.parsimony"),
+            tree_input_path=os.path.join(parsimony_dir, f"{protein_family_name}.newick"),
+        )
 
-    res = convert_parsimony_file_to_stock(
-        protein_family_name=protein_family_name,
-        parsimony_input_path=os.path.join(parsimony_dir, f"{protein_family_name}.parsimony"),
-        tree_input_path=os.path.join(parsimony_dir, f"{protein_family_name}.newick"),
-    )
+        stock_filename = os.path.join(outdir, protein_family_name + ".stock")
+        with open(stock_filename, "w") as stock_file:
+            stock_file.write(res)
+            stock_file.flush()
+        os.system(f"chmod 555 {stock_filename}")
+    else:
+        # Here I now have to figure out how to deal with the use of
+        # site-specific rates.
+        # I should do something similar to transition extraction to get the site
+        # rates.
+        res = convert_parsimony_file_to_one_stock_per_rate_category(
+            protein_family_name=protein_family_name,
+            parsimony_dir=parsimony_dir,
+            num_rate_categories=num_rate_categories,
+        )
+        if len(res) != num_rate_categories:
+            raise Exception(f"Expected {num_rate_categories} stock MSAs for family {protein_family_name}, but got {len(res)}.")
 
-    stock_filename = os.path.join(outdir, protein_family_name + ".stock")
-    with open(stock_filename, "w") as stock_file:
-        stock_file.write(res)
-        stock_file.flush()
-    os.system(f"chmod 555 {stock_filename}")
+        stock_filenames = get_stock_filenames(
+            stock_dir=outdir,
+            protein_family_names=[protein_family_name],
+            use_site_specific_rates=use_site_specific_rates,
+            num_rate_categories=num_rate_categories,
+        )
+        for i in range(num_rate_categories):
+            with open(stock_filenames[i], "w") as stock_file:
+                stock_file.write(res[i])
+                stock_file.flush()
+            os.system(f"chmod 555 {stock_filenames[i]}")
 
 
 class XRATEInputGenerator:
@@ -104,8 +293,11 @@ class XRATEInputGenerator:
             to determine which max_families will get subsampled.
         parsimony_dir: Directory where the MSA files (.parsimony) and
             trees (.newick) are found. Note that the ancestral states are
-            ignored compeltely; however, the parsimony files contain the
-            post-processed MSAs so we read from them.
+            ignored completely; however, the parsimony files contain the
+            post-processed MSAs (e.g. removal of lowercase amino acids)
+            so we read from them. Also, the site rates and sites kept
+            files are here. (Just like with the transition extraction
+            steps, this is done to keep the dependency chain linear.)
         n_process: Number of processes used to parallelize computation.
         expected_number_of_MSAs: The number of files in a3m_dir. This argument
             is only used to sanity check that the correct a3m_dir is being used.
@@ -114,6 +306,10 @@ class XRATEInputGenerator:
             will be found.
         max_families: Only run on 'max_families' randomly chosen files in a3m_dir_full.
             This is useful for testing and to see what happens if less data is used.
+        use_site_specific_rates: Whether to use site specific rates. When True,
+            we get the LG method; when False, we get the WAG method.
+        num_rate_categories: The number of rate categories, in case they shall
+            be used (when use_site_specific_rates=True).
         use_cached: If True and the output file already exists for a family,
             all computation will be skipped for that family.
     """
@@ -125,6 +321,8 @@ class XRATEInputGenerator:
         expected_number_of_MSAs: int,
         outdir: str,
         max_families: int,
+        use_site_specific_rates: bool,
+        num_rate_categories: int,
         use_cached: bool = False,
     ):
         self.a3m_dir_full = a3m_dir_full
@@ -133,6 +331,8 @@ class XRATEInputGenerator:
         self.expected_number_of_MSAs = expected_number_of_MSAs
         self.outdir = outdir
         self.max_families = max_families
+        self.use_site_specific_rates = use_site_specific_rates
+        self.num_rate_categories = num_rate_categories
         self.use_cached = use_cached
 
     def run(self) -> None:
@@ -145,6 +345,8 @@ class XRATEInputGenerator:
         expected_number_of_MSAs = self.expected_number_of_MSAs
         outdir = self.outdir
         max_families = self.max_families
+        use_site_specific_rates = self.use_site_specific_rates
+        num_rate_categories = self.num_rate_categories
         use_cached = self.use_cached
 
         if not os.path.exists(outdir):
@@ -162,7 +364,7 @@ class XRATEInputGenerator:
         # print(f"protein_family_names = {protein_family_names}")
 
         map_args = [
-            [parsimony_dir, protein_family_name, outdir, use_cached]
+            [parsimony_dir, protein_family_name, outdir, use_cached, use_site_specific_rates, num_rate_categories]
             for protein_family_name in protein_family_names
         ]
         if n_process > 1:

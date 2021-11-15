@@ -64,13 +64,24 @@ class Pipeline:
     affects estimation error. You can create the exact same pipeline only varying the
     max_families parameter. Most of the computation will be re-used!
 
+    Regarding the max_sites parameter, its only purpose is to speed up FastTree.
+    So, even though a site is excluded for phylogeny reconstruction, all the
+    sites are still used later. These is one notable eception, which is when
+    use_site_specific_rates=True. In this case, only those sites used in
+    FastTree will have rate estimates, so only these sites will be used
+    downstream in RateMatrix estimation. If all this seems confusing, you
+    can just set max_sites=None, and then all sites will be kept all along,
+    in all scenarios.
+
     Args:
         outdir: Directory where the estimated matrices will be found.
             All the intermediate data will also be written here.
         max_seqs: MSAs will be subsampled down to this number of sequences
             for the purpose of phylogeny generation with FastTree.
+            If 0 or None, all sequences will be used.
         max_sites: MSAs will be subsampled down to this number of sites
             for the purpose of phylogeny generation with FastTree.
+            If 0 or None, all sites will be used.
         armstrong_cutoff: Contact threshold
         rate_matrix: What rate matrix to use in FastTree for the phylogeny
             reconstruction step.
@@ -151,7 +162,9 @@ class Pipeline:
             (This grammar forbids some amino-acid transitions).
             If "JTT-IPW", then the JTT-IPW initialization will be
             used for XRATE.
-        fast_tree_cats: How many rate categories to use in FastTree
+        fast_tree_cats: How many rate categories to use in FastTree,
+            and in also when estimating the rate matrices if
+            use_site_specific_rates=True.
         use_site_specific_rates: If to use site specific rates for
             inference, as in the LG paper.
 
@@ -332,7 +345,10 @@ class Pipeline:
         )
 
         # XRATE stuff
-        xrate_input_params = maximum_parsimony_params  # File-level caching so no need for max_families
+        # File-level caching so no need for max_families
+        # Also, note that the number of rate categories is already part of the
+        # maximum_parsimony_params, so there's no need to include it again.
+        xrate_input_params = f"{use_site_specific_rates}_site-rates__{maximum_parsimony_params}"
         self.xrate_input_dir = os.path.join(outdir, f"XRATE_input__{xrate_input_params}")
         xrate_grammar_hash = hash_str(str(xrate_grammar))
         xrate_grammar_name = str(xrate_grammar).split('/')[-1]
@@ -578,6 +594,8 @@ class Pipeline:
                 expected_number_of_MSAs=expected_number_of_MSAs,
                 outdir=xrate_input_dir,
                 max_families=max_families,
+                use_site_specific_rates=use_site_specific_rates,
+                num_rate_categories=fast_tree_cats,
                 use_cached=use_cached,
             )
             xrate_input_generator.run()
@@ -605,6 +623,8 @@ class Pipeline:
                 outdir=learnt_rate_matrix_dir_XRATE,
                 max_families=max_families,
                 xrate_grammar=xrate_grammar,
+                use_site_specific_rates=use_site_specific_rates,
+                num_rate_categories=fast_tree_cats,
                 use_cached=use_cached,
             )
             xrate.run()

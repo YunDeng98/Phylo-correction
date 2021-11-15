@@ -4,7 +4,7 @@ import time
 import tempfile
 import numpy as np
 import pandas as pd
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from .MSA import MSA
 
@@ -46,6 +46,9 @@ def get_rate_categories(
     Returns the rates, site_cats, sites_kept for the given protein
     family.
 
+    If use_site_specific_rates=False, it is assumed that all sites evolve
+    at the same rate of 1.
+
     Args:
         tree_dir: Directory where the FastTree log is found.
         protein_family_name: Protein family name.
@@ -68,7 +71,8 @@ def get_rate_categories(
         rates = [float(x) for x in lines[1][1:]]
         if not lines[2][0] == "SiteCategories":
             raise ValueError(f"SiteCategories not found in {outlog}")
-        site_cats = [int(x) - 1 for x in lines[2][1:]]  # FastTree uses 1-based indexing, so we shift by 1.
+        # FastTree uses 1-based indexing for SiteCategories, so we shift by 1.
+        site_cats = [int(x) - 1 for x in lines[2][1:]]
     out_sites_kept_path = os.path.join(tree_dir, protein_family_name + ".sites_kept")
     with open(out_sites_kept_path, "r") as out_sites_kept_file:
         sites_kept = [int(x) for x in out_sites_kept_file.read().strip().split()]
@@ -211,10 +215,11 @@ class FastTreePhylogeny:
         a3m_dir: Directory where the MSA file is found.
         protein_family_name: Name of the protein family.
         outdir: Directory where to write the output of FastTree - a .newick file.
-        max_seqs: If nonzero, this number of sequences in the MSA file will be subsampled
-            uniformly at random. The first sequence in the MSA file will always be sampled.
-        max_sites: If nonzero, this number of sites in the MSA file will be subsampled
-            uniformly at random.
+        max_seqs: This number of sequences in the MSA file will be subsampled
+            uniformly at random. The first sequence in the MSA file will always
+            be sampled. If 0 or None, all sequences will be used.
+        max_sites: This number of sites in the MSA file will be subsampled
+            uniformly at random. If 0 or None, all sites will be used.
         rate_matrix: Path to the rate matrix to use within FastTree. If ends in 'None', then
             the default rate matrix will be used in FastTree.
         fast_tree_cats: Number of Gamma rate categories to use in FastTree.
@@ -230,8 +235,8 @@ class FastTreePhylogeny:
         a3m_dir: str,
         protein_family_name: str,
         outdir: str,
-        max_seqs: int,
-        max_sites: int,
+        max_seqs: Optional[int],
+        max_sites: Optional[int],
         rate_matrix: str,
         fast_tree_cats: int,
         use_cached: bool = False,

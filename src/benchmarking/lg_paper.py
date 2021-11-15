@@ -56,14 +56,24 @@ def get_registered_models() -> List[Tuple[str, Optional[str], Optional[str]]]:
         ("WAG (reproduced)", "WAG", None),
         # ("WAG+LGF (reported)", "r__WAG+LG FRE", None),
         ("WAG' (reported)", "r__WAG'", None),
-        ("WAG' reproduced (w/XRATE)", None, "./input_data/Q1XRATE.PAML.txt"),
+        ("WAG' reproduced (w/XRATE); init JTT-IPW", None, "./input_data/Q1XRATE.PAML.txt"),
+        ("WAG' reproduced (w/XRATE); nullprot", None, "./input_data/Q1XRATE_nullprot.PAML.txt"),
         ("LG (reported)", "r__LG", None),
-        ("LG (reproduced)", "LG", None),
+        ("LG reproduced (with LG mat)", "LG", None),
+        ("LG reproduced (with XRATE)", None, "./input_data/Q1XRATE_SR.PAML.txt"),
+        ("LG reproduced (with XRATE); 2nd it.", None, "./input_data/Q2XRATE_SR.PAML.txt"),
+        # ("LG reproduced (with XRATE); nullprot", None, "./input_data/Q1XRATE_SR_nullprot.PAML.txt"),
+        # ("LG reproduced (with XRATE); nullprot; 2nd it.", None, "./input_data/Q2XRATE_SR_nullprot.PAML.txt"),
         # Our method, no site rates
         ("Cherry; No site rates", None, "./input_data/Q1nosr.PAML.txt"),
         # Our method
         ("Cherry", None, "./input_data/Q1.PAML.txt"),
         ("Cherry; 2nd iteration", None, "./input_data/Q2v2.PAML.txt"),
+
+        # Our method, repro
+        # ("Cherry; repro", None, "./input_data/Q1_repro.PAML.txt"),
+        # ("Cherry; 2nd iteration; repro", None, "./input_data/Q2_repro.PAML.txt"),
+
         # FastTree initialization
         ("Cherry; FastTree w/EQU", None, "./input_data/Q1EQU.PAML.txt"),
         (
@@ -455,13 +465,17 @@ def get_phyml_ll(
         return get_phyml_ll_from_phyml_stats(phyml_stats)
 
 
-def get_filenames_Treebase() -> List[str]:
+def get_filenames_Treebase(exclude_families: List[str] = []) -> List[str]:
     """
     Get the list of filenames of the Treebase test data.
 
     The list is sorted from smallest MSA to largest (basically based on Taxa
     and Sites), making it easy to subset the smaller families for testing
     purposes.
+
+    exclude_families: What protein families to exclude. This is useful
+            for excluding protein families that PhyML crashes on due to numerial
+            stability issues.
     """
     dir_path = os.path.dirname(os.path.realpath(__file__))
     df = pd.read_csv(os.path.join(dir_path, "Treebase.txt"), sep="\t")
@@ -472,22 +486,28 @@ def get_filenames_Treebase() -> List[str]:
         "M2577",
         "M964",
     ]
+    filenames = [x for x in filenames if x not in exclude_families]
     filenames = [x + ".clean.ProtGB_phyml" for x in filenames]
     return filenames
 
 
-def get_filenames_Pfam() -> List[str]:
+def get_filenames_Pfam(exclude_families: List[str] = []) -> List[str]:
     """
     Get the list of filenames of the Pfam test data.
 
     The list is sorted from smallest MSA to largest based on Taxa
     and Sites, making it easy to subset the smaller families for testing
     purposes.
+
+    exclude_families: What protein families to exclude. This is useful
+            for excluding protein families that PhyML crashes on due to numerial
+            stability issues.
     """
     dir_path = os.path.dirname(os.path.realpath(__file__))
     df = pd.read_csv(os.path.join(dir_path, "Pfam.txt"), sep="\t")
     df = df.drop(0)
     filenames = list(df.sort_values(by=["Tax", "Sites"]).Name)
+    filenames = [x for x in filenames if x not in exclude_families]
     filenames = [x + ".txt-gb_phyml" for x in filenames]
     return filenames
 
@@ -501,6 +521,7 @@ def reproduce_JTT_WAG_LG_table(
     optimize_rates: bool = True,
     max_families: int = 100000000,
     verbose: bool = False,
+    exclude_families: List[str] = [],
 ) -> pd.DataFrame:
     """
     For either Pfam or Treebase (specified via `pfam_or_treebase` argument),
@@ -521,11 +542,14 @@ def reproduce_JTT_WAG_LG_table(
         max_families: How many families to reproduce the results on. This is
             useful for testing purposes, e.g. setting max_families=1.
         verbose: Verbosity level.
+        exclude_families: What protein families to exclude. This is useful
+            for excluding protein families that PhyML crashes on due to numerial
+            stability issues.
     """
     if pfam_or_treebase == "pfam":
-        filenames = get_filenames_Pfam()
+        filenames = get_filenames_Pfam(exclude_families=exclude_families)
     elif pfam_or_treebase == "treebase":
-        filenames = get_filenames_Treebase()
+        filenames = get_filenames_Treebase(exclude_families=exclude_families)
 
     rows = []
     if model_names is None:
@@ -601,6 +625,7 @@ def reproduce_JTT_WAG_LG_table_parallel(
     max_families: int = 100000000,
     verbose: bool = False,
     n_process: int = 32,
+    exclude_families: List[str] = [],
 ) -> pd.DataFrame:
     """
     Parallel version of reproduce_JTT_WAG_LG_table
@@ -620,11 +645,14 @@ def reproduce_JTT_WAG_LG_table_parallel(
             useful for testing purposes, e.g. setting max_families=1.
         verbose: Verbosity level.
         n_process: How many processes to use to parallelize computation.
+        exclude_families: What protein families to exclude. This is useful
+            for excluding protein families that PhyML crashes on due to numerial
+            stability issues.
     """
     if pfam_or_treebase == "pfam":
-        filenames = get_filenames_Pfam()
+        filenames = get_filenames_Pfam(exclude_families=exclude_families)
     elif pfam_or_treebase == "treebase":
-        filenames = get_filenames_Treebase()
+        filenames = get_filenames_Treebase(exclude_families=exclude_families)
 
     # First warm up the cache in parallel
     if model_names is None:
@@ -662,6 +690,7 @@ def reproduce_JTT_WAG_LG_table_parallel(
         optimize_rates=optimize_rates,
         max_families=max_families,
         verbose=verbose,
+        exclude_families=exclude_families,
     )
 
 
@@ -677,7 +706,9 @@ def reproduce_lg_paper_fig_4(
     n_process: int = 32,
     figsize: Tuple[float, float] = (6.4, 4.8),
     n_bootstraps: int = 0,
-) -> Optional[pd.DataFrame]:
+    exclude_families: List[str] = [],
+    baseline_model: str = "JTT (reported)",
+) -> Tuple[pd.DataFrame, Optional[pd.DataFrame]]:
     """
     Reproduce Fig. 4 of the LG paper, adding the desired models.
 
@@ -700,6 +731,10 @@ def reproduce_lg_paper_fig_4(
         n_bootstraps: If >0, this number of test set bootstraps will be
             performed, and the resulting dataframe of size
             (n_bootstraps X |model_names|) will be returned.
+        exclude_families: What protein families to exclude. This is useful
+            for excluding protein families that PhyML crashes on due to numerial
+            stability issues.
+        baseline_model: Which model to use as the reference.
     """
     if model_names is None:
         model_names = [x[0] for x in get_registered_models()]
@@ -714,6 +749,7 @@ def reproduce_lg_paper_fig_4(
         max_families=max_families,
         verbose=verbose,
         n_process=n_process,
+        exclude_families=exclude_families,
     )
 
     def get_log_likelihoods(df: pd.DataFrame, model_names: List[str]):
@@ -724,7 +760,7 @@ def reproduce_lg_paper_fig_4(
         num_sites = df.Sites.sum()
         log_likelihoods = (
             2.0
-            * (df[model_names].sum(axis=0) - df["JTT (reported)"].sum())
+            * (df[model_names].sum(axis=0) - df[baseline_model].sum())
             / num_sites
         )
         return log_likelihoods
@@ -788,4 +824,6 @@ def reproduce_lg_paper_fig_4(
     plt.show()
 
     if n_bootstraps:
-        return pd.DataFrame(y_bootstraps, columns=model_names)
+        return y, pd.DataFrame(y_bootstraps, columns=model_names)
+    else:
+        return y, None

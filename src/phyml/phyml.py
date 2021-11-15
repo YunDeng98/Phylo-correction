@@ -156,6 +156,31 @@ def run_phyml(
     return phyml_stats_filepath, phyml_site_ll_filepath
 
 
+# def get_phyml_ll_from_phyml_stats(phyml_stats: str) -> float:
+#     """
+#     Given the phyml_stats file contents, return the Log-likelihood.
+#     """
+#     for line in phyml_stats.split("\n"):
+#         if "Log-likelihood:" in line:
+#             return float(line.split()[-1])
+#     # PhyML might have crashed due to numerical instability issue.
+#     # Try to recover by getting the the last instance of LnL
+#     # We reverse the lines in the loop below to get the last iteration first.
+#     for line in phyml_stats.split("\n")[::-1]:
+#         line_contents = line.split()
+#         for i, x in enumerate(line_contents):
+#             if x == "lnL=":
+#                 logger = logging.getLogger("phylo_correction.phyml")
+#                 logger.warning(
+#                     "PhyML probably crashed due to numerical instability, but "
+#                     "I was able to get the lnL of the last iteration."
+#                 )
+#                 return float(line_contents[i + 1])
+#     raise Exception(
+#         f"Could not parse Log-likelihood not lnL from file contents:\n{phyml_stats}"
+#     )
+
+
 def get_phyml_ll_from_phyml_stats(phyml_stats: str) -> float:
     """
     Given the phyml_stats file contents, return the Log-likelihood.

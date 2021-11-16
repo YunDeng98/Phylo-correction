@@ -142,3 +142,24 @@ class TestXRATEInputGenerator(unittest.TestCase):
                     Q_inferred = np.loadtxt(learned_matrix_inferred_path)
                     l1_error = np.sum(np.abs(Q_true - Q_inferred))
                     assert(l1_error < 0.01)
+
+    def test_xrate_with_WAG_initialization(self):
+        """
+        Test that XRATE runs initialized with WAG rate matrix.
+        """
+        install_xrate()
+        with tempfile.TemporaryDirectory() as root_dir:
+            outdir = os.path.join(root_dir, 'xrate')
+            for use_cached in [False, True]:
+                xrate = XRATE(
+                    a3m_dir_full='test_input_data/a3m_small',
+                    xrate_input_dir='test_input_data/stockholm_small',
+                    expected_number_of_MSAs=3,
+                    outdir=outdir,
+                    max_families=3,
+                    xrate_grammar='test_input_data/WAG_matrix.txt',
+                    use_site_specific_rates=False,
+                    num_rate_categories=20,
+                    use_cached=use_cached,
+                )
+                xrate.run()

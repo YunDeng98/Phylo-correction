@@ -18,7 +18,7 @@ import sys
 from typing import List, Optional
 
 
-from src.xrate.xrate_input_generation import get_stock_filenames
+from src.xrate.xrate_input_generation import get_stock_filenames, rate_matrix_to_grammar
 from src.utils import subsample_protein_families, verify_integrity, pushd
 sys.path.append("../")
 import Phylo_util
@@ -163,7 +163,12 @@ class XRATE:
         max_families: Only run on 'max_families' randomly chosen files in a3m_dir_full.
             This is useful for testing and to see what happens if less data is used.
         xrate_grammar: The XRATE grammar file containing the rate matrix
-            parameterization and initialization.
+            parameterization and initialization. If the file has extension type
+            '.eg', then it must be an XRATE grammar file. If it is a '.txt'
+            file, it must be a rate matrix in row-wise format, and we will
+            convert it into a XRATE grammar for you. If None, then the
+            nullprot.eg grammar from XRATE will be used. (Note that this
+            grammar forbids some amino-acid transitions).
         use_site_specific_rates: Whether to use site specific rates. When True,
             we get the LG method; when False, we get the WAG method.
         num_rate_categories: The number of rate categories, in case they shall
@@ -228,6 +233,21 @@ class XRATE:
             expected_number_of_MSAs,
             max_families
         )
+
+        if xrate_grammar is not None and not xrate_grammar.endswith('.eg'):
+            # We change the xrate_grammar to point to the right place.
+            Q1 = np.loadtxt(xrate_grammar)
+            xrate_grammar += '.eg'
+            logger.info(f"XRATE will be ran with grammar file at: {xrate_grammar}")
+            # The grammar might already have been writen previously, so check first.
+            if not os.path.exists(xrate_grammar):
+                grammar = rate_matrix_to_grammar(Q1)
+                with open(xrate_grammar, "w") as outfile:
+                    outfile.write(grammar)
+                    outfile.flush()
+                os.system(f"chmod 555 {xrate_grammar}")
+            else:
+                verify_integrity(xrate_grammar)
 
         run_xrate(
             stock_input_paths=get_stock_filenames_for_training(

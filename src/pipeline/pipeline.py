@@ -88,24 +88,29 @@ class Pipeline:
         use_cached: If True, will do nothing for the output files that
             already exists, effectively re-using them.
         num_epochs: The number of epochs of first order optimization
-            used to solve for the MLE.
+            used to solve for the MLE. This is not used by the XRATE method.
         device: The device to use for pytorch optimization. Should be
-            'cuda' or 'cpu'.
-        center: Quantization grid center
-        step_size: Quantization grid step size (geometric)
+            'cuda' or 'cpu'. This is not used by the XRATE method.
+        center: Quantization grid center. This is not used by the XRATE method.
+        step_size: Quantization grid step size (geometric). This is not used by
+            the XRATE method.
         n_steps: Number of grid points left and right of center (for a total
-            of 2 * n_steps + 1 grid points)
+            of 2 * n_steps + 1 grid points). This is not used by the XRATE
+            method.
         keep_outliers: What to do with points that are outside the grid. If
             False, they will be dropped. If True, they will be assigned
-            to the corresponding closest endpoint of the grid.
+            to the corresponding closest endpoint of the grid. This is not used
+            by the XRATE method.
         max_height: Use only transitions whose starting node is at height
             at most max_height from the leaves in its subtree. This is
             used to filter out unreliable maximum parsimony transitions.
-            If None, no filtering is performed.
+            If None, no filtering is performed. This is not used by the XRATE
+            method.
         max_path_height: Use only transitions whose starting node is at height
             at most max_path_height from the leaves in its subtree, in terms
             of the NUMBER OF EDGES. This is used to filter out unreliable
             maximum parsimony transitions. If None, no filtering is performed.
+            This is not used by the XRATE method.
         n_process: How many processes to use.
         a3m_dir_full: The MSA directory which contains ALL the MSAs.
             This is needed because if one wants to run the pipeline
@@ -147,26 +152,37 @@ class Pipeline:
             maximum parsimony reconstructions.
         learn_pairwise_model: If True, will learn a co-evolution model.
             This step is very slow in generating the training data, so
-            it is a good idea to skip at first.
+            it is a good idea to skip at first. This cannot be used with the
+            XRATE method.
         edge_or_cherry: If "edge", edge transitions will be used. If "cherry",
             cherry transitions will be used instead. Note that "cherry"
             transitions do not depend on the maximum parsimony reconstruction!
-        method: rate matrix estimation method, or list of rate matrix estimation
-            methods. Possibilities: "MLE", "JTT", "JTT-IPW".
-            (Note: cheap baseline will be run anyway.)
-        opt_init: What initialization to use for the optimizer. Can be e.g.
-            "JTT-IPW" or a path to a rate matrix. (Or none for random init)
-        rate_matrix_parameterization: e.g. "pande_reversible".
-        xrate_grammar: Path to the XRATE grammar file. If None,
-            then the nullprot.eg grammar from XRATE will be used.
-            (This grammar forbids some amino-acid transitions).
-            If "JTT-IPW", then the JTT-IPW initialization will be
-            used for XRATE.
+            This is not used by the XRATE method.
+        method: rate matrix estimation method. Possibilities: "MLE", "JTT",
+            "JTT-IPW", "XRATE". (Note: cheap baseline will be run anyway
+            as they are typically used to initialize MLE, for example).
+            A list can be provided to run more than one method, e.g.
+            ['MLE', 'XRATE'], although this is rarely done.
+        mle_init: Only used for our MLE method. This is the initialization to
+            use for our MLE method's optimizer. Can be e.g. "JTT-IPW" or a path
+            to a rate matrix, or None for random init. This is not used by the
+            XRATE method.
+        rate_matrix_parameterization: Only used for our MLE method.
+            e.g. "pande_reversible" for a reversible model. This is not used by
+            the XRATE method.
+        xrate_grammar: Only used for the XRATE method. This is the grammar
+            to use in XRATE. If "JTT-IPW", then the JTT-IPW grammar will
+            be used for XRATE. Otherwise, if the file has extension type '.eg',
+            then it must be an XRATE grammar file. If it is a '.txt' file, it
+            must be a rate matrix in row-wise format, and we will convert it
+            into a XRATE grammar for you. If None, then the nullprot.eg grammar
+            from XRATE will be used. (Note that this grammar forbids some
+            amino-acid transitions).
         fast_tree_cats: How many rate categories to use in FastTree,
             and in also when estimating the rate matrices if
-            use_site_specific_rates=True.
+            use_site_specific_rates=True. This affects all methods.
         use_site_specific_rates: If to use site specific rates for
-            inference, as in the LG paper.
+            inference, as in the LG paper. This affects all methods.
 
     Attributes:
         tree_dir: Where the estimated phylogenies lie
@@ -207,7 +223,7 @@ class Pipeline:
         edge_or_cherry: str = "edge",
         method: Union[str, List[str]] = "MLE",
         learn_pairwise_model: float = False,
-        opt_init: Optional[str] = None,
+        mle_init: Optional[str] = None,
         rate_matrix_parameterization: str = "pande_reversible",
         a3m_dir_full: Optional[str] = None,
         xrate_grammar: Optional[str] = None,
@@ -296,7 +312,7 @@ class Pipeline:
         self.learn_pairwise_model = learn_pairwise_model
         self.edge_or_cherry = edge_or_cherry
         self.method = method
-        self.opt_init = opt_init
+        self.mle_init = mle_init
         self.rate_matrix_parameterization = rate_matrix_parameterization
         self.xrate_grammar = xrate_grammar
         self.fast_tree_cats = fast_tree_cats
@@ -327,7 +343,7 @@ class Pipeline:
         # Where the co-transition matrices obtained by quantizing transition edges will be stored
         co_matrices_params = f"{max_families}_fams__{co_transitions_params}__{filter_params}"
         self.co_matrices_dir = os.path.join(outdir, f"co_matrices__{co_matrices_params}")
-        optimizer_params = f"{num_epochs}_epochs_{opt_init}_opt_init_{rate_matrix_parameterization}_param"
+        optimizer_params = f"{num_epochs}_epochs_{mle_init}_mle_init_{rate_matrix_parameterization}_param"
         learnt_rate_matrix_params = f"{matrices_params}__{optimizer_params}"
         self.learnt_rate_matrix_dir = os.path.join(
             outdir,
@@ -417,7 +433,7 @@ class Pipeline:
         learn_pairwise_model = self.learn_pairwise_model
         edge_or_cherry = self.edge_or_cherry
         method = self.method
-        opt_init = self.opt_init
+        mle_init = self.mle_init
         rate_matrix_parameterization = self.rate_matrix_parameterization
         xrate_grammar = self.xrate_grammar
         path_mask_Q2 = os.path.join(
@@ -575,7 +591,7 @@ class Pipeline:
                 rate_matrix_parameterization=rate_matrix_parameterization,
                 device=device,
                 use_cached=use_cached,
-                initialization=self.get_opt_init(opt_init=opt_init, single_site=True),
+                initialization=self.get_mle_init(mle_init=mle_init, single_site=True),
             )
             single_site_rate_matrix_learner.train(
                 lr=1e-1,
@@ -712,7 +728,7 @@ class Pipeline:
                     rate_matrix_parameterization=rate_matrix_parameterization,
                     device=device,
                     use_cached=use_cached,
-                    initialization=self.get_opt_init(opt_init=opt_init, single_site=False),
+                    initialization=self.get_mle_init(mle_init=mle_init, single_site=False),
                 )
                 pair_of_site_rate_matrix_learner.train(
                     lr=1e-1,
@@ -796,7 +812,7 @@ class Pipeline:
             f"precomputed_tree_dir = {self.precomputed_tree_dir}\n" \
             f"precomputed_maximum_parsimony_dir = {self.precomputed_maximum_parsimony_dir}\n" \
             f"learn_pairwise_model = {self.learn_pairwise_model}\n" \
-            f"opt_init = {self.opt_init}\n" \
+            f"mle_init = {self.mle_init}\n" \
             f"rate_matrix_parameterization = {self.rate_matrix_parameterization}\n" \
             f"fast_tree_cats = {self.fast_tree_cats}\n" \
             f"use_site_specific_rates = {self.use_site_specific_rates}"
@@ -896,14 +912,14 @@ class Pipeline:
         ).to_numpy()
         return self._get_number_of_transitions(mat)
 
-    def get_opt_init(self, opt_init: Optional[str], single_site: bool):
-        if opt_init is None:
+    def get_mle_init(self, mle_init: Optional[str], single_site: bool):
+        if mle_init is None:
             return None
-        elif opt_init == "JTT-IPW" and single_site:
+        elif mle_init == "JTT-IPW" and single_site:
             return self.get_learned_Q1_JTT_IPW()
-        elif opt_init == "JTT-IPW" and not single_site:
+        elif mle_init == "JTT-IPW" and not single_site:
             return self.get_learned_Q2_JTT_IPW()
         else:
-            if not os.path.exists(opt_init):
-                raise ValueError(f"opt_init file: {opt_init} does not exist.")
-            return np.loadtxt(opt_init)
+            if not os.path.exists(mle_init):
+                raise ValueError(f"mle_init file: {mle_init} does not exist.")
+            return np.loadtxt(mle_init)

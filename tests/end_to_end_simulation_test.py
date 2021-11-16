@@ -303,6 +303,8 @@ class TestEndToEndSimulation(unittest.TestCase):
     #         mle_init=None,
     #         rate_matrix_parameterization="pande_reversible",
     #         xrate_grammar=None,
+    #         xrate_forgive=3,
+    #         xrate_mininc=0.001,
     #         ### End-to-end simulator parameters
     #         end_to_end_simulator_outdir=None,
     #         # pipeline=pipeline,
@@ -346,6 +348,8 @@ class TestEndToEndSimulation(unittest.TestCase):
     #             mle_init=mle_init,
     #             rate_matrix_parameterization=rate_matrix_parameterization,
     #             xrate_grammar=xrate_grammar,
+    #             xrate_forgive=xrate_forgive,
+    #             xrate_mininc=xrate_mininc,
     #         )
     #         pipeline.run()
     #         learned_rate_matrices['real_data'] = pipeline.get_learned_Q1_XRATE()

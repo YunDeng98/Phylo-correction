@@ -61,6 +61,8 @@ def install_xrate():
 def run_xrate(
     stock_input_paths: List[str],
     xrate_grammar: Optional[str],
+    xrate_forgive: int,
+    xrate_mininc: float,
     output_path: str,
     logfile: Optional[str] = None,
     estimate_trees: bool = False,
@@ -94,9 +96,9 @@ def run_xrate(
             easily avoid code duplication.
             """
             if estimate_trees:
-                cmd = f"{xrate_bin_path} {' '.join(stock_filepaths)} -e {xrate_grammar} -g {xrate_grammar} -log 6 -f 3 -t {output_path}"
+                cmd = f"{xrate_bin_path} {' '.join(stock_filepaths)} -e {xrate_grammar} -g {xrate_grammar} -log 6 -f {xrate_forgive} -mi {xrate_mininc} -t {output_path}"
             else:
-                cmd = f"{xrate_bin_path} {' '.join(stock_filepaths)} -g {xrate_grammar} -log 6 -f 3 -t {output_path}"
+                cmd = f"{xrate_bin_path} {' '.join(stock_filepaths)} -g {xrate_grammar} -log 6 -f {xrate_forgive} -mi {xrate_mininc} -t {output_path}"
             if logfile is not None:
                 cmd += f" 2>&1 | tee {logfile}"
             return cmd
@@ -192,6 +194,8 @@ class XRATE:
             convert it into a XRATE grammar for you. If None, then the
             nullprot.eg grammar from XRATE will be used. (Note that this
             grammar forbids some amino-acid transitions).
+        xrate_forgive: `forgive` argument in XRATE.
+        xrate_mininc: `mininc` argument in XRATE.
         use_site_specific_rates: Whether to use site specific rates. When True,
             we get the LG method; when False, we get the WAG method.
         num_rate_categories: The number of rate categories, in case they shall
@@ -207,6 +211,8 @@ class XRATE:
         outdir: str,
         max_families: int,
         xrate_grammar: Optional[str],
+        xrate_forgive: int,
+        xrate_mininc: float,
         use_site_specific_rates: bool,
         num_rate_categories: int,
         use_cached: bool = False,
@@ -217,6 +223,8 @@ class XRATE:
         self.outdir = outdir
         self.max_families = max_families
         self.xrate_grammar = xrate_grammar
+        self.xrate_forgive = xrate_forgive
+        self.xrate_mininc = xrate_mininc
         self.use_site_specific_rates = use_site_specific_rates
         self.num_rate_categories = num_rate_categories
         self.use_cached = use_cached
@@ -231,6 +239,8 @@ class XRATE:
         outdir = self.outdir
         max_families = self.max_families
         xrate_grammar = self.xrate_grammar
+        xrate_forgive = self.xrate_forgive
+        xrate_mininc = self.xrate_mininc
         use_site_specific_rates = self.use_site_specific_rates
         num_rate_categories = self.num_rate_categories
         use_cached = self.use_cached
@@ -280,6 +290,8 @@ class XRATE:
                 num_rate_categories=num_rate_categories,
             ),
             xrate_grammar=xrate_grammar,
+            xrate_forgive=xrate_forgive,
+            xrate_mininc=xrate_mininc,
             output_path=os.path.join(outdir, "learned_matrix.xrate"),
             logfile=os.path.join(outdir, "xrate_log"),
         )

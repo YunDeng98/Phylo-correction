@@ -178,6 +178,8 @@ class Pipeline:
             into a XRATE grammar for you. If None, then the nullprot.eg grammar
             from XRATE will be used. (Note that this grammar forbids some
             amino-acid transitions).
+        xrate_forgive: `forgive` argument in XRATE.
+        xrate_mininc: `mininc` argument in XRATE.
         fast_tree_cats: How many rate categories to use in FastTree,
             and in also when estimating the rate matrices if
             use_site_specific_rates=True. This affects all methods.
@@ -227,6 +229,8 @@ class Pipeline:
         rate_matrix_parameterization: str = "pande_reversible",
         a3m_dir_full: Optional[str] = None,
         xrate_grammar: Optional[str] = None,
+        xrate_forgive: Optional[int] = 3,
+        xrate_mininc: Optional[float] = 0.001,
         fast_tree_cats: Optional[int] = 20,
         use_site_specific_rates: Optional[bool] = False,
     ):
@@ -315,6 +319,8 @@ class Pipeline:
         self.mle_init = mle_init
         self.rate_matrix_parameterization = rate_matrix_parameterization
         self.xrate_grammar = xrate_grammar
+        self.xrate_forgive = xrate_forgive
+        self.xrate_mininc = xrate_mininc
         self.fast_tree_cats = fast_tree_cats
         self.use_site_specific_rates = use_site_specific_rates
 
@@ -368,7 +374,7 @@ class Pipeline:
         self.xrate_input_dir = os.path.join(outdir, f"XRATE_input__{xrate_input_params}")
         xrate_grammar_hash = hash_str(str(xrate_grammar))
         xrate_grammar_name = str(xrate_grammar).split('/')[-1]
-        xrate_params = f"{max_families}_fams__{xrate_input_params}__{xrate_grammar_name}-{xrate_grammar_hash}_grammar"
+        xrate_params = f"{max_families}_fams__{xrate_input_params}__{xrate_grammar_name}-{xrate_grammar_hash}_g_{xrate_forgive}_f_{xrate_mininc}_mi"
         self.learnt_rate_matrix_dir_XRATE = os.path.join(
             outdir,
             f"Q1_XRATE__{xrate_params}"
@@ -436,6 +442,8 @@ class Pipeline:
         mle_init = self.mle_init
         rate_matrix_parameterization = self.rate_matrix_parameterization
         xrate_grammar = self.xrate_grammar
+        xrate_forgive = self.xrate_forgive
+        xrate_mininc = self.xrate_mininc
         path_mask_Q2 = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "../../input_data/synthetic_rate_matrices/mask_Q2.txt"
@@ -642,6 +650,8 @@ class Pipeline:
                 use_site_specific_rates=use_site_specific_rates,
                 num_rate_categories=fast_tree_cats,
                 use_cached=use_cached,
+                xrate_forgive=xrate_forgive,
+                xrate_mininc=xrate_mininc,
             )
             xrate.run()
         self.time_XRATE = time.time() - t_start
@@ -814,6 +824,9 @@ class Pipeline:
             f"learn_pairwise_model = {self.learn_pairwise_model}\n" \
             f"mle_init = {self.mle_init}\n" \
             f"rate_matrix_parameterization = {self.rate_matrix_parameterization}\n" \
+            f"xrate_grammar = {self.xrate_grammar}\n" \
+            f"xrate_forgive = {self.xrate_forgive}\n" \
+            f"xrate_mininc = {self.xrate_mininc}\n" \
             f"fast_tree_cats = {self.fast_tree_cats}\n" \
             f"use_site_specific_rates = {self.use_site_specific_rates}"
         return res

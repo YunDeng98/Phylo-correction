@@ -175,6 +175,8 @@ class EndToEndSimulator:
             rate_matrix_parameterization=pipeline.rate_matrix_parameterization,
             learn_pairwise_model=pipeline.learn_pairwise_model,
             xrate_grammar=pipeline.xrate_grammar,
+            xrate_forgive=pipeline.xrate_forgive,
+            xrate_mininc=pipeline.xrate_mininc,
             fast_tree_cats=fast_tree_cats,
             use_site_specific_rates=use_site_specific_rates,
         )
@@ -209,6 +211,8 @@ class EndToEndSimulator:
             rate_matrix_parameterization=pipeline.rate_matrix_parameterization,
             learn_pairwise_model=pipeline.learn_pairwise_model,
             xrate_grammar=pipeline.xrate_grammar,
+            xrate_forgive=pipeline.xrate_forgive,
+            xrate_mininc=pipeline.xrate_mininc,
             fast_tree_cats=fast_tree_cats,
             use_site_specific_rates=use_site_specific_rates,
         )
@@ -243,6 +247,8 @@ class EndToEndSimulator:
             rate_matrix_parameterization=pipeline.rate_matrix_parameterization,
             learn_pairwise_model=pipeline.learn_pairwise_model,
             xrate_grammar=pipeline.xrate_grammar,
+            xrate_forgive=pipeline.xrate_forgive,
+            xrate_mininc=pipeline.xrate_mininc,
             fast_tree_cats=fast_tree_cats,
             use_site_specific_rates=use_site_specific_rates,
         )

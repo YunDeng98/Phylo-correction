@@ -66,7 +66,7 @@ class TestEndToEndSimulation(unittest.TestCase):
             edge_or_cherry="edge",
             method="MLE",
             learn_pairwise_model=False,
-            opt_init=None,
+            mle_init=None,
             rate_matrix_parameterization="pande_reversible",
             fast_tree_cats=20,
             use_site_specific_rates=False,
@@ -113,7 +113,7 @@ class TestEndToEndSimulation(unittest.TestCase):
                 edge_or_cherry=edge_or_cherry,
                 method=method,
                 learn_pairwise_model=learn_pairwise_model,
-                opt_init=opt_init,
+                mle_init=mle_init,
                 rate_matrix_parameterization=rate_matrix_parameterization,
                 fast_tree_cats=fast_tree_cats,
                 use_site_specific_rates=use_site_specific_rates,
@@ -195,7 +195,7 @@ class TestEndToEndSimulation(unittest.TestCase):
                             max_seqs=max_seqs,
                             max_families=max_families,
                             edge_or_cherry="cherry",
-                            opt_init="JTT-IPW",
+                            mle_init="JTT-IPW",
                         )
                         times.append(time.time() - st)
                         key += increment
@@ -300,9 +300,11 @@ class TestEndToEndSimulation(unittest.TestCase):
     #         edge_or_cherry="edge",
     #         method="MLE",
     #         learn_pairwise_model=False,
-    #         opt_init=None,
+    #         mle_init=None,
     #         rate_matrix_parameterization="pande_reversible",
     #         xrate_grammar=None,
+    #         xrate_forgive=3,
+    #         xrate_mininc=0.001,
     #         ### End-to-end simulator parameters
     #         end_to_end_simulator_outdir=None,
     #         # pipeline=pipeline,
@@ -343,9 +345,11 @@ class TestEndToEndSimulation(unittest.TestCase):
     #             edge_or_cherry=edge_or_cherry,
     #             method=method,
     #             learn_pairwise_model=learn_pairwise_model,
-    #             opt_init=opt_init,
+    #             mle_init=mle_init,
     #             rate_matrix_parameterization=rate_matrix_parameterization,
     #             xrate_grammar=xrate_grammar,
+    #             xrate_forgive=xrate_forgive,
+    #             xrate_mininc=xrate_mininc,
     #         )
     #         pipeline.run()
     #         learned_rate_matrices['real_data'] = pipeline.get_learned_Q1_XRATE()

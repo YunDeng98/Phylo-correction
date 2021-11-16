@@ -18,7 +18,7 @@ import sys
 from typing import List, Optional
 
 
-from src.xrate.xrate_input_generation import get_stock_filenames
+from src.xrate.xrate_input_generation import get_stock_filenames, rate_matrix_to_grammar
 from src.utils import subsample_protein_families, verify_integrity, pushd
 sys.path.append("../")
 import Phylo_util
@@ -61,6 +61,8 @@ def install_xrate():
 def run_xrate(
     stock_input_paths: List[str],
     xrate_grammar: Optional[str],
+    xrate_forgive: int,
+    xrate_mininc: float,
     output_path: str,
     logfile: Optional[str] = None,
     estimate_trees: bool = False,
@@ -77,20 +79,43 @@ def run_xrate(
     if not os.path.exists(xrate_grammar):
         raise ValueError(f"Grammar file {xrate_grammar} does not exist.")
 
-    if estimate_trees:
-        cmd = f"{xrate_bin_path} {' '.join(stock_input_paths)} -e {xrate_grammar} -g {xrate_grammar} -log 6 -f 3 -t {output_path}"
-    else:
-        cmd = f"{xrate_bin_path} {' '.join(stock_input_paths)} -g {xrate_grammar} -log 6 -f 3 -t {output_path}"
-    if logfile is not None:
-        cmd += f" 2>&1 | tee {logfile}"
-    # Write the command to a file and run it from there with bash because
-    # running directly subprocess.run(cmd) fails due to command length limit.
-    with tempfile.NamedTemporaryFile("w") as bash_script_file:
-        bash_script_filename = bash_script_file.name
-        bash_script_file.write(cmd)
-        bash_script_file.flush()  # This is key, or else the call below will fail!
-        logger.info(f"Running {cmd}")
-        subprocess.run(f"bash {bash_script_filename}", shell=True, check=True)
+    # We create symlinks to the MSAs to reduce the length of the command,
+    # since there is a command line maximum length imposed by the OS.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        stock_input_paths_symlinks = []
+        for i, stock_input_path in enumerate(stock_input_paths):
+            stock_input_path_symlink = os.path.join(tmpdir, f"{i}.stock")
+            os.symlink(os.path.abspath(stock_input_path), stock_input_path_symlink)
+            stock_input_paths_symlinks.append(stock_input_path_symlink)
+
+        def get_command(stock_filepaths: List[str]) -> str:
+            """
+            Given the stock_filepaths, returns the command for running
+            XRATE on those stock_filepaths. The outdir, etc. are
+            taken from the current context. This is just used to
+            easily avoid code duplication.
+            """
+            if estimate_trees:
+                cmd = f"{xrate_bin_path} {' '.join(stock_filepaths)} -e {xrate_grammar} -g {xrate_grammar} -log 6 -f {xrate_forgive} -mi {xrate_mininc} -t {output_path}"
+            else:
+                cmd = f"{xrate_bin_path} {' '.join(stock_filepaths)} -g {xrate_grammar} -log 6 -f {xrate_forgive} -mi {xrate_mininc} -t {output_path}"
+            if logfile is not None:
+                cmd += f" 2>&1 | tee {logfile}"
+            return cmd
+        cmd = get_command(stock_input_paths)
+        cmd_with_symlinks = get_command(stock_input_paths_symlinks)
+
+        # Write the command to a file and run it from there with bash because
+        # running directly subprocess.run(cmd_with_symlinks) fails due to
+        # command length limit.
+        bash_script_filepath = os.path.join(tmpdir, "run_xrate.sh")
+        with open(bash_script_filepath, "w") as bash_script_file:
+            bash_script_file.write(cmd_with_symlinks)
+            bash_script_file.flush()  # This is key, or else the call below will fail!
+            # We log the command w/o symlinks to be able to run it manually for debugging.
+            logger.info(f"Original command:\n{cmd}")
+            logger.info(f"Running original command with symlinks:\n{cmd_with_symlinks}")
+            subprocess.run(f"bash {bash_script_filepath}", shell=True, check=True)
 
 
 def xrate_to_numpy(xrate_output_file: str) -> np.array:
@@ -163,7 +188,14 @@ class XRATE:
         max_families: Only run on 'max_families' randomly chosen files in a3m_dir_full.
             This is useful for testing and to see what happens if less data is used.
         xrate_grammar: The XRATE grammar file containing the rate matrix
-            parameterization and initialization.
+            parameterization and initialization. If the file has extension type
+            '.eg', then it must be an XRATE grammar file. If it is a '.txt'
+            file, it must be a rate matrix in row-wise format, and we will
+            convert it into a XRATE grammar for you. If None, then the
+            nullprot.eg grammar from XRATE will be used. (Note that this
+            grammar forbids some amino-acid transitions).
+        xrate_forgive: `forgive` argument in XRATE.
+        xrate_mininc: `mininc` argument in XRATE.
         use_site_specific_rates: Whether to use site specific rates. When True,
             we get the LG method; when False, we get the WAG method.
         num_rate_categories: The number of rate categories, in case they shall
@@ -179,6 +211,8 @@ class XRATE:
         outdir: str,
         max_families: int,
         xrate_grammar: Optional[str],
+        xrate_forgive: int,
+        xrate_mininc: float,
         use_site_specific_rates: bool,
         num_rate_categories: int,
         use_cached: bool = False,
@@ -189,6 +223,8 @@ class XRATE:
         self.outdir = outdir
         self.max_families = max_families
         self.xrate_grammar = xrate_grammar
+        self.xrate_forgive = xrate_forgive
+        self.xrate_mininc = xrate_mininc
         self.use_site_specific_rates = use_site_specific_rates
         self.num_rate_categories = num_rate_categories
         self.use_cached = use_cached
@@ -203,6 +239,8 @@ class XRATE:
         outdir = self.outdir
         max_families = self.max_families
         xrate_grammar = self.xrate_grammar
+        xrate_forgive = self.xrate_forgive
+        xrate_mininc = self.xrate_mininc
         use_site_specific_rates = self.use_site_specific_rates
         num_rate_categories = self.num_rate_categories
         use_cached = self.use_cached
@@ -229,6 +267,21 @@ class XRATE:
             max_families
         )
 
+        if xrate_grammar is not None and not xrate_grammar.endswith('.eg'):
+            # We change the xrate_grammar to point to the right place.
+            Q1 = np.loadtxt(xrate_grammar)
+            xrate_grammar += '.eg'
+            logger.info(f"XRATE will be ran with grammar file at: {xrate_grammar}")
+            # The grammar might already have been writen previously, so check first.
+            if not os.path.exists(xrate_grammar):
+                grammar = rate_matrix_to_grammar(Q1)
+                with open(xrate_grammar, "w") as outfile:
+                    outfile.write(grammar)
+                    outfile.flush()
+                os.system(f"chmod 555 {xrate_grammar}")
+            else:
+                verify_integrity(xrate_grammar)
+
         run_xrate(
             stock_input_paths=get_stock_filenames_for_training(
                 stock_dir=xrate_input_dir,
@@ -237,6 +290,8 @@ class XRATE:
                 num_rate_categories=num_rate_categories,
             ),
             xrate_grammar=xrate_grammar,
+            xrate_forgive=xrate_forgive,
+            xrate_mininc=xrate_mininc,
             output_path=os.path.join(outdir, "learned_matrix.xrate"),
             logfile=os.path.join(outdir, "xrate_log"),
         )

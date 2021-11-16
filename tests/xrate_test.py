@@ -87,6 +87,8 @@ class TestXRATEInputGenerator(unittest.TestCase):
                         outdir=outdir,
                         max_families=3,
                         xrate_grammar=xrate_grammar,
+                        xrate_forgive=3,
+                        xrate_mininc=0.001,
                         use_site_specific_rates=False,
                         num_rate_categories=20,
                         use_cached=use_cached,
@@ -124,6 +126,8 @@ class TestXRATEInputGenerator(unittest.TestCase):
                         outdir=outdir,
                         max_families=3,
                         xrate_grammar=xrate_grammar,
+                        xrate_forgive=3,
+                        xrate_mininc=0.001,
                         use_site_specific_rates=True,
                         num_rate_categories=20,
                         use_cached=use_cached,
@@ -142,3 +146,27 @@ class TestXRATEInputGenerator(unittest.TestCase):
                     Q_inferred = np.loadtxt(learned_matrix_inferred_path)
                     l1_error = np.sum(np.abs(Q_true - Q_inferred))
                     assert(l1_error < 0.01)
+
+    def test_xrate_with_WAG_initialization_and_forgive_and_mininc(self):
+        """
+        Test that XRATE runs initialized with WAG rate matrix,
+        and custom values of forgive and mininc
+        """
+        install_xrate()
+        with tempfile.TemporaryDirectory() as root_dir:
+            outdir = os.path.join(root_dir, 'xrate')
+            for use_cached in [False, True]:
+                xrate = XRATE(
+                    a3m_dir_full='test_input_data/a3m_small',
+                    xrate_input_dir='test_input_data/stockholm_small',
+                    expected_number_of_MSAs=3,
+                    outdir=outdir,
+                    max_families=3,
+                    xrate_grammar='test_input_data/WAG_matrix.txt',
+                    xrate_forgive=4,
+                    xrate_mininc=0.1,
+                    use_site_specific_rates=False,
+                    num_rate_categories=20,
+                    use_cached=use_cached,
+                )
+                xrate.run()

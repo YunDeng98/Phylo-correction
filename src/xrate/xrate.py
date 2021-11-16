@@ -77,20 +77,43 @@ def run_xrate(
     if not os.path.exists(xrate_grammar):
         raise ValueError(f"Grammar file {xrate_grammar} does not exist.")
 
-    if estimate_trees:
-        cmd = f"{xrate_bin_path} {' '.join(stock_input_paths)} -e {xrate_grammar} -g {xrate_grammar} -log 6 -f 3 -t {output_path}"
-    else:
-        cmd = f"{xrate_bin_path} {' '.join(stock_input_paths)} -g {xrate_grammar} -log 6 -f 3 -t {output_path}"
-    if logfile is not None:
-        cmd += f" 2>&1 | tee {logfile}"
-    # Write the command to a file and run it from there with bash because
-    # running directly subprocess.run(cmd) fails due to command length limit.
-    with tempfile.NamedTemporaryFile("w") as bash_script_file:
-        bash_script_filename = bash_script_file.name
-        bash_script_file.write(cmd)
-        bash_script_file.flush()  # This is key, or else the call below will fail!
-        logger.info(f"Running {cmd}")
-        subprocess.run(f"bash {bash_script_filename}", shell=True, check=True)
+    # We create symlinks to the MSAs to reduce the length of the command,
+    # since there is a command line maximum length imposed by the OS.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        stock_input_paths_symlinks = []
+        for i, stock_input_path in enumerate(stock_input_paths):
+            stock_input_path_symlink = os.path.join(tmpdir, f"{i}.stock")
+            os.symlink(os.path.abspath(stock_input_path), stock_input_path_symlink)
+            stock_input_paths_symlinks.append(stock_input_path_symlink)
+
+        def get_command(stock_filepaths: List[str]) -> str:
+            """
+            Given the stock_filepaths, returns the command for running
+            XRATE on those stock_filepaths. The outdir, etc. are
+            taken from the current context. This is just used to
+            easily avoid code duplication.
+            """
+            if estimate_trees:
+                cmd = f"{xrate_bin_path} {' '.join(stock_filepaths)} -e {xrate_grammar} -g {xrate_grammar} -log 6 -f 3 -t {output_path}"
+            else:
+                cmd = f"{xrate_bin_path} {' '.join(stock_filepaths)} -g {xrate_grammar} -log 6 -f 3 -t {output_path}"
+            if logfile is not None:
+                cmd += f" 2>&1 | tee {logfile}"
+            return cmd
+        cmd = get_command(stock_input_paths)
+        cmd_with_symlinks = get_command(stock_input_paths_symlinks)
+
+        # Write the command to a file and run it from there with bash because
+        # running directly subprocess.run(cmd_with_symlinks) fails due to
+        # command length limit.
+        bash_script_filepath = os.path.join(tmpdir, "run_xrate.sh")
+        with open(bash_script_filepath, "w") as bash_script_file:
+            bash_script_file.write(cmd_with_symlinks)
+            bash_script_file.flush()  # This is key, or else the call below will fail!
+            # We log the command w/o symlinks to be able to run it manually for debugging.
+            logger.info(f"Original command:\n{cmd}")
+            logger.info(f"Running original command with symlinks:\n{cmd_with_symlinks}")
+            subprocess.run(f"bash {bash_script_filepath}", shell=True, check=True)
 
 
 def xrate_to_numpy(xrate_output_file: str) -> np.array:

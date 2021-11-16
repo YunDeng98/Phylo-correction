@@ -31,17 +31,27 @@ class EndToEndSimulator:
             the FastTree logs from the pipeline.
         Q1_ground_truth: Ground-truth single-site rate matrix.
         Q2_ground_truth: Ground-truth co-evolution rate matrix.
+        simulate_end_to_end: If to run end-to-end simulation, which starts from
+            only the MSAs and contact maps.
+        simulate_from_trees_wo_ancestral_states: If to run simulation starting
+            from the MSAs and contact maps and *ground truth trees wo/ancestral states*.
+        simulate_from_trees_w_ancestral_states: If to run simulation starting
+            from the MSAs and contact maps and *ground truth trees w/ancestral states*.
+        use_cached: If True, will do nothing for the output files that
+            already exists, effectively re-using them.
         fast_tree_rate_matrix: When the pipeline is run on the simulated data,
             this rate matrix will be used in FastTree instead. This is helpful
             because one might want to test the pipeline on data that was
             generated with a single-site model (Q1_ground_truth) that is
             different from standard amino-acid matrices. In that case,
             the phylogeny reconstruction step should use a matrix that
-            aligns with Q1_ground_truth instead.
+            aligns with Q1_ground_truth instead. If None, the
+            rate matrix from the original Pipeline will be used.
         fast_tree_cats: When the pipeline is run on the simulated data,
             these number of rate categories will be used instead in FastTree.
             This is useful for, say, simulating data with 20 rate categories,
             and then performing FastTree estimation with no rate categories.
+            If None, the fast_tree_cats from the original Pipeline will be used.
         use_site_specific_rates: When the pipeline is run on the simulated data,
             use this use_site_specific_rates in the pipeline instead.
             This is useful for, say, simulating data with 20 rate categories,
@@ -50,13 +60,8 @@ class EndToEndSimulator:
             categories. This allows for performing very interesting
             experiments: how much does estimation worsen if site-specific
             rates are not taken into account? This is the essence of the
-            LG paper.
-        simulate_end_to_end: If to run end-to-end simulation, which starts from
-            only the MSAs and contact maps.
-        simulate_from_trees_wo_ancestral_states: If to run simulation starting
-            from the MSAs and contact maps and *ground truth trees wo/ancestral states*.
-        simulate_from_trees_w_ancestral_states: If to run simulation starting
-            from the MSAs and contact maps and *ground truth trees w/ancestral states*.
+            LG paper. If None, the use_site_specific_rates from the original
+            Pipeline will be used.
 
     Attributes:
         time_***: The time taken for each step of the end-to-end simulation.
@@ -70,14 +75,21 @@ class EndToEndSimulator:
         use_site_specific_rates_in_simulation: bool,
         Q1_ground_truth: str,
         Q2_ground_truth: str,
-        fast_tree_rate_matrix: str,
-        fast_tree_cats: int,
-        use_site_specific_rates: bool,
         simulate_end_to_end: Optional[bool],
         simulate_from_trees_wo_ancestral_states: Optional[bool],
         simulate_from_trees_w_ancestral_states: Optional[bool],
         use_cached: bool,
+        fast_tree_rate_matrix: Optional[str] = None,
+        fast_tree_cats: Optional[int] = None,
+        use_site_specific_rates: Optional[bool] = None,
     ):
+        if fast_tree_rate_matrix is None:
+            fast_tree_rate_matrix = pipeline.rate_matrix
+        if fast_tree_cats is None:
+            fast_tree_cats = pipeline.fast_tree_cats
+        if use_site_specific_rates is None:
+            use_site_specific_rates = pipeline.use_site_specific_rates
+
         self.outdir = outdir
         self.pipeline = pipeline
         self.simulation_pct_interacting_positions = simulation_pct_interacting_positions

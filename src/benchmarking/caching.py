@@ -155,6 +155,7 @@ def cached(
                         f"{key}_{val}"
                         for (key, val) in binding.arguments.items()
                         if ((cache_keys is None) or (key in cache_keys))
+                        and ((exclude_args is None) or (key not in exclude_args))
                     ]
                     + ["result"]
                 )
@@ -168,6 +169,7 @@ def cached(
                                 f"{key}_{val}"
                                 for (key, val) in binding.arguments.items()
                                 if ((cache_keys is None) or (key in cache_keys))
+                                and ((exclude_args is None) or (key not in exclude_args))
                             ]
                         )
                     ]

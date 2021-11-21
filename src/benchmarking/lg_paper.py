@@ -55,9 +55,17 @@ def get_registered_models() -> List[Tuple[str, Optional[str], Optional[str]]]:
         ("WAG (reported)", "r__WAG", None),
         ("WAG (reproduced)", "WAG", None),
         # ("WAG+LGF (reported)", "r__WAG+LG FRE", None),
+
         ("WAG' (reported)", "r__WAG'", None),
-        ("WAG' reproduced (w/XRATE); init JTT-IPW", None, "./input_data/Q1XRATE.PAML.txt"),
-        ("WAG' reproduced (w/XRATE); nullprot", None, "./input_data/Q1XRATE_nullprot.PAML.txt"),
+        ("WAG' reproduced (w/XRATE), init JTT-IPW", None, "./input_data/Q1XRATE.PAML.txt"),
+        # ("WAG' reproduced (w/XRATE), init JTT-IPW; 2nd it.", None, "./input_data/Q2XRATE.PAML.txt"),
+        ("WAG' reproduced (w/XRATE), init WAG", None, "./input_data/Q1XRATE_init_WAG.PAML.txt"),
+        ("WAG' reproduced (w/XRATE), init WAG; 2nd it.", None, "./input_data/Q2XRATE_init_WAG.PAML.txt"),
+        ("WAG' reproduced (w/XRATE), init WAG, more EM", None, "./input_data/Q1XRATE_init_WAG_mininc_0_0001.PAML.txt"),
+        ("WAG' reproduced (w/XRATE), init WAG, more EM; 2nd it.", None, "./input_data/Q2XRATE_init_WAG_mininc_0_0001.PAML.txt"),
+        # ("WAG' reproduced (w/XRATE); nullprot", None, "./input_data/Q1XRATE_nullprot.PAML.txt"),
+        # ("WAG' reproduced (w/XRATE); nullprot; 2nd it", None, "./input_data/Q1XRATE_nullprot.PAML.txt"),
+
         ("LG (reported)", "r__LG", None),
         ("LG reproduced (with LG mat)", "LG", None),
         ("LG reproduced (with XRATE), init JTT-IPW", None, "./input_data/Q1XRATE_SR.PAML.txt"),
@@ -68,6 +76,7 @@ def get_registered_models() -> List[Tuple[str, Optional[str], Optional[str]]]:
         ("LG reproduced (with XRATE), init WAG, more EM; 2nd it.", None, "./input_data/Q2XRATE_SR_init_WAG_mininc_0_0001.PAML.txt"),
         # ("LG reproduced (with XRATE); nullprot", None, "./input_data/Q1XRATE_SR_nullprot.PAML.txt"),
         # ("LG reproduced (with XRATE); nullprot; 2nd it.", None, "./input_data/Q2XRATE_SR_nullprot.PAML.txt"),
+
         # Our method, no site rates
         ("Cherry; No site rates", None, "./input_data/Q1nosr.PAML.txt"),
         # Our method
@@ -75,8 +84,11 @@ def get_registered_models() -> List[Tuple[str, Optional[str], Optional[str]]]:
         ("Cherry; 2nd iteration", None, "./input_data/Q2v2.PAML.txt"),
 
         # Our method, repro
-        # ("Cherry; repro", None, "./input_data/Q1_repro.PAML.txt"),
-        # ("Cherry; 2nd iteration; repro", None, "./input_data/Q2_repro.PAML.txt"),
+        ("Cherry; repro", None, "./input_data/Q1_repro.PAML.txt"),
+        ("Cherry; 2nd iteration; repro", None, "./input_data/Q2_repro.PAML.txt"),
+
+        # QMaker model
+        ("QMaker", None, "./input_data/QMaker_Q.LG.PAML.txt"),
 
         # FastTree initialization
         ("Cherry; FastTree w/EQU", None, "./input_data/Q1EQU.PAML.txt"),
@@ -809,7 +821,7 @@ def reproduce_lg_paper_fig_4(
         elif "JTT-IPW" in model_name:
             colors.append("grey")
         else:
-            raise Exception(f"Unknown color for model: {model_name}")
+            colors.append("brown")
     plt.figure(figsize=figsize)
     plt.title(pfam_or_treebase)
     plt.bar(x=model_names, height=y, color=colors, yerr=yerr)
@@ -823,11 +835,64 @@ def reproduce_lg_paper_fig_4(
             mpatches.Patch(color="red", label="Cherry"),
             mpatches.Patch(color="green", label="M. Parsimony"),
             mpatches.Patch(color="grey", label="JTT-IPW"),
+            mpatches.Patch(color="brown", label="Other"),
         ]
     )
     plt.show()
 
     if n_bootstraps:
-        return y, pd.DataFrame(y_bootstraps, columns=model_names)
+        return y, df, pd.DataFrame(y_bootstraps, columns=model_names)
     else:
-        return y, None
+        return y, df, None
+
+
+def reproduce_qmaker_results(
+    pfam_or_treebase: str = "pfam",
+    a3m_phylip_dir: str = "./input_data/lg_PfamTestingAlignments/",
+    model_names: List[str] = [
+        "JTT (reproduced)",
+        "WAG (reproduced)",
+        "LG reproduced (with LG mat)",
+        "QMaker",
+    ],
+    num_rate_categories: int = 4,
+    random_seed: int = 0,
+    optimize_rates: bool = True,
+    max_families: int = 1000,
+    verbose: bool = False,
+    n_process: int = 1,
+    exclude_families: Tuple[str, ...] = (),
+):
+    """
+    Reproduce the results resported by the QMaker paper, where:
+
+    "Q.LG was the most frequently selected matrix (246 MSAs),
+    followed by LG (166 MSAs), WAG (55 MSAs), and JTT (33 MSAs)."
+
+    Although the QMaker paper uses iqtree's ModelFinder to
+    evaluate the rate matrices and here we use PhyML, the
+    results are almost identical.
+    """
+    model_names = model_names[:]
+    df = reproduce_JTT_WAG_LG_table_parallel(
+        pfam_or_treebase=pfam_or_treebase,
+        a3m_phylip_dir=a3m_phylip_dir,
+        model_names=model_names,
+        num_rate_categories=num_rate_categories,
+        random_seed=random_seed,
+        optimize_rates=optimize_rates,
+        max_families=max_families,
+        verbose=verbose,
+        n_process=n_process,
+        exclude_families=exclude_families,
+    )
+    df = df.drop(columns=["Tax", 'Sites'])
+    df_win = df.copy()
+    for col in df.columns:
+        df_win[col] = 0
+        for col2 in df.columns:
+            if col2 == col:
+                continue
+            df_win[col] += (df[col] > df[col2])
+    res = (df_win == (len(model_names) - 1)).sum(axis=0)
+    return res

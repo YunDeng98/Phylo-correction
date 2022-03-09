@@ -724,7 +724,8 @@ def reproduce_lg_paper_fig_4(
     n_bootstraps: int = 0,
     exclude_families: List[str] = [],
     baseline_model: str = "JTT (reported)",
-) -> Tuple[pd.DataFrame, Optional[pd.DataFrame]]:
+    show_legend: bool = True,
+) -> Tuple[pd.DataFrame, pd.DataFrame, Optional[pd.DataFrame]]:
     """
     Reproduce Fig. 4 of the LG paper, adding the desired models.
 
@@ -751,6 +752,7 @@ def reproduce_lg_paper_fig_4(
             for excluding protein families that PhyML crashes on due to numerial
             stability issues.
         baseline_model: Which model to use as the reference.
+        show_legend: If to plot the legend.
     """
     if model_names is None:
         model_names = [x[0] for x in get_registered_models()]
@@ -776,9 +778,10 @@ def reproduce_lg_paper_fig_4(
         num_sites = df.Sites.sum()
         log_likelihoods = (
             2.0
-            * (df[model_names].sum(axis=0) - df[baseline_model].sum())
-            / num_sites
+            * df[model_names].sum(axis=0) / num_sites
         )
+        if baseline_model is not None:
+            log_likelihoods -= 2.0 * df[baseline_model].sum() / num_sites
         return log_likelihoods
 
     y = get_log_likelihoods(df, model_names)
@@ -828,16 +831,17 @@ def reproduce_lg_paper_fig_4(
     plt.xticks(rotation=270)
     ax = plt.gca()
     ax.yaxis.grid()
-    plt.legend(
-        handles=[
-            mpatches.Patch(color="black", label="Reported"),
-            mpatches.Patch(color="blue", label="Reproduced"),
-            mpatches.Patch(color="red", label="Cherry"),
-            mpatches.Patch(color="green", label="M. Parsimony"),
-            mpatches.Patch(color="grey", label="JTT-IPW"),
-            mpatches.Patch(color="brown", label="Other"),
-        ]
-    )
+    if show_legend:
+        plt.legend(
+            handles=[
+                mpatches.Patch(color="black", label="Reported"),
+                mpatches.Patch(color="blue", label="Reproduced"),
+                mpatches.Patch(color="red", label="Cherry"),
+                mpatches.Patch(color="green", label="M. Parsimony"),
+                mpatches.Patch(color="grey", label="JTT-IPW"),
+                mpatches.Patch(color="brown", label="Other"),
+            ]
+        )
     plt.show()
 
     if n_bootstraps:

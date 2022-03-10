@@ -35,6 +35,14 @@ def map_func(args: List) -> pd.DataFrame:
     max_path_height = args[10]
     edge_or_cherry = args[11]
 
+    num_sites = -1
+    if len(alphabet) == 20:
+        num_sites = 1
+    elif len(alphabet) == 400:
+        num_sites = 2
+    else:
+        raise ValueError(f"len(alphabet) should be 20 or 400, but is {len(alphabet)}")
+
     logger = logging.getLogger("phylo_correction.matrix_generation")
     seed = int(
         hashlib.md5(("".join(protein_family_names_for_shard) + "matrix_generation").encode()).hexdigest()[:8], 16
@@ -85,13 +93,17 @@ def map_func(args: List) -> pd.DataFrame:
             # Filter!
             transitions_df = transitions_df[transitions_df.inside_grid]
 
-        # Summarize remaining transitions into the frequency matrices
-        summarized_transitions = transitions_df.groupby(["starting_state", "ending_state", "grid_point_id"]).size()
-        for grid_point_id in range(len(grid)):
-            for starting_state in alphabet:
-                for ending_state in alphabet:
-                    if (starting_state, ending_state, grid_point_id) in summarized_transitions:
-                        res[grid_point_id].at[starting_state, ending_state] += summarized_transitions[(starting_state, ending_state, grid_point_id)]
+        for _, row in transitions_df.iterrows():
+            grid_point_id = row['grid_point_id']
+            starting_state = row['starting_state']
+            ending_state = row['ending_state']
+            if starting_state in alphabet and ending_state in alphabet:
+                if num_sites == 1:
+                    res[grid_point_id].at[starting_state, ending_state] += 1
+                elif num_sites == 2:
+                    # Need to symmetrize
+                    res[grid_point_id].at[starting_state, ending_state] += 0.5
+                    res[grid_point_id].at[starting_state[::-1], ending_state[::-1]] += 0.5
 
     return res, grid
 
@@ -291,17 +303,6 @@ class MatrixGenerator:
             res_i, _ = shard_results[i]
             for grid_point_id in range(len(grid)):
                 res[grid_point_id] += res_i[grid_point_id]
-
-        # "Symmetrize" the transition matrix if its on pair of sites. E.g. the transitions NG->NT and GN->TN should be unified
-        if num_sites == 2:
-            for grid_point_id in range(len(grid)):
-                for aa1 in amino_acids:
-                    for aa2 in amino_acids:
-                        for aa3 in amino_acids:
-                            for aa4 in amino_acids:
-                                symmetrized_frequency = (res[grid_point_id].at[aa1 + aa2, aa3 + aa4] + res[grid_point_id].at[aa2 + aa1, aa4 + aa3]) / 2.0
-                                res[grid_point_id].at[aa1 + aa2, aa3 + aa4] = symmetrized_frequency
-                                res[grid_point_id].at[aa2 + aa1, aa4 + aa3] = symmetrized_frequency
 
         # Compute the total transitions, irrespective of branch length.
         res_all = res[0].copy()

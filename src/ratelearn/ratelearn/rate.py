@@ -105,6 +105,7 @@ class RateMatrix(nn.Module):
             mat = rmat @ pi_mat
 
         if self.mode == "pande_reversible":
+            self.mask = self.mask.to(device=device)
             rmat_off = torch.zeros(self.num_states, self.num_states, device=device)
             triu_indices = torch.triu_indices(
                 row=self.num_states, col=self.num_states, offset=1, device=device
